@@ -10,7 +10,29 @@
     "paidStorage": "Платне зберігання",
     "representative": "Представник",
     "allRepresentatives": "Усі представники",
-    "client": "Клієнт"
+    "client": "Клієнт",
+    "allWarehouses": "Усі склади",
+    "allPayments": "Оплата: усі",
+    "unpaid": "Неоплачені",
+    "paid": "Оплачені"
+  },
+  "selection": {
+    "count": "Обрано: {{count}}"
+  },
+  "payment": {
+    "title": "Оплата",
+    "price": "Ціна доставки",
+    "currency": "Валюта",
+    "status": "Статус оплати",
+    "paidAt": "Оплачено",
+    "paidBy": "Прийняв оплату",
+    "markPaid": "Позначити оплаченою",
+    "markUnpaid": "Скасувати оплату",
+    "noPrice": "Спочатку вкажіть ціну доставки",
+    "paidAtHint": "Залиште порожнім, щоб зарахувати зараз",
+    "unpaidConfirm": "Скасувати оплату?",
+    "PAID": "Оплачено",
+    "UNPAID": "Не оплачено"
   },
   "create": {
     "modeTtn": "За ТТН Нової Пошти",
@@ -85,6 +107,9 @@
     "npDeliveryCost": "Вартість доставки",
     "npCodAmount": "Накладений платіж",
     "statusChangedAt": "Статус змінено",
-    "statusChangedBy": "Хто змінив"
+    "statusChangedBy": "Хто змінив",
+    "warehouse": "Склад",
+    "clientCity": "Місто клієнта",
+    "clientAddress": "Адреса клієнта"
   }
 }

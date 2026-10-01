@@ -48,6 +48,7 @@ export function ParcelHistory({ entries, isLoading }: { entries?: ParcelHistoryR
                   </>
                 )}
                 <ParcelStatusBadge status={e.status} />
+                {e.warehouseName && <span className="text-xs text-muted-foreground">{e.warehouseName}</span>}
               </>
             )}
           </div>

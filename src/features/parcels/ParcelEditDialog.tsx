@@ -10,10 +10,12 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { useAccess } from '@/features/auth/access'
 import { ClientPicker } from '@/features/clients/ClientPicker'
 import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
 import type { ParcelResponse } from '@/lib/api/types'
+import { PriceFields } from './PriceFields'
 import { useUpdateParcel } from './queries'
 import { canEditSeatsAmount, orUndefined, parseNumber } from './status'
 
@@ -34,6 +36,8 @@ const schema = z.object({
   senderPhone: z.string().trim(),
   senderCity: z.string().trim(),
   notes: z.string().trim(),
+  deliveryPrice: numberField,
+  deliveryPriceCurrency: z.enum(['UAH', 'EUR']),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -51,6 +55,8 @@ function toFormValues(p: ParcelResponse): FormValues {
     senderPhone: p.senderPhone ?? '',
     senderCity: p.senderCity ?? '',
     notes: p.notes ?? '',
+    deliveryPrice: p.deliveryPrice != null ? String(p.deliveryPrice) : '',
+    deliveryPriceCurrency: p.deliveryPriceCurrency ?? 'UAH',
   }
 }
 
@@ -79,11 +85,14 @@ function EditForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => 
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
   const seatsEditable = canEditSeatsAmount(parcel)
+  const { isManager } = useAccess()
 
-  // PUT replaces every editable field, so client/representative/flag must always be sent.
+  // PUT is a partial update, but we still send the full form so the dialog reflects what gets saved.
   const submit = form.handleSubmit(async (v) => {
     try {
       await update.mutateAsync({
+        deliveryPrice: isManager ? parseNumber(v.deliveryPrice) : undefined,
+        deliveryPriceCurrency: isManager && v.deliveryPrice ? v.deliveryPriceCurrency : undefined,
         representativeId: v.representativeId,
         clientId: v.clientId,
         needsEnrichment: v.needsEnrichment,
@@ -165,6 +174,8 @@ function EditForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => 
               <FieldErrorText error={errors.declaredValue} />
             </Field>
           </div>
+
+          {isManager && <PriceFields form={form} idPrefix="e-" />}
 
           <div className="grid gap-4 sm:grid-cols-3">
             <Field data-invalid={!!errors.senderName}>

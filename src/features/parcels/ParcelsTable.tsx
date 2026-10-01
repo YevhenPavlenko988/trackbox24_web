@@ -2,11 +2,12 @@ import { AlertCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { DataTable, type Column } from '@/components/common/DataTable'
+import { DataTable, type Column, type Selection } from '@/components/common/DataTable'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { useAccess } from '@/features/auth/access'
 import type { ParcelResponse } from '@/lib/api/types'
-import { formatDate, formatDateTime, formatPhone } from '@/lib/format'
+import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 
 export function seatsProgress(p: ParcelResponse): string {
@@ -27,6 +28,7 @@ export function ParcelsTable({
   emptyText,
   actions,
   extra,
+  selection,
 }: {
   rows: ParcelResponse[]
   isLoading?: boolean
@@ -35,9 +37,11 @@ export function ParcelsTable({
   actions?: (p: ParcelResponse) => ReactNode
   /** Rendered next to the status badge (e.g. "outside the plan"). */
   extra?: (p: ParcelResponse) => ReactNode
+  selection?: Selection
 }) {
   const { t } = useTranslation(['parcels', 'common'])
   const navigate = useNavigate()
+  const { canSeeMoney } = useAccess()
 
   const columns: Column<ParcelResponse>[] = [
     {
@@ -105,6 +109,24 @@ export function ParcelsTable({
           formatDate(p.npPaidStorageFrom)
         ),
     },
+    ...(canSeeMoney
+      ? [
+          {
+            key: 'payment',
+            header: t('parcels:payment.title'),
+            cell: (p: ParcelResponse) => (
+              <div className="flex flex-col">
+                <span>{formatMoney(p.deliveryPrice, p.deliveryPriceCurrency)}</span>
+                {p.deliveryPrice != null && (
+                  <span className={p.paymentStatus === 'PAID' ? 'text-xs text-emerald-700' : 'text-xs text-amber-700'}>
+                    {t(`parcels:payment.${p.paymentStatus ?? 'UNPAID'}`)}
+                  </span>
+                )}
+              </div>
+            ),
+          },
+        ]
+      : []),
     { key: 'createdAt', header: t('common:common.createdAt'), cell: (p) => formatDateTime(p.createdAt) },
     ...(actions
       ? [
@@ -131,6 +153,7 @@ export function ParcelsTable({
       rowClassName={(p) => (isPaidStorageDue(p) ? 'bg-destructive/5' : undefined)}
       isLoading={isLoading}
       emptyText={emptyText}
+      selection={selection}
     />
   )
 }

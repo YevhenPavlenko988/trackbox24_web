@@ -4,10 +4,12 @@ import { unwrap } from '@/lib/api/problem'
 import type {
   ParcelCreateRequest,
   ParcelHistoryResponse,
+  ParcelPaymentRequest,
   ParcelResponse,
   ParcelStatus,
   ParcelStatusChangeRequest,
   ParcelUpdateRequest,
+  PaymentStatus,
 } from '@/lib/api/types'
 
 export type ParcelListParams = PageParams & {
@@ -15,6 +17,8 @@ export type ParcelListParams = PageParams & {
   clientId?: number
   representativeId?: number
   needsEnrichment?: boolean
+  paymentStatus?: PaymentStatus
+  warehouseId?: number
   query?: string
 }
 
@@ -27,6 +31,8 @@ export async function listParcels(params: ParcelListParams): Promise<Page<Parcel
           clientId: params.clientId,
           representativeId: params.representativeId,
           needsEnrichment: params.needsEnrichment,
+          paymentStatus: params.paymentStatus,
+          warehouseId: params.warehouseId,
           query: params.query || undefined,
           page: params.page,
           size: params.size,
@@ -56,6 +62,10 @@ export function updateParcel(id: number, body: ParcelUpdateRequest): Promise<Par
 
 export function changeParcelStatus(id: number, body: ParcelStatusChangeRequest): Promise<ParcelResponse> {
   return unwrap(api.POST('/api/parcels/{id}/status', { params: { path: { id } }, body }))
+}
+
+export function setParcelPayment(id: number, body: ParcelPaymentRequest): Promise<ParcelResponse> {
+  return unwrap(api.PUT('/api/parcels/{id}/payment', { params: { path: { id } }, body }))
 }
 
 export function refreshParcelFromNp(id: number): Promise<ParcelResponse> {

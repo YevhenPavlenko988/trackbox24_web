@@ -14,9 +14,11 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { useAccess } from '@/features/auth/access'
 import { ClientPicker } from '@/features/clients/ClientPicker'
 import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
+import { PriceFields } from './PriceFields'
 import { useCreateParcel } from './queries'
 import { orUndefined, parseNumber } from './status'
 
@@ -40,6 +42,8 @@ const schema = z
     senderPhone: z.string().trim(),
     senderCity: z.string().trim(),
     notes: z.string().trim(),
+    deliveryPrice: numberField,
+    deliveryPriceCurrency: z.enum(['UAH', 'EUR']),
   })
   .superRefine((v, ctx) => {
     if (v.mode === 'ttn' && !/^\d{14}$/.test(v.npTtn)) {
@@ -68,11 +72,14 @@ export function ParcelCreatePage() {
       senderPhone: '',
       senderCity: '',
       notes: '',
+      deliveryPrice: '',
+      deliveryPriceCurrency: 'UAH',
     },
   })
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
   const mode = form.watch('mode')
+  const { isManager } = useAccess()
 
   const submit = form.handleSubmit(async (v) => {
     try {
@@ -89,6 +96,8 @@ export function ParcelCreatePage() {
         senderPhone: orUndefined(v.senderPhone),
         senderCity: orUndefined(v.senderCity),
         notes: orUndefined(v.notes),
+        deliveryPrice: isManager ? parseNumber(v.deliveryPrice) : undefined,
+        deliveryPriceCurrency: isManager && v.deliveryPrice ? v.deliveryPriceCurrency : undefined,
       })
       toast.success(t('common:common.saved'))
       navigate(`/parcels/${created.id}`, { replace: true })
@@ -199,6 +208,8 @@ export function ParcelCreatePage() {
                   <FieldErrorText error={errors.declaredValue} />
                 </Field>
               </div>
+
+              {isManager && <PriceFields form={form} />}
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field data-invalid={!!errors.senderName}>

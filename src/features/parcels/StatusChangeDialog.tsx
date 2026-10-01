@@ -10,6 +10,7 @@ import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { WarehouseSelect } from '@/features/warehouses/WarehouseSelect'
 import { useMutationError } from '@/lib/api/problem'
 import type { ParcelResponse, ParcelStatus } from '@/lib/api/types'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
@@ -21,9 +22,11 @@ const schema = z
     status: z.string().min(1, 'required'),
     force: z.boolean(),
     comment: z.string().trim(),
+    warehouseId: z.number().optional(),
   })
   .superRefine((v, ctx) => {
     if (v.force && !v.comment) ctx.addIssue({ code: 'custom', path: ['comment'], message: 'required' })
+    if (v.status === 'AT_WAREHOUSE' && v.warehouseId == null) ctx.addIssue({ code: 'custom', path: ['warehouseId'], message: 'required' })
   })
 
 type FormValues = z.infer<typeof schema>
@@ -45,20 +48,27 @@ export function StatusChangeDialog({
 }
 
 function StatusForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => void }) {
-  const { t } = useTranslation(['parcels', 'common'])
+  const { t } = useTranslation(['parcels', 'common', 'warehouses'])
   const change = useChangeParcelStatus(parcel.id!)
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { status: '', force: false, comment: '' } })
+  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { status: '', force: false, comment: '', warehouseId: undefined } })
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
   const force = form.watch('force')
+  const status = form.watch('status')
   const current = parcel.status
 
   const allowed = current ? TRANSITIONS[current] : []
-  const options = force ? PARCEL_STATUSES.filter((s) => s !== current) : allowed
+  // Same status is only meaningful for AT_WAREHOUSE (move between warehouses).
+  const options = force ? PARCEL_STATUSES.filter((s) => s !== current || s === 'AT_WAREHOUSE') : allowed
 
   const submit = form.handleSubmit(async (v) => {
     try {
-      await change.mutateAsync({ status: v.status as ParcelStatus, force: v.force, comment: v.comment || undefined })
+      await change.mutateAsync({
+        status: v.status as ParcelStatus,
+        force: v.force,
+        comment: v.comment || undefined,
+        warehouseId: v.status === 'AT_WAREHOUSE' ? v.warehouseId : undefined,
+      })
       toast.success(t('common:common.saved'))
       onClose()
     } catch (e) {
@@ -72,6 +82,7 @@ function StatusForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () =
         <DialogTitle>{t('parcels:statusDialog.title')}</DialogTitle>
         <DialogDescription className="flex items-center gap-2">
           {t('parcels:statusDialog.current')} <ParcelStatusBadge status={current} />
+          {parcel.warehouseName && <span className="text-xs">({parcel.warehouseName})</span>}
         </DialogDescription>
       </DialogHeader>
       <form onSubmit={submit} noValidate>
@@ -105,9 +116,7 @@ function StatusForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () =
                 <FieldLabel htmlFor="status">{t('parcels:statusDialog.newStatus')}</FieldLabel>
                 <Select value={field.value || null} onValueChange={(v) => field.onChange(v ?? '')}>
                   <SelectTrigger id="status" className="w-full" aria-invalid={!!errors.status}>
-                    <SelectValue>
-                      {field.value ? t(`common:parcelStatus.${field.value}`) : t('common:common.selectPlaceholder')}
-                    </SelectValue>
+                    <SelectValue>{field.value ? t(`common:parcelStatus.${field.value}`) : t('common:common.selectPlaceholder')}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {options.map((s) => (
@@ -122,6 +131,20 @@ function StatusForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () =
               </Field>
             )}
           />
+
+          {status === 'AT_WAREHOUSE' && (
+            <Controller
+              control={form.control}
+              name="warehouseId"
+              render={({ field }) => (
+                <Field data-invalid={!!errors.warehouseId}>
+                  <FieldLabel htmlFor="st-warehouse">{t('warehouses:fields.warehouse')}</FieldLabel>
+                  <WarehouseSelect id="st-warehouse" value={field.value} onChange={field.onChange} invalid={!!errors.warehouseId} />
+                  <FieldErrorText error={errors.warehouseId} />
+                </Field>
+              )}
+            />
+          )}
 
           <Field data-invalid={!!errors.comment}>
             <FieldLabel htmlFor="comment">

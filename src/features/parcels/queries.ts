@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { clientKeys } from '@/features/clients/queries'
-import type { ParcelCreateRequest, ParcelResponse, ParcelStatusChangeRequest, ParcelUpdateRequest } from '@/lib/api/types'
+import type { ParcelCreateRequest, ParcelPaymentRequest, ParcelResponse, ParcelStatusChangeRequest, ParcelUpdateRequest } from '@/lib/api/types'
 import {
   changeParcelStatus,
   createParcel,
@@ -8,6 +8,7 @@ import {
   getParcelHistory,
   listParcels,
   refreshParcelFromNp,
+  setParcelPayment,
   updateParcel,
   type ParcelListParams,
 } from './api'
@@ -61,4 +62,8 @@ export function useChangeParcelStatus(id: number) {
 
 export function useRefreshParcelFromNp(id: number) {
   return useParcelMutation(() => refreshParcelFromNp(id))
+}
+
+export function useSetParcelPayment(id: number) {
+  return useParcelMutation((body: ParcelPaymentRequest) => setParcelPayment(id, body))
 }

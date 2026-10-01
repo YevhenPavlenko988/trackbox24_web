@@ -25,8 +25,9 @@ export function fromDateTimeLocal(local: string): string | undefined {
   return local ? new Date(local).toISOString() : undefined
 }
 
-export function formatMoney(value?: number): string {
-  return value == null ? '—' : `${value.toLocaleString('uk-UA')} грн`
+export function formatMoney(value?: number, currency: 'UAH' | 'EUR' = 'UAH'): string {
+  if (value == null) return '—'
+  return `${value.toLocaleString('uk-UA')} ${currency === 'EUR' ? '€' : 'грн'}`
 }
 
 export function formatWeight(kg?: number): string {
