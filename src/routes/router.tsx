@@ -40,6 +40,10 @@ export const router = createBrowserRouter([
               { path: 'users', lazy: page(() => import('@/features/users/UsersListPage'), 'UsersListPage') },
               { path: 'cars', lazy: page(() => import('@/features/cars/CarsListPage'), 'CarsListPage') },
               { path: 'company', lazy: page(() => import('@/features/companies/MyCompanyPage'), 'MyCompanyPage') },
+              { path: 'planned-shipments', lazy: page(() => import('@/features/shipments/PlannedShipmentsListPage'), 'PlannedShipmentsListPage') },
+              { path: 'planned-shipments/:id', lazy: page(() => import('@/features/shipments/PlannedShipmentPage'), 'PlannedShipmentPage') },
+              { path: 'shipments', lazy: page(() => import('@/features/shipments/ShipmentsListPage'), 'ShipmentsListPage') },
+              { path: 'shipments/:id', lazy: page(() => import('@/features/shipments/ShipmentPage'), 'ShipmentPage') },
             ],
           },
           {

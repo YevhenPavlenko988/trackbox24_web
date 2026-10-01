@@ -1,4 +1,5 @@
 import { AlertCircle } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { DataTable, type Column } from '@/components/common/DataTable'
@@ -23,10 +24,14 @@ export function ParcelsTable({
   rows,
   isLoading,
   hideClient = false,
+  emptyText,
+  actions,
 }: {
   rows: ParcelResponse[]
   isLoading?: boolean
   hideClient?: boolean
+  emptyText?: ReactNode
+  actions?: (p: ParcelResponse) => ReactNode
 }) {
   const { t } = useTranslation(['parcels', 'common'])
   const navigate = useNavigate()
@@ -96,6 +101,20 @@ export function ParcelsTable({
         ),
     },
     { key: 'createdAt', header: t('common:common.createdAt'), cell: (p) => formatDateTime(p.createdAt) },
+    ...(actions
+      ? [
+          {
+            key: 'actions',
+            header: '',
+            className: 'w-12 text-right',
+            cell: (p: ParcelResponse) => (
+              <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                {actions(p)}
+              </div>
+            ),
+          },
+        ]
+      : []),
   ]
 
   return (
@@ -106,6 +125,7 @@ export function ParcelsTable({
       onRowClick={(p) => navigate(`/parcels/${p.id}`)}
       rowClassName={(p) => (isPaidStorageDue(p) ? 'bg-destructive/5' : undefined)}
       isLoading={isLoading}
+      emptyText={emptyText}
     />
   )
 }

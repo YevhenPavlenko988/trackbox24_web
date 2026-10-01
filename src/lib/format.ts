@@ -16,6 +16,15 @@ export function formatPhone(phone?: string): string {
   return m ? `+380 ${m[1]} ${m[2]} ${m[3]} ${m[4]}` : phone
 }
 
+/** ISO instant → value for <input type="datetime-local"> in the browser's timezone. */
+export function toDateTimeLocal(iso?: string): string {
+  return iso ? format(parseISO(iso), "yyyy-MM-dd'T'HH:mm") : ''
+}
+
+export function fromDateTimeLocal(local: string): string | undefined {
+  return local ? new Date(local).toISOString() : undefined
+}
+
 export function formatMoney(value?: number): string {
   return value == null ? '—' : `${value.toLocaleString('uk-UA')} грн`
 }

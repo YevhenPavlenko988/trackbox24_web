@@ -1,4 +1,4 @@
-import { Building2, LogOut, Package, Truck, Users, UsersRound, type LucideIcon } from 'lucide-react'
+import { Building2, CalendarClock, LogOut, Package, Route, Truck, Users, UsersRound, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { Button } from '@/components/ui/button'
@@ -24,6 +24,8 @@ type NavItem = { to: string; labelKey: string; icon: LucideIcon; roles: Role[] }
 const NAV: NavItem[] = [
   { to: '/parcels', labelKey: 'nav.parcels', icon: Package, roles: ['MANAGER'] },
   { to: '/clients', labelKey: 'nav.clients', icon: UsersRound, roles: ['MANAGER'] },
+  { to: '/planned-shipments', labelKey: 'nav.plannedShipments', icon: CalendarClock, roles: ['MANAGER'] },
+  { to: '/shipments', labelKey: 'nav.shipments', icon: Route, roles: ['MANAGER'] },
   { to: '/users', labelKey: 'nav.users', icon: Users, roles: ['MANAGER'] },
   { to: '/cars', labelKey: 'nav.cars', icon: Truck, roles: ['MANAGER'] },
   { to: '/company', labelKey: 'nav.company', icon: Building2, roles: ['MANAGER'] },

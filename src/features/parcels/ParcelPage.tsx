@@ -163,6 +163,22 @@ export function ParcelPage() {
                 { label: t('parcels:fields.senderPhone'), value: formatPhone(p.senderPhone) },
                 { label: t('parcels:fields.senderCity'), value: p.senderCity },
                 { label: t('parcels:fields.notes'), value: p.notes },
+                {
+                  label: t('shipments:fields.plannedShipment', { ns: 'shipments' }),
+                  value: p.plannedShipmentId != null ? (
+                    <Link to={`/planned-shipments/${p.plannedShipmentId}`} className="underline underline-offset-4">
+                      {t('shipments:planned.one', { ns: 'shipments', id: p.plannedShipmentId })}
+                    </Link>
+                  ) : undefined,
+                },
+                {
+                  label: t('shipments:actual.title', { ns: 'shipments' }),
+                  value: p.actualShipmentId != null ? (
+                    <Link to={`/shipments/${p.actualShipmentId}`} className="underline underline-offset-4">
+                      {t('shipments:actual.one', { ns: 'shipments', id: p.actualShipmentId })}
+                    </Link>
+                  ) : undefined,
+                },
                 { label: t('common:common.createdAt'), value: formatDateTime(p.createdAt) },
               ]}
             />

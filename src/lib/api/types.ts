@@ -24,6 +24,14 @@ export type CarRequest = Schemas['CarRequest']
 export type CarResponse = Schemas['CarResponse']
 export type SyncResult = Schemas['SyncResult']
 
+export type PlannedShipmentRequest = Schemas['PlannedShipmentRequest']
+export type PlannedShipmentResponse = Schemas['PlannedShipmentResponse']
+export type ActualShipmentStartRequest = Schemas['ActualShipmentStartRequest']
+export type ActualShipmentCompleteRequest = Schemas['ActualShipmentCompleteRequest']
+export type ActualShipmentResponse = Schemas['ActualShipmentResponse']
+export type PlannedShipmentStatus = NonNullable<PlannedShipmentResponse['status']>
+export type ActualShipmentStatus = NonNullable<ActualShipmentResponse['status']>
+
 export type Problem = Schemas['Problem']
 export type PageMetadata = Schemas['PageMetadata']
 
