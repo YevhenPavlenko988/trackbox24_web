@@ -1,6 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { getViewCompanyId } from '@/features/auth/companyView'
 import type { NovaPoshtaKeyRequest, Role, UserCreateRequest, UserResponse, UserUpdateRequest } from '@/lib/api/types'
-import { createUser, listUsers, setUserNovaPoshta, updateUser, type UserListParams } from './api'
+import { createUser, listUsers, resetUserPassword, setUserNovaPoshta, updateUser, type UserListParams } from './api'
 
 export const userKeys = {
   all: ['users'] as const,
@@ -15,8 +16,9 @@ export function useUsers(params: UserListParams) {
   })
 }
 
-export function useUsersByRole(role: Role, companyId?: number) {
-  const params: UserListParams = { role, companyId, size: 100 }
+/** Users with a role, for pickers; a platform admin in company mode must pass the company explicitly. */
+export function useUsersByRole(role: Role) {
+  const params: UserListParams = { role, companyId: getViewCompanyId() ?? undefined, size: 100 }
   return useQuery({
     queryKey: userKeys.list(params),
     queryFn: () => listUsers(params),
@@ -24,7 +26,7 @@ export function useUsersByRole(role: Role, companyId?: number) {
   })
 }
 
-function useUserMutation<TVars>(mutationFn: (vars: TVars) => Promise<UserResponse>) {
+function useUserMutation<TVars, TResult = UserResponse>(mutationFn: (vars: TVars) => Promise<TResult>) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn,
@@ -42,4 +44,8 @@ export function useUpdateUser(id: number) {
 
 export function useSetUserNovaPoshta(id: number) {
   return useUserMutation((body: NovaPoshtaKeyRequest) => setUserNovaPoshta(id, body))
+}
+
+export function useResetUserPassword(id: number) {
+  return useUserMutation((newPassword: string) => resetUserPassword(id, newPassword))
 }

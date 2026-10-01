@@ -3,8 +3,9 @@ import type { ParcelResponse, ParcelStatus } from '@/lib/api/types'
 // Mirrors ParcelStatus.TRANSITIONS on the backend.
 export const TRANSITIONS: Record<ParcelStatus, ParcelStatus[]> = {
   IN_NOVA_POSHTA: ['RECEIVED_BY_REPRESENTATIVE', 'CANCELLED'],
-  RECEIVED_BY_REPRESENTATIVE: ['IN_CAR', 'CANCELLED'],
-  IN_CAR: ['DELIVERED_TO_CLIENT', 'RECEIVED_BY_REPRESENTATIVE'],
+  RECEIVED_BY_REPRESENTATIVE: ['AT_WAREHOUSE', 'IN_CAR', 'CANCELLED'],
+  AT_WAREHOUSE: ['AT_WAREHOUSE', 'IN_CAR', 'DELIVERED_TO_CLIENT', 'CANCELLED'],
+  IN_CAR: ['DELIVERED_TO_CLIENT', 'AT_WAREHOUSE', 'RECEIVED_BY_REPRESENTATIVE'],
   DELIVERED_TO_CLIENT: [],
   CANCELLED: [],
 }
@@ -12,10 +13,14 @@ export const TRANSITIONS: Record<ParcelStatus, ParcelStatus[]> = {
 export const PARCEL_STATUSES: ParcelStatus[] = [
   'IN_NOVA_POSHTA',
   'RECEIVED_BY_REPRESENTATIVE',
+  'AT_WAREHOUSE',
   'IN_CAR',
   'DELIVERED_TO_CLIENT',
   'CANCELLED',
 ]
+
+/** Statuses from which a parcel can be planned into a trip or moved to a warehouse. */
+export const SHIPPABLE_STATUSES: ParcelStatus[] = ['RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE']
 
 export function isFinalStatus(status?: ParcelStatus): boolean {
   return status === 'DELIVERED_TO_CLIENT' || status === 'CANCELLED'
@@ -26,8 +31,9 @@ export function canEditParcel(p: ParcelResponse): boolean {
 }
 
 export function canEditSeatsAmount(p: ParcelResponse): boolean {
-  if (!p.seats?.length) return p.status === 'IN_NOVA_POSHTA' || p.status === 'RECEIVED_BY_REPRESENTATIVE'
-  return p.seats.every((s) => s.status === 'RECEIVED_BY_REPRESENTATIVE')
+  const unloaded = (s?: ParcelStatus) => s === 'IN_NOVA_POSHTA' || s === 'RECEIVED_BY_REPRESENTATIVE' || s === 'AT_WAREHOUSE'
+  if (!p.seats?.length) return unloaded(p.status)
+  return p.seats.every((s) => unloaded(s.status))
 }
 
 export function parseNumber(s?: string): number | undefined {

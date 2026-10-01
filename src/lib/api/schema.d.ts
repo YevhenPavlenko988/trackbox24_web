@@ -4,6 +4,27 @@
  */
 
 export interface paths {
+    "/api/warehouses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Склад за ID */
+        get: operations["get"];
+        /**
+         * Оновити склад
+         * @description Тільки MANAGER. Неактивний склад зникає з вибору, посилки на ньому лишаються.
+         */
+        put: operations["update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/users/{id}": {
         parameters: {
             query?: never;
@@ -12,12 +33,32 @@ export interface paths {
             cookie?: never;
         };
         /** Користувач за ID */
-        get: operations["get"];
+        get: operations["get_1"];
         /**
          * Оновити користувача
-         * @description Email, роль і пароль тут не змінюються.
+         * @description Email, роль і пароль тут не змінюються. Не можна вимкнути себе чи останнього активного менеджера компанії. Вимкнений користувач одразу втрачає доступ (його токени перестають діяти).
          */
-        put: operations["update"];
+        put: operations["update_1"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Скинути пароль користувача
+         * @description Менеджер — для користувачів своєї компанії, адмін — для будь-кого. Старий пароль не потрібен. Усі токени користувача перестають діяти.
+         */
+        put: operations["resetPassword"];
         post?: never;
         delete?: never;
         options?: never;
@@ -45,20 +86,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/planned-shipments/{id}": {
+    "/api/trips/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Планована відправка за ID */
-        get: operations["get_1"];
+        /** Рейс за ID */
+        get: operations["get_2"];
         /**
-         * Оновити плановану відправку
-         * @description Тільки в статусах PLANNED і CONFIRMED.
+         * Змінити план рейсу
+         * @description Тільки MANAGER, до виїзду. Машину й водія можна змінити лише до початку завантаження (PLANNED).
          */
-        put: operations["update_1"];
+        put: operations["update_2"];
         post?: never;
         delete?: never;
         options?: never;
@@ -74,13 +115,34 @@ export interface paths {
             cookie?: never;
         };
         /** Посилка за ID */
-        get: operations["get_2"];
+        get: operations["get_3"];
         /**
          * Редагувати / збагатити дані посилки
-         * @description Ручне доповнення даних, отриманих з НП. Поля зі значенням null не змінюються. `needsEnrichment: false` знімає прапорець.
+         * @description Ручне доповнення даних, отриманих з НП. Часткове оновлення: поля, яких немає в запиті (або null), не змінюються. `needsEnrichment: false` знімає прапорець.
          *     Кількість місць можна змінити, поки жодне місце не завантажено (місця додаються / прибираються з кінця).
          */
-        put: operations["update_2"];
+        put: operations["update_3"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parcels/{id}/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Оплата доставки
+         * @description PAID — оплачено: дата `paidAt` або, якщо не передана, зараз. Потрібна вказана ціна доставки.
+         *     UNPAID — скасувати оплату (дата очищається). Тільки MANAGER.
+         */
+        put: operations["setPayment"];
         post?: never;
         delete?: never;
         options?: never;
@@ -99,12 +161,12 @@ export interface paths {
          * Компанія за ID
          * @description Менеджер бачить тільки свою компанію.
          */
-        get: operations["get_3"];
+        get: operations["get_4"];
         /**
          * Оновити реквізити компанії
          * @description Менеджер може змінювати тільки свою компанію.
          */
-        put: operations["update_3"];
+        put: operations["update_4"];
         post?: never;
         delete?: never;
         options?: never;
@@ -160,9 +222,9 @@ export interface paths {
             cookie?: never;
         };
         /** Клієнт за ID */
-        get: operations["get_4"];
+        get: operations["get_5"];
         /** Оновити клієнта */
-        put: operations["update_4"];
+        put: operations["update_5"];
         post?: never;
         delete?: never;
         options?: never;
@@ -178,10 +240,57 @@ export interface paths {
             cookie?: never;
         };
         /** Машина за ID */
-        get: operations["get_5"];
+        get: operations["get_6"];
         /** Оновити машину */
-        put: operations["update_5"];
+        put: operations["update_6"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Список складів
+         * @description Для вибору складу при переміщенні — `active=true`.
+         */
+        get: operations["list"];
+        put?: never;
+        /**
+         * Додати склад
+         * @description Тільки MANAGER.
+         */
+        post: operations["create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/warehouses/{id}/parcels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Перемістити посилки на склад (списком)
+         * @description Кілька посилок одразу, без сканування (мультиселект); переміщаються всі місця кожної посилки.
+         *     Усе або нічого: якщо хоч одну посилку перемістити не можна — нічого не змінюється.
+         *     Хто може: з «отримано представником» — представник або менеджер; з машини — водій або менеджер;
+         *     з іншого складу — менеджер. Посилки на складі — `GET /api/parcels?warehouseId={id}`.
+         */
+        post: operations["moveParcels"];
         delete?: never;
         options?: never;
         head?: never;
@@ -199,13 +308,153 @@ export interface paths {
          * Список користувачів
          * @description Фільтр за роллю. `companyId` використовується тільки адміном.
          */
-        get: operations["list"];
+        get: operations["list_1"];
         put?: never;
         /**
          * Створити користувача
          * @description ADMIN створює будь-кого (для не-адміна потрібен `companyId`). MANAGER — менеджерів, представників і водіїв своєї компанії.
          */
-        post: operations["create"];
+        post: operations["create_1"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Список рейсів
+         * @description Водій бачить тільки свої. Рейси, у які можна вантажити: `status=PLANNED` або `status=PREPARING`.
+         */
+        get: operations["list_2"];
+        put?: never;
+        /**
+         * Створити рейс
+         * @description Статус PLANNED. Менеджер планує рейс для будь-якого водія й машини (`plannedDepartureAt` обов'язково;
+         *     машину й водія можна призначити пізніше, але до завантаження). Водій створює рейс собі на своїй машині
+         *     (за замовчуванням — машина, закріплена за ним; виїзд — зараз).
+         */
+        post: operations["create_2"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/parcels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Посилки рейсу: план і факт
+         * @description Заплановані й завантажені посилки. `plannedTripId == id` і `tripId == id` — завантажена за планом;
+         *     `plannedTripId == id`, `tripId` порожній — запланована, але ще не завантажена (після виїзду таких немає);
+         *     `tripId == id`, `plannedTripId` інший — завантажена поза планом.
+         */
+        get: operations["parcels"];
+        put?: never;
+        /**
+         * Запланувати посилки в рейс
+         * @description Тільки MANAGER, у будь-який момент до виїзду. Посилки «отримані» або «на складі»; з іншого плану переплановуються.
+         */
+        post: operations["planParcels"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/depart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Виїхав
+         * @description Водій рейсу або менеджер. PLANNED/PREPARING → IN_PROGRESS; після цього вантажити в рейс не можна.
+         *     Заплановані, але не завантажені посилки лишаються на складі й знімаються з плану рейсу.
+         */
+        post: operations["depart"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Завершити рейс
+         * @description Водій рейсу або менеджер, з IN_PROGRESS. Якщо в машині ще є невидані посилки — 409 зі списком
+         *     `undeliveredParcels`: їх треба перемістити на склад (`POST /api/scan/to-warehouse` або
+         *     `POST /api/warehouses/{id}/parcels`), після чого завершити рейс.
+         */
+        post: operations["complete"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Скасувати рейс
+         * @description Тільки MANAGER, будь-який незавершений рейс. Посилки, що в машині, йдуть на склад `warehouseId`
+         *     (або в RECEIVED_BY_REPRESENTATIVE); план рейсу звільняється.
+         */
+        post: operations["cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/scan/to-warehouse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * На склад
+         * @description Обрати склад (`warehouseId`, обов'язково; список — `GET /api/warehouses?active=true`) і сканувати етикетку кожного місця.
+         *     Посилка стає AT_WAREHOUSE, коли всі місця на складі. Хто може:
+         *     з «отримано представником» — представник або менеджер; з машини (не забрали) — водій або менеджер;
+         *     з одного складу на інший — менеджер. Посилка, що вийшла з машини, відв'язується від рейсу.
+         *     Кілька посилок одразу без скану — `POST /api/warehouses/{id}/parcels`.
+         */
+        post: operations["toWarehouse"];
         delete?: never;
         options?: never;
         head?: never;
@@ -245,9 +494,12 @@ export interface paths {
         put?: never;
         /**
          * В машині
-         * @description Водій сканує етикетку кожного місця при завантаженні. Посилка стає IN_CAR, коли завантажені всі місця
-         *     (прогрес видно в `seats`). Для одномісної посилки підходить і штрих-код посилки.
-         *     Якщо в водія є рейс у процесі, посилка прив'язується до нього.
+         * @description Завантаження формує факт рейсу. Водій або представник обирає рейс (`tripId`, обов'язково; рейси, у які можна
+         *     вантажити — `GET /api/trips?status=PLANNED` або `PREPARING`) і сканує етикетку кожного місця.
+         *     Водій вантажить лише у свій рейс, представник і менеджер — у будь-який. Перший скан переводить рейс у PREPARING.
+         *     Посилка стає IN_CAR і отримує `tripId`, коли завантажені всі місця (прогрес видно в `seats`).
+         *     Можна завантажити будь-яку отриману посилку; поза планом рейсу — з позначкою в історії.
+         *     Для одномісної посилки підходить і штрих-код посилки.
          */
         post: operations["load"];
         delete?: never;
@@ -268,94 +520,11 @@ export interface paths {
         /**
          * Отримано клієнтом
          * @description Водій сканує кожне місце і підтверджує видачу. Посилка стає DELIVERED_TO_CLIENT, коли видані всі місця.
-         *     Місце має бути в машині (IN_CAR).
+         *     Видати можна з машини (IN_CAR) або прямо зі складу (AT_WAREHOUSE); хто видав — фіксується в історії.
+         *     `paymentReceived: true` — водій отримав оплату нашої доставки: посилка стає оплаченою (дата — зараз,
+         *     `paidBy` — водій). Без вказаної ціни такий запит відхиляється і нічого не змінює.
          */
         post: operations["deliver"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/planned-shipments": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Список планованих відправок
-         * @description Водій бачить тільки свої.
-         */
-        get: operations["list_1"];
-        put?: never;
-        /**
-         * Створити плановану відправку
-         * @description Статус PLANNED. Машину і водія можна призначити пізніше.
-         */
-        post: operations["create_1"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/planned-shipments/{id}/parcels": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Посилки відправки */
-        get: operations["getParcels"];
-        put?: never;
-        /**
-         * Додати посилки у відправку
-         * @description Тільки отримані представником посилки (RECEIVED_BY_REPRESENTATIVE). Повертає всі посилки відправки.
-         */
-        post: operations["addParcels"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/planned-shipments/{id}/confirm": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Підтвердити
-         * @description PLANNED → CONFIRMED. Потрібні машина і водій.
-         */
-        post: operations["confirm"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/planned-shipments/{id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Скасувати
-         * @description Посилки відв'язуються від відправки.
-         */
-        post: operations["cancel"];
         delete?: never;
         options?: never;
         head?: never;
@@ -382,7 +551,7 @@ export interface paths {
          *     Без ТТН посилка одразу вважається отриманою представником і отримує наш штрих-код.
          *     Без `clientId` позначається як така, що потребує збагачення.
          */
-        post: operations["create_2"];
+        post: operations["create_3"];
         delete?: never;
         options?: never;
         head?: never;
@@ -401,8 +570,9 @@ export interface paths {
         /**
          * Змінити статус вручну
          * @description Ручний режим, коли сканер недоступний. Тільки MANAGER.
-         *     Звичайний флоу: IN_NOVA_POSHTA → RECEIVED_BY_REPRESENTATIVE → IN_CAR → DELIVERED_TO_CLIENT
-         *     (а також IN_CAR → RECEIVED_BY_REPRESENTATIVE і скасування до завантаження).
+         *     Звичайний флоу: IN_NOVA_POSHTA → RECEIVED_BY_REPRESENTATIVE → (AT_WAREHOUSE) → IN_CAR → DELIVERED_TO_CLIENT;
+         *     також AT_WAREHOUSE → DELIVERED_TO_CLIENT (видача зі складу), IN_CAR → AT_WAREHOUSE (не забрали),
+         *     переміщення між складами і скасування до завантаження. Для AT_WAREHOUSE потрібен `warehouseId`.
          *     `force = true` з обов'язковим коментарем дозволяє виправити помилку поза флоу.
          *     Статус застосовується до всіх місць посилки.
          */
@@ -464,13 +634,13 @@ export interface paths {
          * Список компаній
          * @description Тільки ADMIN.
          */
-        get: operations["list_2"];
+        get: operations["list_3"];
         put?: never;
         /**
          * Створити компанію
          * @description Тільки ADMIN.
          */
-        post: operations["create_3"];
+        post: operations["create_4"];
         delete?: never;
         options?: never;
         head?: never;
@@ -492,9 +662,9 @@ export interface paths {
         put?: never;
         /**
          * Створити клієнта
-         * @description Клієнт — кінцевий отримувач, якому водій видає посилку. Телефон унікальний у межах компанії.
+         * @description Клієнт — кінцевий отримувач, якому водій видає посилку. Телефон унікальний у межах компанії. Менеджер або представник (для збагачення посилок).
          */
-        post: operations["create_4"];
+        post: operations["create_5"];
         delete?: never;
         options?: never;
         head?: never;
@@ -509,10 +679,30 @@ export interface paths {
             cookie?: never;
         };
         /** Список машин */
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         /** Додати машину */
-        post: operations["create_5"];
+        post: operations["create_6"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Змінити свій пароль
+         * @description Потрібен поточний пароль. Усі видані раніше токени (зокрема на інших пристроях) перестають діяти; у відповіді — новий токен, щоб лишитися в системі.
+         */
+        post: operations["changePassword"];
         delete?: never;
         options?: never;
         head?: never;
@@ -539,7 +729,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/actual-shipments": {
+    "/api/trips/{id}/history": {
         parameters: {
             query?: never;
             header?: never;
@@ -547,56 +737,14 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Список рейсів
-         * @description Водій бачить тільки свої.
+         * Історія рейсу
+         * @description Журнал подій від старого до нового: створення й зміни плану, зміни статусу (з якого моменту почали вантажити,
+         *     виїзд з одометром, завершення, скасування), посилки — заплановано / прибрано з плану (вручну, при виїзді як
+         *     незавантажену, при скасуванні) / завантажено / видано / вивантажено на склад. Хто і коли — у кожному записі.
          */
-        get: operations["list_4"];
+        get: operations["history"];
         put?: never;
-        /**
-         * Почати рейс
-         * @description З `plannedShipmentId` машина, водій і посилки беруться з підтвердженої планованої відправки (вона стає STARTED). Без нього — неплановий рейс, потрібні `carId` і `driverId`.
-         */
-        post: operations["start"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/actual-shipments/{id}/complete": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Завершити рейс
-         * @description Фіксує час прибуття і одометр.
-         */
-        post: operations["complete"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/actual-shipments/{id}/cancel": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Скасувати рейс
-         * @description Тільки MANAGER.
-         */
-        post: operations["cancel_1"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -654,7 +802,27 @@ export interface paths {
          * Історія статусів
          * @description Усі зміни внутрішнього статусу і статусу НП у хронологічному порядку: коли, хто, як (SCAN / MANUAL / NOVA_POSHTA / SYSTEM).
          */
-        get: operations["history"];
+        get: operations["history_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/current": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Моя компанія
+         * @description Реквізити компанії поточного користувача, без знання її ID. Для будь-якої ролі компанії; адмін платформи передає X-Company-Id.
+         */
+        get: operations["current"];
         put?: never;
         post?: never;
         delete?: never;
@@ -674,7 +842,7 @@ export interface paths {
          * Історія посилок клієнта
          * @description Усі посилки клієнта, нові зверху. Можна відфільтрувати за статусом.
          */
-        get: operations["parcels"];
+        get: operations["parcels_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -703,41 +871,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/actual-shipments/{id}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Рейс за ID */
-        get: operations["get_6"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/actual-shipments/{id}/parcels": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Посилки рейсу */
-        get: operations["getParcels_1"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/planned-shipments/{id}/parcels/{parcelId}": {
+    "/api/trips/{id}/parcels/{parcelId}": {
         parameters: {
             query?: never;
             header?: never;
@@ -747,8 +881,11 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        /** Прибрати посилку з відправки */
-        delete: operations["removeParcel"];
+        /**
+         * Прибрати посилку з плану рейсу
+         * @description Тільки MANAGER, до виїзду.
+         */
+        delete: operations["unplanParcel"];
         options?: never;
         head?: never;
         patch?: never;
@@ -758,6 +895,56 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        WarehouseRequest: {
+            /**
+             * @description Назва складу, унікальна в межах компанії
+             * @example Київ, Пирогівський шлях
+             */
+            name: string;
+            /**
+             * @description Адреса
+             * @example м. Київ, Пирогівський шлях, 135
+             */
+            address?: string;
+            /**
+             * @description Примітки
+             * @example Вхід з двору, працює 9-18
+             */
+            notes?: string;
+            /**
+             * @description Склад працює; на неактивний не можна переміщати посилки. Не передано — true
+             * @example true
+             */
+            active?: boolean;
+        };
+        WarehouseResponse: {
+            /**
+             * Format: int64
+             * @description ID складу
+             * @example 2
+             */
+            id?: number;
+            /**
+             * @description Назва складу
+             * @example Київ, Пирогівський шлях
+             */
+            name?: string;
+            /**
+             * @description Адреса
+             * @example м. Київ, Пирогівський шлях, 135
+             */
+            address?: string;
+            /**
+             * @description Примітки
+             * @example Вхід з двору, працює 9-18
+             */
+            notes?: string;
+            /**
+             * @description Склад працює
+             * @example true
+             */
+            active?: boolean;
+        };
         UserUpdateRequest: {
             /**
              * @description Ім'я
@@ -780,10 +967,23 @@ export interface components {
              */
             driverLicenseNumber?: string;
             /**
-             * @description Активний; неактивний користувач не може увійти
+             * @description Активний; неактивний користувач не може увійти. Не передано — не змінюється
              * @example true
              */
             active?: boolean;
+            /**
+             * @description Нові ролі (замінюють поточні); не передано — не змінюються. Після зміни токени користувача відкликаються
+             * @example [
+             *       "REPRESENTATIVE",
+             *       "DRIVER"
+             *     ]
+             */
+            roles?: ("ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER")[];
+            /**
+             * @description Примітки; не передано — не змінюються
+             * @example Працює лише у вихідні
+             */
+            notes?: string;
         };
         UserResponse: {
             /**
@@ -819,11 +1019,13 @@ export interface components {
              */
             phone?: string;
             /**
-             * @description Роль
-             * @example REPRESENTATIVE
-             * @enum {string}
+             * @description Ролі користувача
+             * @example [
+             *       "REPRESENTATIVE",
+             *       "DRIVER"
+             *     ]
              */
-            role?: "ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER";
+            roles?: ("ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER")[];
             /**
              * @description Номер посвідчення водія
              * @example ВХК123456
@@ -844,6 +1046,18 @@ export interface components {
              * @example true
              */
             active?: boolean;
+            /**
+             * @description Примітки
+             * @example Працює лише у вихідні
+             */
+            notes?: string;
+        };
+        PasswordResetRequest: {
+            /**
+             * @description Новий пароль користувача, 8-100 символів
+             * @example Temp-pass-2026
+             */
+            newPassword: string;
         };
         NovaPoshtaKeyRequest: {
             /**
@@ -857,25 +1071,25 @@ export interface components {
              */
             syncEnabled?: boolean;
         };
-        PlannedShipmentRequest: {
+        TripRequest: {
             /**
              * Format: int64
-             * @description ID машини; обов'язково до підтвердження
+             * @description ID машини; до завантаження обов'язково. Водій може взяти тільки свою машину (за замовчуванням — її)
              * @example 2
              */
             carId?: number;
             /**
              * Format: int64
-             * @description ID водія; обов'язково до підтвердження
+             * @description ID водія; до завантаження обов'язково. Для водія — він сам
              * @example 5
              */
             driverId?: number;
             /**
              * Format: date-time
-             * @description Запланований виїзд
+             * @description Запланований виїзд; менеджеру обов'язково, водієві — зараз за замовчуванням
              * @example 2026-10-03T06:00:00Z
              */
-            plannedDepartureAt: string;
+            plannedDepartureAt?: string;
             /**
              * Format: date-time
              * @description Заплановане прибуття (не раніше виїзду)
@@ -898,13 +1112,19 @@ export interface components {
              */
             notes?: string;
         };
-        PlannedShipmentResponse: {
+        TripResponse: {
             /**
              * Format: int64
-             * @description ID планованої відправки
-             * @example 4
+             * @description ID рейсу
+             * @example 6
              */
             id?: number;
+            /**
+             * @description Статус: PLANNED → PREPARING (почали вантажити) → IN_PROGRESS (виїхав) → COMPLETED, або CANCELLED
+             * @example PREPARING
+             * @enum {string}
+             */
+            status?: "PLANNED" | "PREPARING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
             /**
              * Format: int64
              * @description ID машини
@@ -950,16 +1170,34 @@ export interface components {
              */
             destination?: string;
             /**
-             * @description Статус: PLANNED → CONFIRMED → STARTED, або CANCELLED
-             * @example CONFIRMED
-             * @enum {string}
-             */
-            status?: "PLANNED" | "CONFIRMED" | "STARTED" | "CANCELLED";
-            /**
              * @description Примітки
              * @example Забрати документи на кордоні
              */
             notes?: string;
+            /**
+             * Format: date-time
+             * @description Фактичний виїзд
+             * @example 2026-10-03T06:30:00Z
+             */
+            departedAt?: string;
+            /**
+             * Format: date-time
+             * @description Фактичне завершення
+             * @example 2026-10-03T19:10:00Z
+             */
+            arrivedAt?: string;
+            /**
+             * Format: int32
+             * @description Одометр на виїзді, км
+             * @example 152340
+             */
+            startOdometerKm?: number;
+            /**
+             * Format: int32
+             * @description Одометр на фініші, км
+             * @example 153180
+             */
+            endOdometerKm?: number;
         };
         ParcelUpdateRequest: {
             /**
@@ -996,6 +1234,17 @@ export interface components {
              */
             declaredValue?: number;
             /**
+             * @description Наша ціна доставки (вводиться вручну)
+             * @example 350
+             */
+            deliveryPrice?: number;
+            /**
+             * @description Валюта ціни доставки; якщо ціну вказано без валюти — UAH
+             * @example UAH
+             * @enum {string}
+             */
+            deliveryPriceCurrency?: "UAH" | "EUR";
+            /**
              * @description ПІБ відправника
              * @example Петренко Олег
              */
@@ -1016,7 +1265,7 @@ export interface components {
              */
             notes?: string;
             /**
-             * @description Залишити прапорець «треба збагатити дані»; false — дані заповнено
+             * @description false — дані заповнено (зняти прапорець), true — знову позначити; не передано — не змінюється
              * @example false
              */
             needsEnrichment?: boolean;
@@ -1044,7 +1293,7 @@ export interface components {
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус
@@ -1089,6 +1338,16 @@ export interface components {
              */
             clientPhone?: string;
             /**
+             * @description Місто доставки клієнту
+             * @example Варшава
+             */
+            clientCity?: string;
+            /**
+             * @description Адреса доставки клієнту
+             * @example ul. Marszałkowska 10
+             */
+            clientAddress?: string;
+            /**
              * @description Опис вмісту
              * @example Взуття
              */
@@ -1109,6 +1368,34 @@ export interface components {
              * @example 1500
              */
             declaredValue?: number;
+            /**
+             * @description Наша ціна доставки
+             * @example 350
+             */
+            deliveryPrice?: number;
+            /**
+             * @description Валюта ціни доставки
+             * @example UAH
+             * @enum {string}
+             */
+            deliveryPriceCurrency?: "UAH" | "EUR";
+            /**
+             * @description Статус оплати нашої доставки
+             * @example PAID
+             * @enum {string}
+             */
+            paymentStatus?: "UNPAID" | "PAID";
+            /**
+             * Format: date-time
+             * @description Коли оплачено
+             * @example 2026-10-03T15:20:00Z
+             */
+            paidAt?: string;
+            /**
+             * @description Хто прийняв оплату
+             * @example Андрій Шевчук
+             */
+            paidBy?: string;
             /**
              * @description ПІБ відправника
              * @example Петренко Олег
@@ -1205,16 +1492,27 @@ export interface components {
             seats?: components["schemas"]["ParcelSeatResponse"][];
             /**
              * Format: int64
-             * @description ID планованої відправки
-             * @example 4
+             * @description Склад, де лежить посилка (статус AT_WAREHOUSE, усі місця на одному складі)
+             * @example 2
              */
-            plannedShipmentId?: number;
+            warehouseId?: number;
+            /**
+             * @description Назва складу
+             * @example Київ, Пирогівський шлях
+             */
+            warehouseName?: string;
             /**
              * Format: int64
-             * @description ID фактичного рейсу
+             * @description Рейс, у плані якого посилка
              * @example 6
              */
-            actualShipmentId?: number;
+            plannedTripId?: number;
+            /**
+             * Format: int64
+             * @description Рейс, у який посилку фактично завантажено (скан); null — не завантажена
+             * @example 6
+             */
+            tripId?: number;
             /**
              * Format: date-time
              * @description Дата створення в системі
@@ -1239,7 +1537,7 @@ export interface components {
              * @example IN_CAR
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус місця
@@ -1251,6 +1549,31 @@ export interface components {
              * @example Андрій Шевчук
              */
             statusChangedBy?: string;
+            /**
+             * Format: int64
+             * @description Склад, де лежить місце (AT_WAREHOUSE)
+             * @example 2
+             */
+            warehouseId?: number;
+            /**
+             * @description Назва складу
+             * @example Київ, Пирогівський шлях
+             */
+            warehouseName?: string;
+        };
+        ParcelPaymentRequest: {
+            /**
+             * @description Статус оплати нашої доставки
+             * @example PAID
+             * @enum {string}
+             */
+            status: "UNPAID" | "PAID";
+            /**
+             * Format: date-time
+             * @description Коли оплачено (для PAID); не передано — зараз
+             * @example 2026-10-03T15:20:00Z
+             */
+            paidAt?: string;
         };
         CompanyRequest: {
             /**
@@ -1279,6 +1602,11 @@ export interface components {
              * @example м. Київ, вул. Хрещатик, 1
              */
             address?: string;
+            /**
+             * @description Примітки; при оновленні не передано — не змінюються
+             * @example Оплата за договором до 10 числа
+             */
+            notes?: string;
         };
         CompanyResponse: {
             /**
@@ -1328,6 +1656,11 @@ export interface components {
              * @example 2026-10-01T08:30:00Z
              */
             createdAt?: string;
+            /**
+             * @description Примітки
+             * @example Оплата за договором до 10 числа
+             */
+            notes?: string;
         };
         ClientRequest: {
             /**
@@ -1475,10 +1808,15 @@ export interface components {
              */
             defaultDriverId?: number;
             /**
-             * @description Машина в роботі
+             * @description Машина в роботі; не передано — нова машина активна, наявна не змінюється
              * @example true
              */
             active?: boolean;
+            /**
+             * @description Примітки; при оновленні не передано — не змінюються
+             * @example Не їздить у Польщу без страховки
+             */
+            notes?: string;
         };
         CarResponse: {
             /**
@@ -1528,6 +1866,27 @@ export interface components {
              * @example true
              */
             active?: boolean;
+            /**
+             * @description Примітки
+             * @example Не їздить у Польщу без страховки
+             */
+            notes?: string;
+        };
+        WarehouseParcelsRequest: {
+            /**
+             * @description ID посилок, які переміщаються на склад (усі місця кожної посилки)
+             * @example [
+             *       10,
+             *       11,
+             *       12
+             *     ]
+             */
+            parcelIds: number[];
+            /**
+             * @description Коментар до переміщення
+             * @example Не забрали, повертаємо на склад
+             */
+            comment?: string;
         };
         UserCreateRequest: {
             /**
@@ -1563,16 +1922,55 @@ export interface components {
              */
             phone?: string;
             /**
-             * @description Роль
-             * @example REPRESENTATIVE
-             * @enum {string}
+             * @description Ролі (одна або кілька; права — об'єднання прав ролей). ADMIN не поєднується з іншими ролями
+             * @example [
+             *       "REPRESENTATIVE",
+             *       "DRIVER"
+             *     ]
              */
-            role: "ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER";
+            roles: ("ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER")[];
             /**
              * @description Номер посвідчення водія (для водіїв)
              * @example ВХК123456
              */
             driverLicenseNumber?: string;
+            /**
+             * @description Примітки; при оновленні не передано — не змінюються
+             * @example Працює лише у вихідні
+             */
+            notes?: string;
+        };
+        ParcelIdsRequest: {
+            /**
+             * @description ID посилок; всі мають бути в статусі RECEIVED_BY_REPRESENTATIVE
+             * @example [
+             *       10,
+             *       11,
+             *       12
+             *     ]
+             */
+            parcelIds: number[];
+        };
+        TripDepartRequest: {
+            /**
+             * Format: int32
+             * @description Показник одометра на виїзді, км
+             * @example 152340
+             */
+            startOdometerKm?: number;
+        };
+        TripCompleteRequest: {
+            /**
+             * Format: int32
+             * @description Показник одометра на фініші, км (не менше стартового)
+             * @example 153180
+             */
+            endOdometerKm?: number;
+            /**
+             * @description Примітки (замінюють попередні, якщо передані)
+             * @example Без пригод
+             */
+            notes?: string;
         };
         ScanRequest: {
             /**
@@ -1590,17 +1988,23 @@ export interface components {
              * @example Пошкоджена упаковка
              */
             comment?: string;
-        };
-        ParcelIdsRequest: {
             /**
-             * @description ID посилок; всі мають бути в статусі RECEIVED_BY_REPRESENTATIVE
-             * @example [
-             *       10,
-             *       11,
-             *       12
-             *     ]
+             * Format: int64
+             * @description Тільки для завантаження, обов'язково: рейс (PLANNED або PREPARING), у який вантажать. Водій — лише свій рейс, представник і менеджер — будь-який
+             * @example 6
              */
-            parcelIds: number[];
+            tripId?: number;
+            /**
+             * @description Тільки для видачі: водій отримав оплату нашої доставки. Посилка стає оплаченою (потрібна вказана ціна)
+             * @example true
+             */
+            paymentReceived?: boolean;
+            /**
+             * Format: int64
+             * @description Тільки для переміщення на склад, обов'язково: склад, куди переміщають
+             * @example 2
+             */
+            warehouseId?: number;
         };
         ParcelCreateRequest: {
             /**
@@ -1642,6 +2046,17 @@ export interface components {
              */
             declaredValue?: number;
             /**
+             * @description Наша ціна доставки (вводиться вручну)
+             * @example 350
+             */
+            deliveryPrice?: number;
+            /**
+             * @description Валюта ціни доставки; якщо ціну вказано без валюти — UAH
+             * @example UAH
+             * @enum {string}
+             */
+            deliveryPriceCurrency?: "UAH" | "EUR";
+            /**
              * @description ПІБ відправника
              * @example Петренко Олег
              */
@@ -1673,7 +2088,7 @@ export interface components {
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * @description Коментар; обов'язковий при force=true
              * @example Забрали з відділення, сканер не працював
@@ -1684,6 +2099,12 @@ export interface components {
              * @example false
              */
             force?: boolean;
+            /**
+             * Format: int64
+             * @description Склад; обов'язково для статусу AT_WAREHOUSE
+             * @example 2
+             */
+            warehouseId?: number;
         };
         SyncResult: {
             /**
@@ -1705,6 +2126,36 @@ export interface components {
              */
             failures?: number;
         };
+        ChangePasswordRequest: {
+            /**
+             * @description Поточний пароль
+             * @example manager123
+             */
+            currentPassword: string;
+            /**
+             * @description Новий пароль, 8-100 символів
+             * @example N3w-secret!
+             */
+            newPassword: string;
+        };
+        TokenResponse: {
+            /**
+             * @description JWT токен; передавати в заголовку Authorization: Bearer <токен>
+             * @example eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIyIn0.signature
+             */
+            accessToken?: string;
+            /**
+             * @description Тип токена
+             * @example Bearer
+             */
+            tokenType?: string;
+            /**
+             * Format: int64
+             * @description Час життя токена, секунд
+             * @example 43200
+             */
+            expiresIn?: number;
+        };
         LoginRequest: {
             /**
              * Format: email
@@ -1718,129 +2169,6 @@ export interface components {
              */
             password: string;
         };
-        ActualShipmentStartRequest: {
-            /**
-             * Format: int64
-             * @description ID підтвердженої планованої відправки; машина, водій і посилки беруться з неї
-             * @example 4
-             */
-            plannedShipmentId?: number;
-            /**
-             * Format: int64
-             * @description ID машини; обов'язково для непланового рейсу
-             * @example 2
-             */
-            carId?: number;
-            /**
-             * Format: int64
-             * @description ID водія; для водія за замовчуванням — він сам
-             * @example 5
-             */
-            driverId?: number;
-            /**
-             * Format: int32
-             * @description Показник одометра на старті, км
-             * @example 152340
-             */
-            startOdometerKm?: number;
-            /**
-             * @description Явний список посилок замість посилок з плану
-             * @example [
-             *       10,
-             *       11
-             *     ]
-             */
-            parcelIds?: number[];
-            /**
-             * @description Примітки
-             * @example Виїхали на 30 хв пізніше
-             */
-            notes?: string;
-        };
-        ActualShipmentResponse: {
-            /**
-             * Format: int64
-             * @description ID рейсу
-             * @example 6
-             */
-            id?: number;
-            /**
-             * Format: int64
-             * @description ID планованої відправки; null для непланового рейсу
-             * @example 4
-             */
-            plannedShipmentId?: number;
-            /**
-             * Format: int64
-             * @description ID машини
-             * @example 2
-             */
-            carId?: number;
-            /**
-             * @description Держномер машини
-             * @example AA1234BB
-             */
-            carPlateNumber?: string;
-            /**
-             * Format: int64
-             * @description ID водія
-             * @example 5
-             */
-            driverId?: number;
-            /**
-             * @description Ім'я водія
-             * @example Андрій Шевчук
-             */
-            driverName?: string;
-            /**
-             * Format: date-time
-             * @description Фактичний виїзд
-             * @example 2026-10-03T06:30:00Z
-             */
-            departedAt?: string;
-            /**
-             * Format: date-time
-             * @description Фактичне прибуття
-             * @example 2026-10-03T19:10:00Z
-             */
-            arrivedAt?: string;
-            /**
-             * Format: int32
-             * @description Одометр на старті, км
-             * @example 152340
-             */
-            startOdometerKm?: number;
-            /**
-             * Format: int32
-             * @description Одометр на фініші, км
-             * @example 153180
-             */
-            endOdometerKm?: number;
-            /**
-             * @description Статус рейсу
-             * @example IN_PROGRESS
-             * @enum {string}
-             */
-            status?: "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-            /**
-             * @description Примітки
-             * @example Виїхали на 30 хв пізніше
-             */
-            notes?: string;
-        };
-        ActualShipmentCompleteRequest: {
-            /**
-             * Format: int32
-             * @description Показник одометра на фініші, км (не менше стартового)
-             * @example 153180
-             */
-            endOdometerKm?: number;
-            /**
-             * @description Примітки (замінюють попередні, якщо передані)
-             * @example Без пригод
-             */
-            notes?: string;
-        };
         PageMetadata: {
             /** Format: int64 */
             size?: number;
@@ -1851,9 +2179,76 @@ export interface components {
             /** Format: int64 */
             totalPages?: number;
         };
+        PagedModelWarehouseResponse: {
+            content?: components["schemas"]["WarehouseResponse"][];
+            page?: components["schemas"]["PageMetadata"];
+        };
         PagedModelUserResponse: {
             content?: components["schemas"]["UserResponse"][];
             page?: components["schemas"]["PageMetadata"];
+        };
+        PagedModelTripResponse: {
+            content?: components["schemas"]["TripResponse"][];
+            page?: components["schemas"]["PageMetadata"];
+        };
+        TripHistoryResponse: {
+            /**
+             * Format: int64
+             * @description ID запису
+             * @example 31
+             */
+            id?: number;
+            /**
+             * @description Подія: створення, зміна плану, зміна статусу, посилку заплановано / прибрано з плану / завантажено / видано / вивантажено
+             * @example PARCEL_LOADED
+             * @enum {string}
+             */
+            event?: "CREATED" | "UPDATED" | "STATUS_CHANGED" | "PARCEL_PLANNED" | "PARCEL_UNPLANNED" | "PARCEL_LOADED" | "PARCEL_DELIVERED" | "PARCEL_UNLOADED";
+            /**
+             * @description Статус рейсу до події (для STATUS_CHANGED)
+             * @example PLANNED
+             * @enum {string}
+             */
+            previousStatus?: "PLANNED" | "PREPARING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+            /**
+             * @description Статус рейсу після події
+             * @example PREPARING
+             * @enum {string}
+             */
+            status?: "PLANNED" | "PREPARING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+            /**
+             * Format: int64
+             * @description Посилка (для подій PARCEL_*)
+             * @example 10
+             */
+            parcelId?: number;
+            /**
+             * @description Штрих-код посилки
+             * @example PT0123456789
+             */
+            parcelBarcode?: string;
+            /**
+             * Format: int64
+             * @description ID користувача; null — автоматична подія
+             * @example 5
+             */
+            changedById?: number;
+            /**
+             * @description Хто
+             * @example Андрій Шевчук
+             */
+            changedByName?: string;
+            /**
+             * Format: date-time
+             * @description Коли
+             * @example 2026-10-03T06:10:00Z
+             */
+            changedAt?: string;
+            /**
+             * @description Коментар
+             * @example Not loaded before departure
+             */
+            comment?: string;
         };
         PublicTrackingResponse: {
             /**
@@ -1866,17 +2261,13 @@ export interface components {
              * @example IN_CAR
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус
              * @example 2026-10-01T08:30:00Z
              */
             statusChangedAt?: string;
-        };
-        PagedModelPlannedShipmentResponse: {
-            content?: components["schemas"]["PlannedShipmentResponse"][];
-            page?: components["schemas"]["PageMetadata"];
         };
         PagedModelParcelResponse: {
             content?: components["schemas"]["ParcelResponse"][];
@@ -1900,13 +2291,24 @@ export interface components {
              * @example IN_NOVA_POSHTA
              * @enum {string}
              */
-            previousStatus?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            previousStatus?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * @description Внутрішній статус після зміни
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            /**
+             * Format: int64
+             * @description Склад після зміни (для AT_WAREHOUSE)
+             * @example 2
+             */
+            warehouseId?: number;
+            /**
+             * @description Назва складу
+             * @example Київ, Пирогівський шлях
+             */
+            warehouseName?: string;
             /**
              * @description Код статусу НП на момент зміни
              * @example 7
@@ -1958,10 +2360,6 @@ export interface components {
             content?: components["schemas"]["CarResponse"][];
             page?: components["schemas"]["PageMetadata"];
         };
-        PagedModelActualShipmentResponse: {
-            content?: components["schemas"]["ActualShipmentResponse"][];
-            page?: components["schemas"]["PageMetadata"];
-        };
         /** @description Опис помилки (RFC 9457) */
         Problem: {
             /** @example about:blank */
@@ -2002,6 +2400,211 @@ export interface components {
 export type $defs = Record<string, never>;
 export interface operations {
     get: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WarehouseResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/warehouses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/warehouses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/warehouses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/warehouses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarehouseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WarehouseResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/warehouses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/warehouses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/warehouses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/warehouses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2094,7 +2697,7 @@ export interface operations {
             };
         };
     };
-    update: {
+    update_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -2193,6 +2796,110 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/users/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    resetPassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PasswordResetRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/users/{id}/password"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/users/{id}/password"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/users/{id}/password"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/users/{id}/password"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -2324,10 +3031,16 @@ export interface operations {
             };
         };
     };
-    get_1: {
+    get_2: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path: {
                 id: number;
             };
@@ -2341,7 +3054,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PlannedShipmentResponse"];
+                    "*/*": components["schemas"]["TripResponse"];
                 };
             };
             /** @description Невалідний запит або дія недоступна в поточному стані */
@@ -2356,7 +3069,7 @@ export interface operations {
                      *       "title": "Bad Request",
                      *       "status": 400,
                      *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
-                     *       "instance": "/api/planned-shipments/{id}"
+                     *       "instance": "/api/trips/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -2373,7 +3086,7 @@ export interface operations {
                      *       "type": "about:blank",
                      *       "title": "Unauthorized",
                      *       "status": 401,
-                     *       "instance": "/api/planned-shipments/{id}"
+                     *       "instance": "/api/trips/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -2391,7 +3104,7 @@ export interface operations {
                      *       "title": "Forbidden",
                      *       "status": 403,
                      *       "detail": "Access Denied",
-                     *       "instance": "/api/planned-shipments/{id}"
+                     *       "instance": "/api/trips/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -2409,7 +3122,7 @@ export interface operations {
                      *       "title": "Not Found",
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/planned-shipments/{id}"
+                     *       "instance": "/api/trips/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -2417,7 +3130,7 @@ export interface operations {
             };
         };
     };
-    update_1: {
+    update_2: {
         parameters: {
             query?: never;
             header?: never;
@@ -2428,7 +3141,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PlannedShipmentRequest"];
+                "application/json": components["schemas"]["TripRequest"];
             };
         };
         responses: {
@@ -2438,7 +3151,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PlannedShipmentResponse"];
+                    "*/*": components["schemas"]["TripResponse"];
                 };
             };
             /** @description Невалідний запит або дія недоступна в поточному стані */
@@ -2461,7 +3174,7 @@ export interface operations {
                      *       "type": "about:blank",
                      *       "title": "Unauthorized",
                      *       "status": 401,
-                     *       "instance": "/api/planned-shipments/{id}"
+                     *       "instance": "/api/trips/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -2479,7 +3192,7 @@ export interface operations {
                      *       "title": "Forbidden",
                      *       "status": 403,
                      *       "detail": "Access Denied",
-                     *       "instance": "/api/planned-shipments/{id}"
+                     *       "instance": "/api/trips/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -2497,7 +3210,7 @@ export interface operations {
                      *       "title": "Not Found",
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/planned-shipments/{id}"
+                     *       "instance": "/api/trips/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -2515,7 +3228,7 @@ export interface operations {
                      *       "title": "Conflict",
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
-                     *       "instance": "/api/planned-shipments/{id}"
+                     *       "instance": "/api/trips/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -2523,10 +3236,16 @@ export interface operations {
             };
         };
     };
-    get_2: {
+    get_3: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path: {
                 id: number;
             };
@@ -2616,7 +3335,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -2722,7 +3441,113 @@ export interface operations {
             };
         };
     };
-    get_3: {
+    setPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParcelPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/parcels/{id}/payment"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/parcels/{id}/payment"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/parcels/{id}/payment"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/parcels/{id}/payment"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -2815,7 +3640,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -3153,10 +3978,16 @@ export interface operations {
             };
         };
     };
-    get_4: {
+    get_5: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path: {
                 id: number;
             };
@@ -3246,7 +4077,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -3352,10 +4183,16 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_6: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path: {
                 id: number;
             };
@@ -3445,7 +4282,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -3555,6 +4392,289 @@ export interface operations {
         parameters: {
             query?: {
                 /**
+                 * @description true — тільки робочі склади
+                 * @example true
+                 */
+                active?: boolean;
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagedModelWarehouseResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarehouseRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WarehouseResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    moveParcels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WarehouseParcelsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/warehouses/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/warehouses/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/warehouses/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/warehouses/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_1: {
+        parameters: {
+            query?: {
+                /**
                  * @description ID компанії (тільки для адміна)
                  * @example 1
                  */
@@ -3563,7 +4683,7 @@ export interface operations {
                  * @description Фільтр за роллю
                  * @example DRIVER
                  */
-                role?: "ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER";
+                role?: "ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER";
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */
@@ -3641,7 +4761,7 @@ export interface operations {
             };
         };
     };
-    create: {
+    create_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -3720,6 +4840,793 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/users"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_2: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Фільтр за статусом
+                 * @example PREPARING
+                 */
+                status?: "PLANNED" | "PREPARING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagedModelTripResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    create_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TripRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TripResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    parcels: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/trips/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    planParcels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ParcelIdsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/trips/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    depart: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["TripDepartRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TripResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{id}/depart"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{id}/depart"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{id}/depart"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/trips/{id}/depart"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    complete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TripCompleteRequest"];
+            };
+        };
+        responses: {
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{id}/complete"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{id}/complete"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{id}/complete"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description У машині лишились невидані посилки */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Parcels left in the car",
+                     *       "status": 409,
+                     *       "detail": "2 parcel(s) are still in the car: move them to a warehouse, then complete the trip",
+                     *       "instance": "/api/trips/6/complete",
+                     *       "undeliveredParcels": [
+                     *         {
+                     *           "id": 10,
+                     *           "barcode": "PT0123456789",
+                     *           "status": "IN_CAR",
+                     *           "tripId": 6
+                     *         }
+                     *       ]
+                     *     }
+                     */
+                    "application/problem+json": unknown;
+                };
+            };
+        };
+    };
+    cancel: {
+        parameters: {
+            query?: {
+                /**
+                 * @description Склад для посилок, що в машині
+                 * @example 2
+                 */
+                warehouseId?: number;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TripResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{id}/cancel"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{id}/cancel"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{id}/cancel"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/trips/{id}/cancel"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    toWarehouse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScanRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/scan/to-warehouse"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/scan/to-warehouse"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/scan/to-warehouse"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -4003,580 +5910,11 @@ export interface operations {
             };
         };
     };
-    list_1: {
-        parameters: {
-            query?: {
-                /** @description Zero-based page index (0..N) */
-                page?: number;
-                /** @description The size of the page to be returned */
-                size?: number;
-                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
-                sort?: string[];
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PagedModelPlannedShipmentResponse"];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Bad Request",
-                     *       "status": 400,
-                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
-                     *       "instance": "/api/planned-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/planned-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/planned-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    create_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["PlannedShipmentRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PlannedShipmentResponse"];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/planned-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/planned-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Конфлікт з існуючими даними (дублікат) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Conflict",
-                     *       "status": 409,
-                     *       "detail": "Data conflicts with existing records",
-                     *       "instance": "/api/planned-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    getParcels: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ParcelResponse"][];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Bad Request",
-                     *       "status": 400,
-                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
-                     *       "instance": "/api/planned-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/planned-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/planned-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Не знайдено (або належить іншій компанії) */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not Found",
-                     *       "status": 404,
-                     *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/planned-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    addParcels: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ParcelIdsRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ParcelResponse"][];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/planned-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/planned-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Не знайдено (або належить іншій компанії) */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not Found",
-                     *       "status": 404,
-                     *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/planned-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Конфлікт з існуючими даними (дублікат) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Conflict",
-                     *       "status": 409,
-                     *       "detail": "Data conflicts with existing records",
-                     *       "instance": "/api/planned-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    confirm: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PlannedShipmentResponse"];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/planned-shipments/{id}/confirm"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/planned-shipments/{id}/confirm"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Не знайдено (або належить іншій компанії) */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not Found",
-                     *       "status": 404,
-                     *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/planned-shipments/{id}/confirm"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Конфлікт з існуючими даними (дублікат) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Conflict",
-                     *       "status": 409,
-                     *       "detail": "Data conflicts with existing records",
-                     *       "instance": "/api/planned-shipments/{id}/confirm"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    cancel: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PlannedShipmentResponse"];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/planned-shipments/{id}/cancel"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/planned-shipments/{id}/cancel"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Не знайдено (або належить іншій компанії) */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not Found",
-                     *       "status": 404,
-                     *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/planned-shipments/{id}/cancel"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Конфлікт з існуючими даними (дублікат) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Conflict",
-                     *       "status": 409,
-                     *       "detail": "Data conflicts with existing records",
-                     *       "instance": "/api/planned-shipments/{id}/cancel"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
     search: {
         parameters: {
             query?: {
                 /** @description Внутрішній статус */
-                status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+                status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
                 /**
                  * @description ID клієнта
                  * @example 7
@@ -4593,6 +5931,16 @@ export interface operations {
                  */
                 needsEnrichment?: boolean;
                 /**
+                 * @description Статус оплати нашої доставки
+                 * @example UNPAID
+                 */
+                paymentStatus?: "UNPAID" | "PAID";
+                /**
+                 * @description Посилки на цьому складі
+                 * @example 2
+                 */
+                warehouseId?: number;
+                /**
                  * @description Частина нашого штрих-коду, ТТН, ПІБ або телефону відправника
                  * @example 2045154945
                  */
@@ -4604,7 +5952,13 @@ export interface operations {
                 /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
                 sort?: string[];
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path?: never;
             cookie?: never;
         };
@@ -4674,7 +6028,7 @@ export interface operations {
             };
         };
     };
-    create_2: {
+    create_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -5104,7 +6458,7 @@ export interface operations {
             };
         };
     };
-    list_2: {
+    list_3: {
         parameters: {
             query?: {
                 /** @description Zero-based page index (0..N) */
@@ -5184,7 +6538,7 @@ export interface operations {
             };
         };
     };
-    create_3: {
+    create_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -5285,7 +6639,13 @@ export interface operations {
                 /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
                 sort?: string[];
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5355,7 +6715,7 @@ export interface operations {
             };
         };
     };
-    create_4: {
+    create_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -5441,7 +6801,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: {
                 /** @description Zero-based page index (0..N) */
@@ -5451,7 +6811,13 @@ export interface operations {
                 /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
                 sort?: string[];
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path?: never;
             cookie?: never;
         };
@@ -5521,7 +6887,7 @@ export interface operations {
             };
         };
     };
-    create_5: {
+    create_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -5607,6 +6973,92 @@ export interface operations {
             };
         };
     };
+    changePassword: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TokenResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/auth/password"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/auth/password"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/auth/password"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     login: {
         parameters: {
             query?: never;
@@ -5649,18 +7101,19 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    history: {
         parameters: {
-            query?: {
-                /** @description Zero-based page index (0..N) */
-                page?: number;
-                /** @description The size of the page to be returned */
-                size?: number;
-                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
-                sort?: string[];
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
             };
-            header?: never;
-            path?: never;
+            path: {
+                id: number;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -5671,7 +7124,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "*/*": components["schemas"]["PagedModelActualShipmentResponse"];
+                    "*/*": components["schemas"]["TripHistoryResponse"][];
                 };
             };
             /** @description Невалідний запит або дія недоступна в поточному стані */
@@ -5686,7 +7139,7 @@ export interface operations {
                      *       "title": "Bad Request",
                      *       "status": 400,
                      *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
-                     *       "instance": "/api/actual-shipments"
+                     *       "instance": "/api/trips/{id}/history"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -5703,7 +7156,7 @@ export interface operations {
                      *       "type": "about:blank",
                      *       "title": "Unauthorized",
                      *       "status": 401,
-                     *       "instance": "/api/actual-shipments"
+                     *       "instance": "/api/trips/{id}/history"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -5721,163 +7174,7 @@ export interface operations {
                      *       "title": "Forbidden",
                      *       "status": 403,
                      *       "detail": "Access Denied",
-                     *       "instance": "/api/actual-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    start: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ActualShipmentStartRequest"];
-            };
-        };
-        responses: {
-            /** @description Created */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ActualShipmentResponse"];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/actual-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/actual-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Конфлікт з існуючими даними (дублікат) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Conflict",
-                     *       "status": 409,
-                     *       "detail": "Data conflicts with existing records",
-                     *       "instance": "/api/actual-shipments"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    complete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ActualShipmentCompleteRequest"];
-            };
-        };
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ActualShipmentResponse"];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/actual-shipments/{id}/complete"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/actual-shipments/{id}/complete"
+                     *       "instance": "/api/trips/{id}/history"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -5895,127 +7192,7 @@ export interface operations {
                      *       "title": "Not Found",
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/actual-shipments/{id}/complete"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Конфлікт з існуючими даними (дублікат) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Conflict",
-                     *       "status": 409,
-                     *       "detail": "Data conflicts with existing records",
-                     *       "instance": "/api/actual-shipments/{id}/complete"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    cancel_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ActualShipmentResponse"];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/actual-shipments/{id}/cancel"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/actual-shipments/{id}/cancel"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Не знайдено (або належить іншій компанії) */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not Found",
-                     *       "status": 404,
-                     *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/actual-shipments/{id}/cancel"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Конфлікт з існуючими даними (дублікат) */
-            409: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Conflict",
-                     *       "status": 409,
-                     *       "detail": "Data conflicts with existing records",
-                     *       "instance": "/api/actual-shipments/{id}/cancel"
+                     *       "instance": "/api/trips/{id}/history"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -6032,7 +7209,13 @@ export interface operations {
                  */
                 code: string;
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path?: never;
             cookie?: never;
         };
@@ -6160,10 +7343,16 @@ export interface operations {
             };
         };
     };
-    history: {
+    history_1: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path: {
                 id: number;
             };
@@ -6253,11 +7442,90 @@ export interface operations {
             };
         };
     };
-    parcels: {
+    current: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/companies/current"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/current"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/current"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    parcels_1: {
         parameters: {
             query?: {
                 /** @description Фільтр за статусом посилки */
-                status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+                status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */
@@ -6265,7 +7533,13 @@ export interface operations {
                 /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
                 sort?: string[];
             };
-            header?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
             path: {
                 id: number;
             };
@@ -6428,193 +7702,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ActualShipmentResponse"];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Bad Request",
-                     *       "status": 400,
-                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
-                     *       "instance": "/api/actual-shipments/{id}"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/actual-shipments/{id}"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/actual-shipments/{id}"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Не знайдено (або належить іншій компанії) */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not Found",
-                     *       "status": 404,
-                     *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/actual-shipments/{id}"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    getParcels_1: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                id: number;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["ParcelResponse"][];
-                };
-            };
-            /** @description Невалідний запит або дія недоступна в поточному стані */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Bad Request",
-                     *       "status": 400,
-                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
-                     *       "instance": "/api/actual-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Немає токена або він недійсний / прострочений */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Unauthorized",
-                     *       "status": 401,
-                     *       "instance": "/api/actual-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Недостатньо прав для цієї ролі */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Forbidden",
-                     *       "status": 403,
-                     *       "detail": "Access Denied",
-                     *       "instance": "/api/actual-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-            /** @description Не знайдено (або належить іншій компанії) */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not Found",
-                     *       "status": 404,
-                     *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/actual-shipments/{id}/parcels"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
-                };
-            };
-        };
-    };
-    removeParcel: {
+    unplanParcel: {
         parameters: {
             query?: never;
             header?: never;
@@ -6645,7 +7733,7 @@ export interface operations {
                      *       "title": "Bad Request",
                      *       "status": 400,
                      *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
-                     *       "instance": "/api/planned-shipments/{id}/parcels/{parcelId}"
+                     *       "instance": "/api/trips/{id}/parcels/{parcelId}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -6662,7 +7750,7 @@ export interface operations {
                      *       "type": "about:blank",
                      *       "title": "Unauthorized",
                      *       "status": 401,
-                     *       "instance": "/api/planned-shipments/{id}/parcels/{parcelId}"
+                     *       "instance": "/api/trips/{id}/parcels/{parcelId}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -6680,7 +7768,7 @@ export interface operations {
                      *       "title": "Forbidden",
                      *       "status": 403,
                      *       "detail": "Access Denied",
-                     *       "instance": "/api/planned-shipments/{id}/parcels/{parcelId}"
+                     *       "instance": "/api/trips/{id}/parcels/{parcelId}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -6698,7 +7786,7 @@ export interface operations {
                      *       "title": "Not Found",
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/planned-shipments/{id}/parcels/{parcelId}"
+                     *       "instance": "/api/trips/{id}/parcels/{parcelId}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

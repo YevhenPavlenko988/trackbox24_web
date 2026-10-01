@@ -38,7 +38,13 @@ export function setUserNovaPoshta(id: number, body: NovaPoshtaKeyRequest): Promi
   return unwrap(api.PUT('/api/users/{id}/nova-poshta', { params: { path: { id } }, body }))
 }
 
+export function resetUserPassword(id: number, newPassword: string): Promise<unknown> {
+  return unwrap(api.PUT('/api/users/{id}/password', { params: { path: { id } }, body: { newPassword } }))
+}
+
 export function userDisplayName(u: UserResponse | undefined): string {
   if (!u) return '—'
   return [u.lastName, u.firstName].filter(Boolean).join(' ') || u.email || '—'
 }
+
+export const COMPANY_ROLES: Role[] = ['MANAGER', 'REPRESENTATIVE', 'DRIVER', 'VIEWER']

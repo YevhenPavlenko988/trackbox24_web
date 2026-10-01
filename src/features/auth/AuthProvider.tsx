@@ -6,15 +6,19 @@ import { clearToken, getToken, setToken } from './token'
 
 export type AuthContextValue = {
   user: UserResponse | null
-  role?: Role
+  roles: Role[]
   companyId?: number
   login: (accessToken: string) => Promise<void>
+  /** Swap the token without re-fetching `me` (after changing own password). */
+  replaceToken: (accessToken: string) => void
   logout: () => void
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
 export const ME_QUERY_KEY = ['me'] as const
+
+const NO_ROLES: Role[] = []
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
@@ -48,6 +52,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [queryClient],
   )
 
+  const replaceToken = useCallback((accessToken: string) => {
+    setToken(accessToken)
+    setTokenState(accessToken)
+  }, [])
+
   const logout = useCallback(() => {
     clearToken()
     setTokenState(null)
@@ -57,8 +66,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const user = token && !sessionBroken && meQuery.data ? meQuery.data : null
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, role: user?.role, companyId: user?.companyId, login, logout }),
-    [user, login, logout],
+    () => ({ user, roles: user?.roles ?? NO_ROLES, companyId: user?.companyId, login, replaceToken, logout }),
+    [user, login, replaceToken, logout],
   )
 
   if (token && meQuery.isPending) {

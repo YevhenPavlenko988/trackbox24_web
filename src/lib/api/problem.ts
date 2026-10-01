@@ -9,14 +9,17 @@ export class ApiError extends Error {
   readonly title: string
   readonly detail?: string
   readonly errors?: FieldErrors
+  /** Extra problem+json members (e.g. `undeliveredParcels` on trip completion). */
+  readonly extensions: Record<string, unknown>
 
-  constructor(status: number, title: string, detail?: string, errors?: FieldErrors) {
+  constructor(status: number, title: string, detail?: string, errors?: FieldErrors, extensions: Record<string, unknown> = {}) {
     super(detail ?? title)
     this.name = 'ApiError'
     this.status = status
     this.title = title
     this.detail = detail
     this.errors = errors
+    this.extensions = extensions
   }
 }
 
@@ -27,12 +30,12 @@ export function statusTitle(status: number): string {
   return i18n.t(`errors.${key}`, { ns: 'common' })
 }
 
-type ProblemLike = { title?: string; detail?: string; errors?: FieldErrors }
+type ProblemLike = { title?: string; detail?: string; errors?: FieldErrors } & Record<string, unknown>
 
 /** Spring Security answers 401/403 with an empty body, so `error` may be undefined or a string. */
 export function toApiError(error: unknown, response: Response): ApiError {
   const p: ProblemLike = error && typeof error === 'object' ? (error as ProblemLike) : {}
-  return new ApiError(response.status, statusTitle(response.status), p.detail, p.errors)
+  return new ApiError(response.status, statusTitle(response.status), p.detail, p.errors, p)
 }
 
 type FetchResult<T> = { data?: T; error?: unknown; response: Response }

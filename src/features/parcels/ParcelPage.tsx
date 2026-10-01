@@ -164,18 +164,18 @@ export function ParcelPage() {
                 { label: t('parcels:fields.senderCity'), value: p.senderCity },
                 { label: t('parcels:fields.notes'), value: p.notes },
                 {
-                  label: t('shipments:fields.plannedShipment', { ns: 'shipments' }),
-                  value: p.plannedShipmentId != null ? (
-                    <Link to={`/planned-shipments/${p.plannedShipmentId}`} className="underline underline-offset-4">
-                      {t('shipments:planned.one', { ns: 'shipments', id: p.plannedShipmentId })}
+                  label: t('trips:fields.plannedTrip', { ns: 'trips' }),
+                  value: p.plannedTripId != null ? (
+                    <Link to={`/trips/${p.plannedTripId}`} className="underline underline-offset-4">
+                      {t('trips:one', { ns: 'trips', id: p.plannedTripId })}
                     </Link>
                   ) : undefined,
                 },
                 {
-                  label: t('shipments:actual.title', { ns: 'shipments' }),
-                  value: p.actualShipmentId != null ? (
-                    <Link to={`/shipments/${p.actualShipmentId}`} className="underline underline-offset-4">
-                      {t('shipments:actual.one', { ns: 'shipments', id: p.actualShipmentId })}
+                  label: t('trips:fields.trip', { ns: 'trips' }),
+                  value: p.tripId != null ? (
+                    <Link to={`/trips/${p.tripId}`} className="underline underline-offset-4">
+                      {t('trips:one', { ns: 'trips', id: p.tripId })}
                     </Link>
                   ) : undefined,
                 },

@@ -30,12 +30,12 @@ export async function ensureSeed() {
   if (!company) company = await admin.post('/api/companies', { name: 'Тест Логістик', edrpou: '12345678' })
   const users = await admin.get(`/api/users?companyId=${company.id}&size=100`)
   if (!(users.content ?? []).some((u) => u.email === MANAGER.email)) {
-    await admin.post('/api/users', { companyId: company.id, email: MANAGER.email, password: MANAGER.password, firstName: 'Олена', lastName: 'Менеджер', role: 'MANAGER' })
+    await admin.post('/api/users', { companyId: company.id, email: MANAGER.email, password: MANAGER.password, firstName: 'Олена', lastName: 'Менеджер', roles: ['MANAGER'] })
   }
   const manager = await apiAs(MANAGER)
   const reps = await manager.get('/api/users?role=REPRESENTATIVE&size=1')
   if (!reps.content?.length) {
-    await manager.post('/api/users', { email: 'rep@test.ua', password: 'rep12345', firstName: 'Іван', lastName: 'Представник', role: 'REPRESENTATIVE', phone: '380501112233' })
+    await manager.post('/api/users', { email: 'rep@test.ua', password: 'rep12345', firstName: 'Іван', lastName: 'Представник', roles: ['REPRESENTATIVE'], phone: '380501112233' })
   }
   const clients = await manager.get('/api/clients?size=1')
   if (!clients.content?.length) {

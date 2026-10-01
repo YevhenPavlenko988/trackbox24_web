@@ -5,6 +5,7 @@ import { parcelKeys } from '@/features/parcels/queries'
 import {
   createCompany,
   getCompany,
+  getCurrentCompany,
   listCompanies,
   setCompanyActive,
   setCompanyNpKey,
@@ -32,6 +33,10 @@ export function useCompany(id: number | undefined) {
     queryFn: () => getCompany(id!),
     enabled: id != null,
   })
+}
+
+export function useCurrentCompany() {
+  return useQuery({ queryKey: ['companies', 'current'] as const, queryFn: getCurrentCompany })
 }
 
 function useCompanyMutation<TVars>(mutationFn: (vars: TVars) => Promise<CompanyResponse>) {

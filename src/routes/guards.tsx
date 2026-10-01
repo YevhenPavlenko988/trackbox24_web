@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router'
+import { useAccess, type Access } from '@/features/auth/access'
 import { useAuth } from '@/features/auth/useAuth'
-import type { Role } from '@/lib/api/types'
-import { ForbiddenPage } from './ErrorPages'
+import { ForbiddenPage, MobileOnlyPage } from './ErrorPages'
 
 export function RequireAuth() {
   const { user } = useAuth()
@@ -10,10 +10,16 @@ export function RequireAuth() {
   return <Outlet />
 }
 
-export function RequireRole({ roles }: { roles: Role[] }) {
-  const { role } = useAuth()
-  if (!role || !roles.includes(role)) return <ForbiddenPage />
-  return <Outlet />
+/** Company operational pages: managers, viewers, or an admin browsing a company. */
+export function RequireCompanyAccess() {
+  const access = useAccess()
+  if (access.hasCompanyAccess) return <Outlet />
+  return access.mobileOnly ? <MobileOnlyPage /> : <ForbiddenPage />
+}
+
+export function RequireAdmin() {
+  const { isAdmin } = useAccess()
+  return isAdmin ? <Outlet /> : <ForbiddenPage />
 }
 
 export function RedirectIfAuthenticated() {
@@ -22,11 +28,13 @@ export function RedirectIfAuthenticated() {
   return <Outlet />
 }
 
-export function homePathFor(role?: Role): string {
-  return role === 'ADMIN' ? '/companies' : '/parcels'
+export function homePathFor(access: Access): string {
+  if (access.isAdmin && !access.companyMode) return '/companies'
+  if (access.mobileOnly) return '/mobile-only'
+  return '/parcels'
 }
 
 export function HomeRedirect() {
-  const { role } = useAuth()
-  return <Navigate to={homePathFor(role)} replace />
+  const access = useAccess()
+  return <Navigate to={homePathFor(access)} replace />
 }

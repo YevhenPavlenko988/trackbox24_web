@@ -16,6 +16,10 @@ export function getCompany(id: number): Promise<CompanyResponse> {
   return unwrap(api.GET('/api/companies/{id}', { params: { path: { id } } }))
 }
 
+export function getCurrentCompany(): Promise<CompanyResponse> {
+  return unwrap(api.GET('/api/companies/current'))
+}
+
 export function createCompany(body: CompanyRequest): Promise<CompanyResponse> {
   return unwrap(api.POST('/api/companies', { body }))
 }

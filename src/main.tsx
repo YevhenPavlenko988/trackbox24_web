@@ -7,6 +7,7 @@ import './index.css'
 import { Toaster } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider } from '@/features/auth/AuthProvider'
+import { CompanyViewProvider } from '@/features/auth/companyView'
 import { router } from '@/routes/router'
 
 const queryClient = new QueryClient({
@@ -19,9 +20,11 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <RouterProvider router={router} />
-        </TooltipProvider>
+        <CompanyViewProvider>
+          <TooltipProvider>
+            <RouterProvider router={router} />
+          </TooltipProvider>
+        </CompanyViewProvider>
       </AuthProvider>
       <Toaster richColors position="top-right" />
     </QueryClientProvider>

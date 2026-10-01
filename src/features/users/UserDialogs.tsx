@@ -5,17 +5,41 @@ import { toast } from 'sonner'
 import { z } from 'zod'
 import { FieldErrorText } from '@/components/common/FieldErrorText'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { useMutationError } from '@/lib/api/problem'
 import type { Role, UserResponse } from '@/lib/api/types'
-import { useCreateUser, useUpdateUser } from './queries'
+import { COMPANY_ROLES, userDisplayName } from './api'
+import { useCreateUser, useResetUserPassword, useUpdateUser } from './queries'
 
 const PHONE = /^380\d{9}$/
-const COMPANY_ROLES: Role[] = ['MANAGER', 'REPRESENTATIVE', 'DRIVER']
+const rolesSchema = z.array(z.enum(['MANAGER', 'REPRESENTATIVE', 'DRIVER', 'VIEWER'])).min(1, 'rolesRequired')
+
+function RolesField({ value, onChange, error }: { value: Role[]; onChange: (roles: Role[]) => void; error?: { message?: string } }) {
+  const { t } = useTranslation(['users', 'common'])
+  return (
+    <Field data-invalid={!!error}>
+      <FieldLabel>{t('users:fields.roles')}</FieldLabel>
+      <div className="grid grid-cols-2 gap-2">
+        {COMPANY_ROLES.map((role) => (
+          <Label key={role} className="flex items-center gap-2 font-normal">
+            <Checkbox
+              checked={value.includes(role)}
+              onCheckedChange={(c) => onChange(c === true ? [...value, role] : value.filter((r) => r !== role))}
+            />
+            {t(`common:roles.${role}`)}
+          </Label>
+        ))}
+      </div>
+      <FieldErrorText error={error} />
+    </Field>
+  )
+}
 
 const createSchema = z
   .object({
@@ -24,11 +48,12 @@ const createSchema = z
     lastName: z.string().trim().min(1, 'required'),
     firstName: z.string().trim().min(1, 'required'),
     phone: z.string().trim(),
-    role: z.enum(['MANAGER', 'REPRESENTATIVE', 'DRIVER']),
+    roles: rolesSchema,
     driverLicenseNumber: z.string().trim(),
+    notes: z.string().trim(),
   })
   .superRefine((v, ctx) => {
-    if (v.role === 'REPRESENTATIVE' && !v.phone) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'required' })
+    if (v.roles.includes('REPRESENTATIVE') && !v.phone) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'required' })
     if (v.phone && !PHONE.test(v.phone)) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phone' })
   })
 
@@ -63,11 +88,11 @@ function CreateForm({ companyId, onClose }: { companyId?: number; onClose: () =>
   const create = useCreateUser()
   const form = useForm<CreateValues>({
     resolver: zodResolver(createSchema),
-    defaultValues: { email: '', password: '', lastName: '', firstName: '', phone: '', role: 'MANAGER', driverLicenseNumber: '' },
+    defaultValues: { email: '', password: '', lastName: '', firstName: '', phone: '', roles: ['MANAGER'], driverLicenseNumber: '', notes: '' },
   })
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
-  const role = form.watch('role')
+  const roles = form.watch('roles')
 
   const submit = form.handleSubmit(async (v) => {
     try {
@@ -78,8 +103,9 @@ function CreateForm({ companyId, onClose }: { companyId?: number; onClose: () =>
         lastName: v.lastName,
         firstName: v.firstName,
         phone: orUndefined(v.phone),
-        role: v.role,
-        driverLicenseNumber: v.role === 'DRIVER' ? orUndefined(v.driverLicenseNumber) : undefined,
+        roles: v.roles,
+        driverLicenseNumber: v.roles.includes('DRIVER') ? orUndefined(v.driverLicenseNumber) : undefined,
+        notes: orUndefined(v.notes),
       })
       toast.success(t('common:common.saved'))
       onClose()
@@ -91,28 +117,7 @@ function CreateForm({ companyId, onClose }: { companyId?: number; onClose: () =>
   return (
     <form onSubmit={submit} noValidate>
       <FieldGroup>
-        <Controller
-          control={form.control}
-          name="role"
-          render={({ field }) => (
-            <Field data-invalid={!!errors.role}>
-              <FieldLabel htmlFor="u-role">{t('users:fields.role')}</FieldLabel>
-              <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
-                <SelectTrigger id="u-role" className="w-full">
-                  <SelectValue>{t(`common:roles.${field.value}`)}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {COMPANY_ROLES.map((r) => (
-                    <SelectItem key={r} value={r}>
-                      {t(`common:roles.${r}`)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldErrorText error={errors.role} />
-            </Field>
-          )}
-        />
+        <Controller control={form.control} name="roles" render={({ field }) => <RolesField value={field.value} onChange={field.onChange} error={errors.roles} />} />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.lastName}>
             <FieldLabel htmlFor="u-lastName">{t('users:fields.lastName')}</FieldLabel>
@@ -140,16 +145,21 @@ function CreateForm({ companyId, onClose }: { companyId?: number; onClose: () =>
         <Field data-invalid={!!errors.phone}>
           <FieldLabel htmlFor="u-phone">{t('users:fields.phone')}</FieldLabel>
           <Input id="u-phone" inputMode="tel" placeholder="380XXXXXXXXX" aria-invalid={!!errors.phone} {...form.register('phone')} />
-          {role === 'REPRESENTATIVE' && <FieldDescription>{t('users:hints.phoneRepresentative')}</FieldDescription>}
+          {roles.includes('REPRESENTATIVE') && <FieldDescription>{t('users:hints.phoneRepresentative')}</FieldDescription>}
           <FieldErrorText error={errors.phone} />
         </Field>
-        {role === 'DRIVER' && (
+        {roles.includes('DRIVER') && (
           <Field data-invalid={!!errors.driverLicenseNumber}>
             <FieldLabel htmlFor="u-license">{t('users:fields.driverLicenseNumber')}</FieldLabel>
             <Input id="u-license" {...form.register('driverLicenseNumber')} />
             <FieldErrorText error={errors.driverLicenseNumber} />
           </Field>
         )}
+        <Field data-invalid={!!errors.notes}>
+          <FieldLabel htmlFor="u-notes">{t('users:fields.notes')}</FieldLabel>
+          <Textarea id="u-notes" rows={2} {...form.register('notes')} />
+          <FieldErrorText error={errors.notes} />
+        </Field>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>
             {t('common:actions.cancel')}
@@ -168,10 +178,13 @@ const editSchema = z
     lastName: z.string().trim().min(1, 'required'),
     firstName: z.string().trim().min(1, 'required'),
     phone: z.string().trim(),
+    roles: rolesSchema,
     driverLicenseNumber: z.string().trim(),
+    notes: z.string().trim(),
     active: z.boolean(),
   })
   .superRefine((v, ctx) => {
+    if (v.roles.includes('REPRESENTATIVE') && !v.phone) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'required' })
     if (v.phone && !PHONE.test(v.phone)) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phone' })
   })
 
@@ -202,18 +215,23 @@ export function UserEditDialog({
 function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }) {
   const { t } = useTranslation(['users', 'common'])
   const update = useUpdateUser(user.id!)
+  const isAdminUser = user.roles?.includes('ADMIN') ?? false
   const form = useForm<EditValues>({
     resolver: zodResolver(editSchema),
     defaultValues: {
       lastName: user.lastName ?? '',
       firstName: user.firstName ?? '',
       phone: user.phone ?? '',
+      roles: (user.roles ?? []).filter((r): r is Exclude<Role, 'ADMIN'> => r !== 'ADMIN'),
       driverLicenseNumber: user.driverLicenseNumber ?? '',
+      notes: user.notes ?? '',
       active: user.active ?? true,
     },
   })
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
+  const roles = form.watch('roles')
+  const rolesChanged = JSON.stringify([...roles].sort()) !== JSON.stringify([...(user.roles ?? [])].sort())
 
   const submit = form.handleSubmit(async (v) => {
     try {
@@ -221,7 +239,9 @@ function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }
         lastName: v.lastName,
         firstName: v.firstName,
         phone: orUndefined(v.phone),
-        driverLicenseNumber: user.role === 'DRIVER' ? orUndefined(v.driverLicenseNumber) : undefined,
+        roles: isAdminUser ? undefined : v.roles,
+        driverLicenseNumber: v.roles.includes('DRIVER') ? orUndefined(v.driverLicenseNumber) : undefined,
+        notes: orUndefined(v.notes),
         active: v.active,
       })
       toast.success(t('common:common.saved'))
@@ -234,9 +254,19 @@ function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }
   return (
     <form onSubmit={submit} noValidate>
       <FieldGroup>
-        <p className="text-sm text-muted-foreground">
-          {user.email} · {user.role && t(`common:roles.${user.role}`)}
-        </p>
+        <p className="text-sm text-muted-foreground">{user.email}</p>
+        {!isAdminUser && (
+          <Controller
+            control={form.control}
+            name="roles"
+            render={({ field }) => (
+              <div className="flex flex-col gap-1">
+                <RolesField value={field.value} onChange={field.onChange} error={errors.roles} />
+                {rolesChanged && <FieldDescription className="text-amber-700">{t('users:hints.rolesChange')}</FieldDescription>}
+              </div>
+            )}
+          />
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.lastName}>
             <FieldLabel htmlFor="ue-lastName">{t('users:fields.lastName')}</FieldLabel>
@@ -254,13 +284,18 @@ function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }
           <Input id="ue-phone" inputMode="tel" placeholder="380XXXXXXXXX" aria-invalid={!!errors.phone} {...form.register('phone')} />
           <FieldErrorText error={errors.phone} />
         </Field>
-        {user.role === 'DRIVER' && (
+        {roles.includes('DRIVER') && (
           <Field data-invalid={!!errors.driverLicenseNumber}>
             <FieldLabel htmlFor="ue-license">{t('users:fields.driverLicenseNumber')}</FieldLabel>
             <Input id="ue-license" {...form.register('driverLicenseNumber')} />
             <FieldErrorText error={errors.driverLicenseNumber} />
           </Field>
         )}
+        <Field data-invalid={!!errors.notes}>
+          <FieldLabel htmlFor="ue-notes">{t('users:fields.notes')}</FieldLabel>
+          <Textarea id="ue-notes" rows={2} {...form.register('notes')} />
+          <FieldErrorText error={errors.notes} />
+        </Field>
         <Controller
           control={form.control}
           name="active"
@@ -283,5 +318,54 @@ function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }
         </div>
       </FieldGroup>
     </form>
+  )
+}
+
+const resetSchema = z.object({ newPassword: z.string().min(8, 'min8') })
+type ResetValues = z.infer<typeof resetSchema>
+
+export function ResetPasswordDialog({ user, onClose }: { user: UserResponse; onClose: () => void }) {
+  const { t } = useTranslation(['users', 'common'])
+  const reset = useResetUserPassword(user.id!)
+  const form = useForm<ResetValues>({ resolver: zodResolver(resetSchema), defaultValues: { newPassword: '' } })
+  const { errors, isSubmitting } = form.formState
+  const onError = useMutationError(form)
+
+  const submit = form.handleSubmit(async (v) => {
+    try {
+      await reset.mutateAsync(v.newPassword)
+      toast.success(t('users:resetPassword.done'))
+      onClose()
+    } catch (e) {
+      onError(e)
+    }
+  })
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('users:resetPassword.title', { name: userDisplayName(user) })}</DialogTitle>
+          <DialogDescription>{t('users:resetPassword.description')}</DialogDescription>
+        </DialogHeader>
+        <form onSubmit={submit} noValidate>
+          <FieldGroup>
+            <Field data-invalid={!!errors.newPassword}>
+              <FieldLabel htmlFor="rp-password">{t('users:resetPassword.newPassword')}</FieldLabel>
+              <Input id="rp-password" type="text" autoComplete="off" aria-invalid={!!errors.newPassword} {...form.register('newPassword')} />
+              <FieldErrorText error={errors.newPassword} />
+            </Field>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={onClose}>
+                {t('common:actions.cancel')}
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {t('users:resetPassword.action')}
+              </Button>
+            </div>
+          </FieldGroup>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }

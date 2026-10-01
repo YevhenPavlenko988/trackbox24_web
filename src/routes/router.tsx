@@ -2,8 +2,8 @@ import type { ComponentType } from 'react'
 import { createBrowserRouter } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
-import { NotFoundPage } from './ErrorPages'
-import { HomeRedirect, RedirectIfAuthenticated, RequireAuth, RequireRole } from './guards'
+import { MobileOnlyPage, NotFoundPage } from './ErrorPages'
+import { HomeRedirect, RedirectIfAuthenticated, RequireAdmin, RequireAuth, RequireCompanyAccess } from './guards'
 
 type PageModule = Record<string, unknown>
 
@@ -20,8 +20,9 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth />,
     children: [
+      { path: 'mobile-only', element: <MobileOnlyPage /> },
       {
-        element: <RequireRole roles={['MANAGER']} />,
+        element: <RequireCompanyAccess />,
         children: [{ path: 'parcels/:id/labels', lazy: page(() => import('@/features/parcels/LabelsPage'), 'LabelsPage') }],
       },
       {
@@ -29,7 +30,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <HomeRedirect /> },
           {
-            element: <RequireRole roles={['MANAGER']} />,
+            element: <RequireCompanyAccess />,
             children: [
               { path: 'parcels', lazy: page(() => import('@/features/parcels/ParcelsListPage'), 'ParcelsListPage') },
               { path: 'parcels/new', lazy: page(() => import('@/features/parcels/ParcelCreatePage'), 'ParcelCreatePage') },
@@ -40,14 +41,10 @@ export const router = createBrowserRouter([
               { path: 'users', lazy: page(() => import('@/features/users/UsersListPage'), 'UsersListPage') },
               { path: 'cars', lazy: page(() => import('@/features/cars/CarsListPage'), 'CarsListPage') },
               { path: 'company', lazy: page(() => import('@/features/companies/MyCompanyPage'), 'MyCompanyPage') },
-              { path: 'planned-shipments', lazy: page(() => import('@/features/shipments/PlannedShipmentsListPage'), 'PlannedShipmentsListPage') },
-              { path: 'planned-shipments/:id', lazy: page(() => import('@/features/shipments/PlannedShipmentPage'), 'PlannedShipmentPage') },
-              { path: 'shipments', lazy: page(() => import('@/features/shipments/ShipmentsListPage'), 'ShipmentsListPage') },
-              { path: 'shipments/:id', lazy: page(() => import('@/features/shipments/ShipmentPage'), 'ShipmentPage') },
             ],
           },
           {
-            element: <RequireRole roles={['ADMIN']} />,
+            element: <RequireAdmin />,
             children: [
               { path: 'companies', lazy: page(() => import('@/features/companies/CompaniesListPage'), 'CompaniesListPage') },
               { path: 'companies/:id', lazy: page(() => import('@/features/companies/CompanyPage'), 'CompanyPage') },
