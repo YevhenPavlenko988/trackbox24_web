@@ -11,6 +11,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useAccess } from '@/features/auth/access'
 import { ParcelStatusSelect } from '@/features/parcels/ParcelStatusSelect'
 import { ParcelsTable } from '@/features/parcels/ParcelsTable'
 import { useListParams } from '@/hooks/use-list-params'
@@ -28,6 +29,7 @@ export function ClientPage() {
   const clientId = Number(id)
   const { t } = useTranslation(['clients', 'common'])
   const query = useClient(clientId)
+  const { canEdit } = useAccess()
   const [editing, setEditing] = useState(false)
   const { get, set } = useListParams()
   const tab = get('tab') ?? 'info'
@@ -42,10 +44,12 @@ export function ClientPage() {
         title={clientDisplayName(client)}
         description={client.type ? t(`common:clientType.${client.type}`) : undefined}
         actions={
-          <Button variant="outline" onClick={() => setEditing(true)}>
-            <Pencil />
-            {t('common:actions.edit')}
-          </Button>
+          canEdit && (
+            <Button variant="outline" onClick={() => setEditing(true)}>
+              <Pencil />
+              {t('common:actions.edit')}
+            </Button>
+          )
         }
       />
 

@@ -1,13 +1,14 @@
-import { Power, PowerOff } from 'lucide-react'
+import { Eye, Power, PowerOff } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useCompanyView } from '@/features/auth/companyView'
 import { UsersSection } from '@/features/users/UsersSection'
 import { useListParams } from '@/hooks/use-list-params'
 import { showApiError } from '@/lib/api/problem'
@@ -21,6 +22,8 @@ export function CompanyPage() {
   const { t } = useTranslation(['companies', 'common'])
   const query = useCompany(companyId)
   const setActive = useSetCompanyActive(companyId)
+  const companyView = useCompanyView()
+  const navigate = useNavigate()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const { get, set } = useListParams()
   const tab = get('tab') ?? 'info'
@@ -49,17 +52,29 @@ export function CompanyPage() {
           </span>
         }
         actions={
-          company.active === false ? (
-            <Button variant="outline" onClick={() => toggleActive(true)} disabled={setActive.isPending}>
-              <Power />
-              {t('companies:actions.activate')}
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                companyView.enter({ id: companyId, name: company.name ?? `#${companyId}` })
+                navigate('/parcels')
+              }}
+            >
+              <Eye />
+              {t('common:companyMode.enter')}
             </Button>
-          ) : (
-            <Button variant="destructive" onClick={() => setConfirmOpen(true)}>
-              <PowerOff />
-              {t('companies:actions.deactivate')}
-            </Button>
-          )
+            {company.active === false ? (
+              <Button variant="outline" onClick={() => toggleActive(true)} disabled={setActive.isPending}>
+                <Power />
+                {t('companies:actions.activate')}
+              </Button>
+            ) : (
+              <Button variant="destructive" onClick={() => setConfirmOpen(true)}>
+                <PowerOff />
+                {t('companies:actions.deactivate')}
+              </Button>
+            )}
+          </>
         }
       />
 

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { useMutationError } from '@/lib/api/problem'
 import type { CompanyRequest, CompanyResponse } from '@/lib/api/types'
 
@@ -17,6 +18,7 @@ const schema = z.object({
   phone: z.string().trim(),
   email: z.union([z.literal(''), z.email('email')]),
   address: z.string().trim(),
+  notes: z.string().trim(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -65,6 +67,7 @@ function CompanyForm({
       phone: company?.phone ?? '',
       email: company?.email ?? '',
       address: company?.address ?? '',
+      notes: company?.notes ?? '',
     },
   })
   const { errors, isSubmitting } = form.formState
@@ -78,6 +81,7 @@ function CompanyForm({
         phone: orUndefined(v.phone),
         email: orUndefined(v.email),
         address: orUndefined(v.address),
+        notes: orUndefined(v.notes),
       })
       toast.success(t('common:common.saved'))
       onClose()
@@ -115,6 +119,11 @@ function CompanyForm({
           <FieldLabel htmlFor="c-address">{t('companies:fields.address')}</FieldLabel>
           <Input id="c-address" {...form.register('address')} />
           <FieldErrorText error={errors.address} />
+        </Field>
+        <Field data-invalid={!!errors.notes}>
+          <FieldLabel htmlFor="c-notes">{t('companies:fields.notes')}</FieldLabel>
+          <Textarea id="c-notes" rows={2} {...form.register('notes')} />
+          <FieldErrorText error={errors.notes} />
         </Field>
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>

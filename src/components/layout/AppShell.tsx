@@ -1,4 +1,5 @@
-import { Building2, Eye, LogOut, Package, Route, Truck, Users, UsersRound, Warehouse, X, type LucideIcon } from 'lucide-react'
+import { Building2, Eye, KeyRound, LogOut, Package, Route, Truck, Users, UsersRound, Warehouse, X, type LucideIcon } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
 import { Button } from '@/components/ui/button'
@@ -17,6 +18,7 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { useAccess, type Access } from '@/features/auth/access'
+import { ChangePasswordDialog } from '@/features/auth/ChangePasswordDialog'
 import { useCompanyView } from '@/features/auth/companyView'
 import { useAuth } from '@/features/auth/useAuth'
 
@@ -40,6 +42,7 @@ export function AppShell() {
   const companyView = useCompanyView()
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const [changingPassword, setChangingPassword] = useState(false)
 
   const items = NAV.filter((item) => item.show(access))
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email
@@ -74,6 +77,10 @@ export function AppShell() {
             <p className="truncate font-medium">{fullName}</p>
             <p className="truncate text-xs text-muted-foreground">{roles.map((r) => t(`roles.${r}`)).join(', ')}</p>
           </div>
+          <Button variant="ghost" size="sm" onClick={() => setChangingPassword(true)}>
+            <KeyRound />
+            {t('nav.changePassword')}
+          </Button>
           <Button variant="outline" size="sm" onClick={logout}>
             <LogOut />
             {t('nav.logout')}
@@ -100,6 +107,7 @@ export function AppShell() {
           <Outlet />
         </main>
       </SidebarInset>
+      <ChangePasswordDialog open={changingPassword} onOpenChange={setChangingPassword} />
     </SidebarProvider>
   )
 }

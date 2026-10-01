@@ -5,6 +5,7 @@ import { DetailsList } from '@/components/common/DetailsList'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useAccess } from '@/features/auth/access'
 import type { CompanyResponse } from '@/lib/api/types'
 import { formatDateTime, formatPhone } from '@/lib/format'
 import { CompanyDialog } from './CompanyDialog'
@@ -34,6 +35,9 @@ export function NpKeyBadge({ configured }: { configured?: boolean }) {
 /** Details card with edit + NP backup key dialogs; used by admin's company page and manager's own-company page. */
 export function CompanyDetails({ company }: { company: CompanyResponse }) {
   const { t } = useTranslation(['companies', 'common'])
+  const { canEdit, isAdmin, companyMode } = useAccess()
+  // Admins may edit company requisites from the companies section, but not while browsing a company read-only.
+  const editable = canEdit || (isAdmin && !companyMode)
   const update = useUpdateCompany(company.id!)
   const setKey = useSetCompanyNpKey(company.id!)
   const [editing, setEditing] = useState(false)
@@ -51,19 +55,22 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
               { label: t('companies:fields.email'), value: company.email },
               { label: t('companies:fields.address'), value: company.address },
               { label: t('companies:fields.npKey'), value: <NpKeyBadge configured={company.novaPoshtaKeyConfigured} /> },
+              { label: t('companies:fields.notes'), value: company.notes },
               { label: t('common:common.createdAt'), value: formatDateTime(company.createdAt) },
             ]}
           />
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => setEditing(true)}>
-              <Pencil />
-              {t('common:actions.edit')}
-            </Button>
-            <Button variant="outline" onClick={() => setKeyOpen(true)}>
-              <KeyRound />
-              {t('companies:actions.npKey')}
-            </Button>
-          </div>
+          {editable && (
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={() => setEditing(true)}>
+                <Pencil />
+                {t('common:actions.edit')}
+              </Button>
+              <Button variant="outline" onClick={() => setKeyOpen(true)}>
+                <KeyRound />
+                {t('companies:actions.npKey')}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

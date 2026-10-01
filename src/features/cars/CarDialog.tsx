@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Field, FieldContent, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import { parseNumber } from '@/features/parcels/status'
 import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
@@ -27,6 +28,7 @@ const schema = z.object({
   capacityKg: numberField,
   volumeM3: numberField,
   defaultDriverId: z.number().optional(),
+  notes: z.string().trim(),
   active: z.boolean(),
 })
 
@@ -67,6 +69,7 @@ function CarForm({ car, onClose }: { car?: CarResponse; onClose: () => void }) {
       capacityKg: car?.capacityKg != null ? String(car.capacityKg) : '',
       volumeM3: car?.volumeM3 != null ? String(car.volumeM3) : '',
       defaultDriverId: car?.defaultDriverId,
+      notes: car?.notes ?? '',
       active: car?.active ?? true,
     },
   })
@@ -81,6 +84,7 @@ function CarForm({ car, onClose }: { car?: CarResponse; onClose: () => void }) {
       capacityKg: parseNumber(v.capacityKg),
       volumeM3: parseNumber(v.volumeM3),
       defaultDriverId: v.defaultDriverId,
+      notes: v.notes || undefined,
       active: v.active,
     }
     try {
@@ -135,6 +139,11 @@ function CarForm({ car, onClose }: { car?: CarResponse; onClose: () => void }) {
             </Field>
           )}
         />
+        <Field data-invalid={!!errors.notes}>
+          <FieldLabel htmlFor="car-notes">{t('cars:fields.notes')}</FieldLabel>
+          <Textarea id="car-notes" rows={2} {...form.register('notes')} />
+          <FieldErrorText error={errors.notes} />
+        </Field>
         <Controller
           control={form.control}
           name="active"

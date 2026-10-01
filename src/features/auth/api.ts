@@ -1,20 +1,18 @@
 import { api } from '@/lib/api/client'
 import { toApiError, unwrap } from '@/lib/api/problem'
-import type { LoginRequest, UserResponse } from '@/lib/api/types'
-
-// Login 200 is not declared in the OpenAPI spec, so the shape is typed by hand.
-export type TokenResponse = {
-  accessToken: string
-  tokenType: string
-  expiresIn: number
-}
+import type { ChangePasswordRequest, LoginRequest, TokenResponse, UserResponse } from '@/lib/api/types'
 
 export async function login(body: LoginRequest): Promise<TokenResponse> {
   const { data, error, response } = await api.POST('/api/auth/login', { body })
   if (!response.ok) throw toApiError(error, response)
-  return data as unknown as TokenResponse
+  return data as TokenResponse
 }
 
 export function fetchMe(): Promise<UserResponse> {
   return unwrap(api.GET('/api/auth/me'))
+}
+
+/** Returns a fresh token; every other session of the user is revoked. */
+export function changePassword(body: ChangePasswordRequest): Promise<TokenResponse> {
+  return unwrap(api.POST('/api/auth/password', { body }))
 }

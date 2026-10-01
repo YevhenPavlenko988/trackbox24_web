@@ -7,6 +7,7 @@ import { LinkButton } from '@/components/common/LinkButton'
 import { Pagination } from '@/components/common/Pagination'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Input } from '@/components/ui/input'
+import { useAccess } from '@/features/auth/access'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useListParams } from '@/hooks/use-list-params'
 import { emptyPage } from '@/lib/api/page'
@@ -18,6 +19,7 @@ import { useClients } from './queries'
 export function ClientsListPage() {
   const { t } = useTranslation(['clients', 'common'])
   const navigate = useNavigate()
+  const { canEdit } = useAccess()
   const { page, size, get, set, setPage, setSize } = useListParams()
 
   const urlSearch = get('search') ?? ''
@@ -42,10 +44,12 @@ export function ClientsListPage() {
       <PageHeader
         title={t('clients:title')}
         actions={
-          <LinkButton to="/clients/new">
-            <Plus />
-            {t('common:actions.add')}
-          </LinkButton>
+          canEdit && (
+            <LinkButton to="/clients/new">
+              <Plus />
+              {t('common:actions.add')}
+            </LinkButton>
+          )
         }
       />
       <div className="mb-4 flex gap-2">

@@ -47,9 +47,11 @@ export function ParcelsListPage() {
   const query = useParcels({ query: urlQuery, status, clientId, representativeId, warehouseId, paymentStatus, needsEnrichment, page, size, sort })
   const data = query.data ?? emptyPage<ParcelResponse>()
 
-  const [selected, setSelected] = useState<Set<string | number>>(new Set())
+  const [rawSelected, setSelected] = useState<Set<string | number>>(new Set())
   const [moving, setMoving] = useState(false)
-  useEffect(() => setSelected(new Set()), [query.data])
+  // Only rows on the current page count; stale ids from other pages/filters are ignored.
+  const visibleIds = new Set(data.content.map((p) => p.id ?? 0))
+  const selected = new Set([...rawSelected].filter((id) => visibleIds.has(Number(id))))
 
   const reset = () => {
     setSearch('')

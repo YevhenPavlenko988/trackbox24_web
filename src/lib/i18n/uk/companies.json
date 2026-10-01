@@ -13,6 +13,7 @@
     "phone": "Телефон",
     "email": "Email",
     "address": "Адреса",
+    "notes": "Примітки",
     "active": "Активна",
     "npKey": "Ключ Нової Пошти",
     "npKeyConfigured": "Ключ налаштовано",

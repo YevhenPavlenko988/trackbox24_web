@@ -6,6 +6,7 @@ import { Pagination } from '@/components/common/Pagination'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useAccess } from '@/features/auth/access'
 import { useListParams } from '@/hooks/use-list-params'
 import { emptyPage } from '@/lib/api/page'
 import type { CarResponse } from '@/lib/api/types'
@@ -15,6 +16,7 @@ import { useCars } from './queries'
 export function CarsListPage() {
   const { t } = useTranslation(['cars', 'common'])
   const { page, size, setPage, setSize } = useListParams()
+  const { canEdit } = useAccess()
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<CarResponse | null>(null)
 
@@ -39,13 +41,15 @@ export function CarsListPage() {
       <PageHeader
         title={t('cars:title')}
         actions={
-          <Button onClick={() => setCreating(true)}>
-            <Plus />
-            {t('common:actions.add')}
-          </Button>
+          canEdit && (
+            <Button onClick={() => setCreating(true)}>
+              <Plus />
+              {t('common:actions.add')}
+            </Button>
+          )
         }
       />
-      <DataTable columns={columns} rows={data.content} rowKey={(c) => c.id ?? 0} onRowClick={(c) => setEditing(c)} isLoading={query.isPending} />
+      <DataTable columns={columns} rows={data.content} rowKey={(c) => c.id ?? 0} onRowClick={canEdit ? (c) => setEditing(c) : undefined} isLoading={query.isPending} />
       <div className="mt-4">
         <Pagination page={data} onPageChange={setPage} onSizeChange={setSize} />
       </div>
