@@ -15,7 +15,6 @@ import { parseNumber } from '@/features/parcels/status'
 import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
 import type { PlannedShipmentResponse } from '@/lib/api/types'
-import { ParcelPickList } from './ParcelPickList'
 import { useStartActual } from './queries'
 
 const schema = z.object({
@@ -23,12 +22,11 @@ const schema = z.object({
   driverId: z.number({ error: 'required' }),
   startOdometerKm: z.string().trim().refine((s) => s === '' || /^\d+$/.test(s), 'number'),
   notes: z.string().trim(),
-  parcelIds: z.array(z.number()),
 })
 
 type FormValues = z.infer<typeof schema>
 
-/** Starts a trip either from a CONFIRMED planned shipment (parcels come from it) or ad hoc with a parcel picker. */
+/** Opens a trip for a driver; the manifest is then built by load scans in the mobile app, not here. */
 export function StartShipmentDialog({
   open,
   onOpenChange,
@@ -44,7 +42,10 @@ export function StartShipmentDialog({
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{t('actual.startTitle')}</DialogTitle>
-          {planned && <DialogDescription>{t('planned.one', { id: planned.id })}</DialogDescription>}
+          <DialogDescription>
+            {planned ? t('planned.one', { id: planned.id }) + '. ' : ''}
+            {t('actual.startHint')}
+          </DialogDescription>
         </DialogHeader>
         {open && <StartForm planned={planned} onClose={() => onOpenChange(false)} />}
       </DialogContent>
@@ -58,7 +59,7 @@ function StartForm({ planned, onClose }: { planned?: PlannedShipmentResponse; on
   const start = useStartActual()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { carId: planned?.carId, driverId: planned?.driverId, startOdometerKm: '', notes: '', parcelIds: [] },
+    defaultValues: { carId: planned?.carId, driverId: planned?.driverId, startOdometerKm: '', notes: '' },
   })
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
@@ -71,7 +72,6 @@ function StartForm({ planned, onClose }: { planned?: PlannedShipmentResponse; on
         driverId: v.driverId,
         startOdometerKm: parseNumber(v.startOdometerKm),
         notes: v.notes || undefined,
-        parcelIds: planned ? undefined : v.parcelIds,
       })
       toast.success(t('common:common.saved'))
       onClose()
@@ -118,18 +118,6 @@ function StartForm({ planned, onClose }: { planned?: PlannedShipmentResponse; on
           <Textarea id="st-notes" rows={2} {...form.register('notes')} />
           <FieldErrorText error={errors.notes} />
         </Field>
-        {!planned && (
-          <Controller
-            control={form.control}
-            name="parcelIds"
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>{t('shipments:fields.parcels')}</FieldLabel>
-                <ParcelPickList selected={field.value} onChange={field.onChange} />
-              </Field>
-            )}
-          />
-        )}
         <div className="flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>
             {t('common:actions.cancel')}

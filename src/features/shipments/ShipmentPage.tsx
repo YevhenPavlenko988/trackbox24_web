@@ -8,15 +8,33 @@ import { DetailsList } from '@/components/common/DetailsList'
 import { LinkButton } from '@/components/common/LinkButton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ParcelsTable } from '@/features/parcels/ParcelsTable'
 import { showApiError } from '@/lib/api/problem'
+import type { ParcelResponse } from '@/lib/api/types'
 import { formatDateTime } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { CompleteShipmentDialog } from './CompleteShipmentDialog'
 import { useActualParcels, useActualShipment, useCancelActual } from './queries'
 import { ActualStatusBadge } from './ShipmentStatusBadge'
+
+/** A parcel counts as loaded once at least one seat was scanned into the car (or further). */
+function isLoaded(p: ParcelResponse): boolean {
+  if (p.status === 'IN_CAR' || p.status === 'DELIVERED_TO_CLIENT') return true
+  return (p.seats ?? []).some((s) => s.status === 'IN_CAR' || s.status === 'DELIVERED_TO_CLIENT')
+}
+
+function loadedSeats(parcels: ParcelResponse[]): { loaded: number; total: number } {
+  let loaded = 0
+  let total = 0
+  for (const p of parcels) {
+    const seats = p.seats?.length ? p.seats : [{ status: p.status }]
+    total += seats.length
+    loaded += seats.filter((s) => s.status === 'IN_CAR' || s.status === 'DELIVERED_TO_CLIENT').length
+  }
+  return { loaded, total }
+}
 
 export function ShipmentPage() {
   const { id } = useParams()
@@ -32,6 +50,10 @@ export function ShipmentPage() {
   if (query.isError || !query.data) return <NotFoundPage />
   const s = query.data
   const active = s.status === 'IN_PROGRESS'
+  const all = parcels.data ?? []
+  const loaded = all.filter(isLoaded)
+  const notLoaded = all.filter((p) => !isLoaded(p))
+  const seats = loadedSeats(all)
 
   const onCancel = async () => {
     try {
@@ -101,13 +123,32 @@ export function ShipmentPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {t('shipments:actual.parcelsTitle')} ({parcels.data?.length ?? 0})
+              {t('shipments:actual.loadedTitle')} ({loaded.length})
             </CardTitle>
+            <CardDescription>
+              {t('shipments:actual.loadedSummary', { parcels: loaded.length, seats: seats.loaded, totalSeats: seats.total })}
+              {' · '}
+              {t('shipments:actual.manifestHint')}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <ParcelsTable rows={parcels.data ?? []} isLoading={parcels.isPending} emptyText={t('shipments:actual.noParcels')} />
+            <ParcelsTable rows={loaded} isLoading={parcels.isPending} emptyText={t('shipments:actual.noLoaded')} />
           </CardContent>
         </Card>
+
+        {notLoaded.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {t('shipments:actual.notLoadedTitle')} ({notLoaded.length})
+              </CardTitle>
+              <CardDescription>{t('shipments:actual.notLoadedHint')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ParcelsTable rows={notLoaded} />
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <CompleteShipmentDialog shipment={s} open={completing} onOpenChange={setCompleting} />

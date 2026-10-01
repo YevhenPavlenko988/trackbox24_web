@@ -8,7 +8,7 @@ import { DetailsList } from '@/components/common/DetailsList'
 import { LinkButton } from '@/components/common/LinkButton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ParcelsTable } from '@/features/parcels/ParcelsTable'
@@ -128,10 +128,13 @@ export function PlannedShipmentPage() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>
-              {t('shipments:planned.parcelsTitle')} ({parcelIds.length})
-            </CardTitle>
+          <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <div className="flex flex-col gap-1">
+              <CardTitle>
+                {t('shipments:planned.parcelsTitle')} ({parcelIds.length})
+              </CardTitle>
+              <CardDescription>{t('shipments:planned.parcelsHint')}</CardDescription>
+            </div>
             {editable && (
               <Button size="sm" variant="outline" onClick={() => setPicking(true)}>
                 <Plus />
