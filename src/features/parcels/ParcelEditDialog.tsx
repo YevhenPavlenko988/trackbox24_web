@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { ClientPicker } from '@/features/clients/ClientPicker'
-import { RepresentativeSelect } from '@/features/users/RepresentativeSelect'
+import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
 import type { ParcelResponse } from '@/lib/api/types'
 import { useUpdateParcel } from './queries'
@@ -117,7 +117,7 @@ function EditForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => 
               render={({ field }) => (
                 <Field data-invalid={!!errors.representativeId}>
                   <FieldLabel htmlFor="e-representativeId">{t('parcels:fields.representative')}</FieldLabel>
-                  <RepresentativeSelect
+                  <UserSelect role="REPRESENTATIVE"
                     id="e-representativeId"
                     className="w-full"
                     value={field.value}

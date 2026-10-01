@@ -1,16 +1,16 @@
+import type { ComponentType } from 'react'
 import { createBrowserRouter } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
-import { ClientCreatePage } from '@/features/clients/ClientCreatePage'
-import { ClientPage } from '@/features/clients/ClientPage'
-import { ClientsListPage } from '@/features/clients/ClientsListPage'
-import { LabelsPage } from '@/features/parcels/LabelsPage'
-import { ParcelCreatePage } from '@/features/parcels/ParcelCreatePage'
-import { ParcelPage } from '@/features/parcels/ParcelPage'
-import { ParcelsListPage } from '@/features/parcels/ParcelsListPage'
 import { NotFoundPage } from './ErrorPages'
 import { HomeRedirect, RedirectIfAuthenticated, RequireAuth, RequireRole } from './guards'
-import { PlaceholderPage } from './PlaceholderPage'
+
+type PageModule = Record<string, unknown>
+
+/** Code-splits a page: `page(() => import('...'), 'ExportName')`. */
+const page = (load: () => Promise<PageModule>, name: string) => async () => ({
+  Component: (await load())[name] as ComponentType,
+})
 
 export const router = createBrowserRouter([
   {
@@ -22,7 +22,7 @@ export const router = createBrowserRouter([
     children: [
       {
         element: <RequireRole roles={['MANAGER']} />,
-        children: [{ path: 'parcels/:id/labels', element: <LabelsPage /> }],
+        children: [{ path: 'parcels/:id/labels', lazy: page(() => import('@/features/parcels/LabelsPage'), 'LabelsPage') }],
       },
       {
         element: <AppShell />,
@@ -31,19 +31,22 @@ export const router = createBrowserRouter([
           {
             element: <RequireRole roles={['MANAGER']} />,
             children: [
-              { path: 'parcels', element: <ParcelsListPage /> },
-              { path: 'parcels/new', element: <ParcelCreatePage /> },
-              { path: 'parcels/:id', element: <ParcelPage /> },
-              { path: 'clients', element: <ClientsListPage /> },
-              { path: 'clients/new', element: <ClientCreatePage /> },
-              { path: 'clients/:id', element: <ClientPage /> },
+              { path: 'parcels', lazy: page(() => import('@/features/parcels/ParcelsListPage'), 'ParcelsListPage') },
+              { path: 'parcels/new', lazy: page(() => import('@/features/parcels/ParcelCreatePage'), 'ParcelCreatePage') },
+              { path: 'parcels/:id', lazy: page(() => import('@/features/parcels/ParcelPage'), 'ParcelPage') },
+              { path: 'clients', lazy: page(() => import('@/features/clients/ClientsListPage'), 'ClientsListPage') },
+              { path: 'clients/new', lazy: page(() => import('@/features/clients/ClientCreatePage'), 'ClientCreatePage') },
+              { path: 'clients/:id', lazy: page(() => import('@/features/clients/ClientPage'), 'ClientPage') },
+              { path: 'users', lazy: page(() => import('@/features/users/UsersListPage'), 'UsersListPage') },
+              { path: 'cars', lazy: page(() => import('@/features/cars/CarsListPage'), 'CarsListPage') },
+              { path: 'company', lazy: page(() => import('@/features/companies/MyCompanyPage'), 'MyCompanyPage') },
             ],
           },
           {
-            element: <RequireRole roles={['ADMIN', 'MANAGER']} />,
+            element: <RequireRole roles={['ADMIN']} />,
             children: [
-              { path: 'companies', element: <PlaceholderPage titleKey="nav.companies" /> },
-              { path: 'users', element: <PlaceholderPage titleKey="nav.users" /> },
+              { path: 'companies', lazy: page(() => import('@/features/companies/CompaniesListPage'), 'CompaniesListPage') },
+              { path: 'companies/:id', lazy: page(() => import('@/features/companies/CompanyPage'), 'CompanyPage') },
             ],
           },
           { path: '*', element: <NotFoundPage /> },

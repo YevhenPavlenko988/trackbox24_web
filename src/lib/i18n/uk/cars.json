@@ -1,0 +1,18 @@
+{
+  "title": "Машини",
+  "createTitle": "Нова машина",
+  "editTitle": "Редагувати машину",
+  "fields": {
+    "plateNumber": "Номер",
+    "brand": "Марка",
+    "model": "Модель",
+    "capacityKg": "Вантажопідйомність, кг",
+    "volumeM3": "Об'єм, м³",
+    "defaultDriver": "Водій за замовчуванням",
+    "active": "Активна"
+  },
+  "status": {
+    "active": "Активна",
+    "inactive": "Неактивна"
+  }
+}

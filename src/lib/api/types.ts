@@ -15,6 +15,15 @@ export type ParcelStatusChangeRequest = Schemas['ParcelStatusChangeRequest']
 export type ClientResponse = Schemas['ClientResponse']
 export type ClientRequest = Schemas['ClientRequest']
 
+export type CompanyRequest = Schemas['CompanyRequest']
+export type CompanyResponse = Schemas['CompanyResponse']
+export type UserCreateRequest = Schemas['UserCreateRequest']
+export type UserUpdateRequest = Schemas['UserUpdateRequest']
+export type NovaPoshtaKeyRequest = Schemas['NovaPoshtaKeyRequest']
+export type CarRequest = Schemas['CarRequest']
+export type CarResponse = Schemas['CarResponse']
+export type SyncResult = Schemas['SyncResult']
+
 export type Problem = Schemas['Problem']
 export type PageMetadata = Schemas['PageMetadata']
 

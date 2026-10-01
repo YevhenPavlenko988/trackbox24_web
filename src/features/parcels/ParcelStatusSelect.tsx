@@ -1,14 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { ParcelStatus } from '@/lib/api/types'
-
-export const PARCEL_STATUSES: ParcelStatus[] = [
-  'IN_NOVA_POSHTA',
-  'RECEIVED_BY_REPRESENTATIVE',
-  'IN_CAR',
-  'DELIVERED_TO_CLIENT',
-  'CANCELLED',
-]
+import { PARCEL_STATUSES } from './status'
 
 const ALL = '__all__'
 

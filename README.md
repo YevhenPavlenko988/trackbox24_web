@@ -35,7 +35,9 @@ src/
   features/auth/        токен, AuthProvider, логін
   features/parcels/     список, створення, картка, редагування, статус, історія, етикетки
   features/clients/     список, створення, картка, форма, ClientPicker
-  features/users/       список представників
+  features/users/       користувачі компанії (створення/редагування, ключ НП представника), UserSelect
+  features/companies/   адмін: список/картка компаній, активація; менеджер: «Моя компанія», резервний ключ НП, синхронізація
+  features/cars/        машини (список, створення/редагування)
   lib/api/              openapi-fetch клієнт, парсер problem+json, пагінація, типи
   lib/i18n/uk/          словники
   routes/               роутер, гарди за роллю

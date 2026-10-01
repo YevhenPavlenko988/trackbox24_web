@@ -1,4 +1,4 @@
-import { Building2, LogOut, Package, Users, UsersRound, type LucideIcon } from 'lucide-react'
+import { Building2, LogOut, Package, Truck, Users, UsersRound, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation } from 'react-router'
 import { Button } from '@/components/ui/button'
@@ -24,8 +24,10 @@ type NavItem = { to: string; labelKey: string; icon: LucideIcon; roles: Role[] }
 const NAV: NavItem[] = [
   { to: '/parcels', labelKey: 'nav.parcels', icon: Package, roles: ['MANAGER'] },
   { to: '/clients', labelKey: 'nav.clients', icon: UsersRound, roles: ['MANAGER'] },
+  { to: '/users', labelKey: 'nav.users', icon: Users, roles: ['MANAGER'] },
+  { to: '/cars', labelKey: 'nav.cars', icon: Truck, roles: ['MANAGER'] },
+  { to: '/company', labelKey: 'nav.company', icon: Building2, roles: ['MANAGER'] },
   { to: '/companies', labelKey: 'nav.companies', icon: Building2, roles: ['ADMIN'] },
-  { to: '/users', labelKey: 'nav.users', icon: Users, roles: ['ADMIN', 'MANAGER'] },
 ]
 
 export function AppShell() {
@@ -47,7 +49,7 @@ export function AppShell() {
                 {items.map((item) => (
                   <SidebarMenuItem key={item.to}>
                     <SidebarMenuButton
-                      isActive={pathname.startsWith(item.to)}
+                      isActive={pathname === item.to || pathname.startsWith(item.to + '/')}
                       render={<NavLink to={item.to} />}
                     >
                       <item.icon />

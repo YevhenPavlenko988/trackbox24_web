@@ -1,11 +1,13 @@
 import { useTranslation } from 'react-i18next'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { Role } from '@/lib/api/types'
 import { userDisplayName } from './api'
-import { useRepresentatives } from './queries'
+import { useUsersByRole } from './queries'
 
 const NONE = '__none__'
 
-export function RepresentativeSelect({
+export function UserSelect({
+  role,
   value,
   onChange,
   id,
@@ -13,6 +15,7 @@ export function RepresentativeSelect({
   className,
   noneLabel,
 }: {
+  role: Role
   value?: number
   onChange: (id: number | undefined) => void
   id?: string
@@ -20,11 +23,11 @@ export function RepresentativeSelect({
   className?: string
   noneLabel?: string
 }) {
-  const { t } = useTranslation(['parcels', 'common'])
-  const reps = useRepresentatives()
-  const items = reps.data?.content ?? []
+  const { t } = useTranslation('users')
+  const users = useUsersByRole(role)
+  const items = users.data?.content ?? []
   const selected = items.find((u) => u.id === value)
-  const empty = noneLabel ?? t('parcels:filters.allRepresentatives')
+  const empty = noneLabel ?? t('selectPlaceholder')
 
   return (
     <Select value={value != null ? String(value) : NONE} onValueChange={(v) => onChange(v && v !== NONE ? Number(v) : undefined)}>

@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ClientPicker } from '@/features/clients/ClientPicker'
-import { RepresentativeSelect } from '@/features/users/RepresentativeSelect'
+import { UserSelect } from '@/features/users/UserSelect'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useListParams } from '@/hooks/use-list-params'
 import { emptyPage } from '@/lib/api/page'
@@ -64,7 +64,7 @@ export function ParcelsListPage() {
           onChange={(e) => setSearch(e.target.value)}
         />
         <ParcelStatusSelect value={status} onChange={(v) => set({ status: v, sort: undefined })} />
-        <RepresentativeSelect value={representativeId} onChange={(v) => set({ representativeId: v })} />
+        <UserSelect role="REPRESENTATIVE" value={representativeId} onChange={(v) => set({ representativeId: v })} />
         <div className="w-64">
           <ClientPicker value={clientId} onChange={(v) => set({ clientId: v })} placeholder={t('parcels:filters.client')} />
         </div>

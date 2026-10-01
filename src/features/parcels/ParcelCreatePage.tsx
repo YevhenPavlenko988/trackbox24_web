@@ -15,7 +15,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { ClientPicker } from '@/features/clients/ClientPicker'
-import { RepresentativeSelect } from '@/features/users/RepresentativeSelect'
+import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
 import { useCreateParcel } from './queries'
 import { orUndefined, parseNumber } from './status'
@@ -139,7 +139,7 @@ export function ParcelCreatePage() {
                   render={({ field }) => (
                     <Field data-invalid={!!errors.representativeId}>
                       <FieldLabel htmlFor="representativeId">{t('parcels:fields.representative')}</FieldLabel>
-                      <RepresentativeSelect
+                      <UserSelect role="REPRESENTATIVE"
                         id="representativeId"
                         className="w-full"
                         value={field.value}
