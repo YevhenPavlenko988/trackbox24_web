@@ -110,7 +110,7 @@ export async function run() {
     const navM = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
     ok('manager nav has 7 items', navM.length === 7, navM.join(','))
 
-    await page.goto(BASE + '/users')
+    await page.goto(BASE + '/users?size=100')
     await page.waitForSelector('table tbody tr:has-text("rep@test.ua")')
     await shot('05-users-list')
     await page.getByRole('button', { name: 'Додати' }).click()
@@ -161,7 +161,7 @@ export async function run() {
 
     await page.click('[data-slot=select-trigger]')
     await page.locator('[data-slot=select-item]', { hasText: 'Водій' }).click()
-    await page.waitForURL('**/users?role=DRIVER')
+    await page.waitForURL((u) => u.pathname.endsWith('/users') && u.searchParams.get('role') === 'DRIVER')
     ok('role filter in URL', true)
 
     // cars with notes
@@ -233,7 +233,7 @@ export async function run() {
     await page.waitForSelector('h1:has-text("PT")')
     ok('viewer parcel page without edit/status', (await page.getByRole('button', { name: 'Редагувати' }).count()) === 0 && (await page.getByRole('button', { name: 'Змінити статус' }).count()) === 0)
     await shot('07-viewer')
-    await page.goto(BASE + '/users')
+    await page.goto(BASE + '/users?size=100')
     await page.waitForSelector('table tbody tr:has-text("rep@test.ua")')
     ok('viewer lists users without actions', (await page.getByRole('button', { name: 'Додати' }).count()) === 0)
 
@@ -242,10 +242,11 @@ export async function run() {
     await admin.post('/api/users', { companyId: company.id, email: driverEmail, password: 'driver123', firstName: 'Водій', lastName: u, roles: ['DRIVER'] })
     await r.login({ email: driverEmail, password: 'driver123' })
     await page.waitForURL('**/mobile-only')
-    ok('pure driver lands on mobile-only page', (await page.textContent('body')).includes('мобільному застосунку'))
+    const mobileOnly = await page.getByText('мобільному застосунку').first().waitFor({ timeout: 5000 }).then(() => true, () => false)
+    ok('pure driver lands on mobile-only page', mobileOnly)
 
     await r.login(ADMIN)
-    await page.goto(BASE + '/users')
+    await page.goto(BASE + '/users?size=100')
     await page.waitForTimeout(400)
     ok('admin outside company mode gets 403 on /users', (await page.textContent('body')).includes('403'))
     void newCompanyUrl

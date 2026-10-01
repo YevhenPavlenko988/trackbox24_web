@@ -75,7 +75,7 @@ export function ParcelsListPage() {
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Input className="w-72" placeholder={t('parcels:filters.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
         <ParcelStatusSelect value={status} onChange={(v) => set({ status: v, sort: undefined })} />
-        <UserSelect role="REPRESENTATIVE" value={representativeId} onChange={(v) => set({ representativeId: v })} />
+        <UserSelect role="REPRESENTATIVE" value={representativeId} onChange={(v) => set({ representativeId: v })} noneLabel={t('parcels:filters.allRepresentatives')} />
         <div className="w-56">
           <WarehouseSelect value={warehouseId} onChange={(v) => set({ warehouseId: v })} noneLabel={t('parcels:filters.allWarehouses')} />
         </div>

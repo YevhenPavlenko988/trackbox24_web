@@ -18,6 +18,7 @@ export function splitTripParcels(tripId: number, parcels: ParcelResponse[]) {
 
 export const isOutsidePlan = (tripId: number, p: ParcelResponse) => p.tripId === tripId && p.plannedTripId !== tripId
 
+/** Seats of the parcels in the trip: `loaded` = ever loaded (still in the car or already delivered). */
 export function seatProgress(parcels: ParcelResponse[]): { loaded: number; delivered: number; total: number } {
   let loaded = 0
   let delivered = 0
@@ -26,7 +27,7 @@ export function seatProgress(parcels: ParcelResponse[]): { loaded: number; deliv
     const seats = p.seats?.length ? p.seats : [{ status: p.status }]
     total += seats.length
     for (const s of seats) {
-      if (s.status === 'IN_CAR') loaded += 1
+      if (s.status === 'IN_CAR' || s.status === 'DELIVERED_TO_CLIENT') loaded += 1
       if (s.status === 'DELIVERED_TO_CLIENT') delivered += 1
     }
   }

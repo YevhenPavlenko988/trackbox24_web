@@ -43,6 +43,7 @@ export function ParcelPage() {
   if (query.isError || !query.data) return <NotFoundPage />
   const p = query.data
   const hasPrice = p.deliveryPrice != null
+  const hasSeatWarehouse = !!p.seats?.some((s) => s.warehouseName)
 
   const onRefresh = async () => {
     try {
@@ -135,7 +136,7 @@ export function ParcelPage() {
                     <TableHead>№</TableHead>
                     <TableHead>{t('parcels:fields.barcode')}</TableHead>
                     <TableHead>{t('parcels:fields.status')}</TableHead>
-                    <TableHead>{t('parcels:fields.warehouse')}</TableHead>
+                    {hasSeatWarehouse && <TableHead>{t('parcels:fields.warehouse')}</TableHead>}
                     <TableHead>{t('parcels:fields.statusChangedAt')}</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -147,8 +148,8 @@ export function ParcelPage() {
                       <TableCell>
                         <ParcelStatusBadge status={s.status} />
                       </TableCell>
-                      <TableCell>{s.warehouseName ?? '—'}</TableCell>
-                      <TableCell className="text-muted-foreground">
+                      {hasSeatWarehouse && <TableCell>{s.warehouseName ?? '—'}</TableCell>}
+                      <TableCell className="whitespace-normal text-muted-foreground">
                         <div className="flex flex-col">
                           <span>{formatDateTime(s.statusChangedAt)}</span>
                           {s.statusChangedBy && <span className="text-xs">{s.statusChangedBy}</span>}

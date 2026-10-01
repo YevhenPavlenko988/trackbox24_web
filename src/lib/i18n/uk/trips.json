@@ -52,6 +52,7 @@
     "loadedProgress": "Завантажено місць: {{loaded}} з {{total}} · видано: {{delivered}}",
     "noPlan": "План порожній",
     "noLoaded": "Ще нічого не завантажено",
+    "noLoadedClosed": "У цьому рейсі посилок немає",
     "history": "Історія рейсу"
   },
   "departDialog": {

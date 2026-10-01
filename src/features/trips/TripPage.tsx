@@ -178,7 +178,7 @@ export function TripPage() {
             <ParcelsTable
               rows={loaded}
               isLoading={parcels.isPending}
-              emptyText={t('trips:sections.noLoaded')}
+              emptyText={t(acceptsLoading(trip.status) ? 'trips:sections.noLoaded' : 'trips:sections.noLoadedClosed')}
               extra={(p) => (isOutsidePlan(tripId, p) ? <Badge variant="outline">{t('trips:sections.outsidePlan')}</Badge> : null)}
             />
           </CardContent>
