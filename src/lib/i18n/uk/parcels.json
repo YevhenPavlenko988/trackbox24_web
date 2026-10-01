@@ -1,0 +1,90 @@
+{
+  "title": "Посилки",
+  "createTitle": "Нова посилка",
+  "editTitle": "Редагувати посилку",
+  "needsEnrichment": "Потребує уточнення даних",
+  "filters": {
+    "allStatuses": "Усі статуси",
+    "searchPlaceholder": "Штрих-код, ТТН, відправник або телефон",
+    "needsEnrichment": "Потребують уточнення",
+    "paidStorage": "Платне зберігання",
+    "representative": "Представник",
+    "allRepresentatives": "Усі представники",
+    "client": "Клієнт"
+  },
+  "create": {
+    "modeTtn": "За ТТН Нової Пошти",
+    "modeManual": "Без ТТН",
+    "modeTtnHint": "Дані підтягнуться з Нової Пошти. Решту полів можна заповнити зараз або пізніше.",
+    "modeManualHint": "Посилка одразу вважається отриманою представником, буде згенеровано штрих-код.",
+    "alreadyReceived": "Посилка вже в руках представника"
+  },
+  "edit": {
+    "seatsLocked": "Кількість місць не можна змінити після завантаження в машину"
+  },
+  "actions": {
+    "changeStatus": "Змінити статус",
+    "refreshNp": "Оновити з НП",
+    "refreshed": "Дані оновлено з Нової Пошти",
+    "printLabels": "Етикетки"
+  },
+  "statusDialog": {
+    "title": "Зміна статусу",
+    "current": "Поточний статус:",
+    "newStatus": "Новий статус",
+    "force": "Примусово",
+    "forceHint": "Дозволити перехід поза звичайним флоу — для виправлення помилки, коментар обов'язковий",
+    "comment": "Коментар",
+    "noTransitions": "З поточного статусу переходів немає. Увімкніть «Примусово», щоб виправити помилку."
+  },
+  "sections": {
+    "seats": "Місця",
+    "seatsPending": "Місця ({{count}}) будуть створені після отримання представником",
+    "details": "Дані посилки",
+    "novaPoshta": "Нова Пошта"
+  },
+  "history": {
+    "title": "Історія",
+    "empty": "Історія порожня",
+    "seat": "Місце {{n}}"
+  },
+  "labels": {
+    "seat": "Місце {{n}} / {{total}}"
+  },
+  "source": {
+    "NOVA_POSHTA": "Нова Пошта",
+    "MANUAL": "Вручну"
+  },
+  "fields": {
+    "barcode": "Штрих-код",
+    "npTtn": "ТТН Нової Пошти",
+    "npTtnShort": "ТТН",
+    "status": "Статус",
+    "client": "Клієнт",
+    "sender": "Відправник",
+    "senderName": "ПІБ відправника",
+    "senderPhone": "Телефон відправника",
+    "senderCity": "Місто відправника",
+    "seats": "Місця",
+    "seatsAmount": "Кількість місць",
+    "description": "Опис вмісту",
+    "weightKg": "Вага, кг",
+    "declaredValue": "Оголошена вартість, грн",
+    "notes": "Примітки",
+    "representative": "Представник",
+    "source": "Джерело",
+    "npScheduledDeliveryAt": "Планова доставка",
+    "npArrivedAt": "Прибула у відділення",
+    "npReceivedAt": "Забрали з НП",
+    "npReturnAt": "Повернення відправнику",
+    "npPaidStorageFrom": "Платне зберігання з",
+    "npStatus": "Статус НП",
+    "npStatusUpdatedAt": "Статус НП оновлено",
+    "npRecipientWarehouse": "Відділення",
+    "npCreatedAt": "Створено в НП",
+    "npDeliveryCost": "Вартість доставки",
+    "npCodAmount": "Накладений платіж",
+    "statusChangedAt": "Статус змінено",
+    "statusChangedBy": "Хто змінив"
+  }
+}

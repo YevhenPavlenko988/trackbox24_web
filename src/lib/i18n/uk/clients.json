@@ -1,0 +1,24 @@
+{
+  "title": "Клієнти",
+  "createTitle": "Новий клієнт",
+  "editTitle": "Редагувати клієнта",
+  "searchPlaceholder": "Пошук за ПІБ, організацією або телефоном",
+  "pickerPlaceholder": "Оберіть клієнта",
+  "tabs": {
+    "info": "Дані",
+    "parcels": "Посилки"
+  },
+  "fields": {
+    "name": "Клієнт",
+    "type": "Тип",
+    "lastName": "Прізвище",
+    "firstName": "Ім'я",
+    "middleName": "По батькові",
+    "organizationName": "Назва організації",
+    "phone": "Телефон",
+    "email": "Email",
+    "city": "Місто",
+    "address": "Адреса",
+    "notes": "Примітки"
+  }
+}
