@@ -14,6 +14,7 @@ export function UserSelect({
   invalid,
   className,
   noneLabel,
+  disabled,
 }: {
   role: Role
   value?: number
@@ -22,6 +23,7 @@ export function UserSelect({
   invalid?: boolean
   className?: string
   noneLabel?: string
+  disabled?: boolean
 }) {
   const { t } = useTranslation('users')
   const users = useUsersByRole(role)
@@ -30,7 +32,7 @@ export function UserSelect({
   const empty = noneLabel ?? t('selectPlaceholder')
 
   return (
-    <Select value={value != null ? String(value) : NONE} onValueChange={(v) => onChange(v && v !== NONE ? Number(v) : undefined)}>
+    <Select value={value != null ? String(value) : NONE} onValueChange={(v) => onChange(v && v !== NONE ? Number(v) : undefined)} disabled={disabled}>
       <SelectTrigger id={id} aria-invalid={invalid} className={className ?? 'w-56'}>
         <SelectValue>{selected ? userDisplayName(selected) : empty}</SelectValue>
       </SelectTrigger>

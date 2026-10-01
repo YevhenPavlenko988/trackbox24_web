@@ -26,12 +26,15 @@ export function ParcelsTable({
   hideClient = false,
   emptyText,
   actions,
+  extra,
 }: {
   rows: ParcelResponse[]
   isLoading?: boolean
   hideClient?: boolean
   emptyText?: ReactNode
   actions?: (p: ParcelResponse) => ReactNode
+  /** Rendered next to the status badge (e.g. "outside the plan"). */
+  extra?: (p: ParcelResponse) => ReactNode
 }) {
   const { t } = useTranslation(['parcels', 'common'])
   const navigate = useNavigate()
@@ -51,8 +54,10 @@ export function ParcelsTable({
       key: 'status',
       header: t('parcels:fields.status'),
       cell: (p) => (
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <ParcelStatusBadge status={p.status} />
+          {p.status === 'AT_WAREHOUSE' && p.warehouseName && <span className="text-xs text-muted-foreground">{p.warehouseName}</span>}
+          {extra?.(p)}
           {p.needsEnrichment && (
             <Tooltip>
               <TooltipTrigger render={<span />}>

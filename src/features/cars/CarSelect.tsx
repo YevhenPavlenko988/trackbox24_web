@@ -11,12 +11,14 @@ export function CarSelect({
   id,
   invalid,
   className,
+  disabled,
 }: {
   value?: number
   onChange: (id: number | undefined) => void
   id?: string
   invalid?: boolean
   className?: string
+  disabled?: boolean
 }) {
   const { t } = useTranslation()
   const cars = useCars({ size: 100 })
@@ -25,7 +27,7 @@ export function CarSelect({
   const empty = t('common.selectPlaceholder')
 
   return (
-    <Select value={value != null ? String(value) : NONE} onValueChange={(v) => onChange(v && v !== NONE ? Number(v) : undefined)}>
+    <Select value={value != null ? String(value) : NONE} onValueChange={(v) => onChange(v && v !== NONE ? Number(v) : undefined)} disabled={disabled}>
       <SelectTrigger id={id} aria-invalid={invalid} className={className ?? 'w-full'}>
         <SelectValue>{selected ? carDisplayName(selected) : empty}</SelectValue>
       </SelectTrigger>

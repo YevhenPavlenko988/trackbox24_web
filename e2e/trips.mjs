@@ -1,0 +1,181 @@
+// Trips: plan → driver load scans (API) → depart → complete (409 → warehouse), deliver path, cancel path.
+import { apiAs, BASE, createRunner, ensureSeed, MANAGER, uniq } from './lib.mjs'
+
+export async function run() {
+  await ensureSeed()
+  const u = uniq()
+  const manager = await apiAs(MANAGER)
+  const driverEmail = `driver${u}@test.ua`
+  await manager.post('/api/users', { email: driverEmail, password: 'driver123', firstName: 'Водій', lastName: u, roles: ['DRIVER'], phone: '38063' + u + '9' })
+  const plate = 'KA' + u.slice(0, 4) + 'XX'
+  await manager.post('/api/cars', { plateNumber: plate, brand: 'Ford', model: 'Transit', active: true })
+  const warehouse = await manager.post('/api/warehouses', { name: 'Склад ' + u, address: 'вул. Складська, 1' })
+  const p1 = await manager.post('/api/parcels', { description: 'Для рейсу A ' + u, senderName: 'Відправник A' })
+  const p2 = await manager.post('/api/parcels', { description: 'Для рейсу B ' + u, senderName: 'Відправник B' })
+  const p3 = await manager.post('/api/parcels', { description: 'Для рейсу C ' + u, senderName: 'Відправник C' })
+  const driver = await apiAs({ email: driverEmail, password: 'driver123' })
+
+  const r = await createRunner('trips')
+  const { page, ok, shot, dialog } = r
+  const pickParcel = async (barcode) => {
+    await page.fill('[data-slot=dialog-content] input[placeholder*="Штрих-код"]', barcode)
+    await page.waitForSelector(`[data-slot=dialog-content] label:has-text("${barcode}")`)
+    await page.locator(`[data-slot=dialog-content] label:has-text("${barcode}")`).click()
+  }
+  const createTrip = async () => {
+    await page.goto(BASE + '/trips')
+    await page.waitForSelector('h1:has-text("Рейси")')
+    await page.getByRole('button', { name: 'Додати' }).click()
+    await dialog().waitFor()
+    await page.fill('#tr-departure', '2026-10-05T08:00')
+    await r.pickSelect('tr-car', plate)
+    await r.pickSelect('tr-driver', u)
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForURL(/\/trips\/\d+$/)
+    await page.waitForSelector('h1:has-text("Рейс #")')
+    return Number(page.url().split('/').pop())
+  }
+
+  try {
+    await r.login(MANAGER)
+
+    // --- trip 1: validation, plan, load, depart, 409 on complete ---
+    await page.goto(BASE + '/trips')
+    await page.waitForSelector('h1:has-text("Рейси")')
+    await page.getByRole('button', { name: 'Додати' }).click()
+    await dialog().waitFor()
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(300)
+    ok('departure required', (await dialog().locator('[data-slot=field-error]').count()) >= 1)
+    await page.fill('#tr-departure', '2026-10-05T08:00')
+    await page.fill('#tr-arrival', '2026-10-05T07:00')
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(300)
+    ok('arrival before departure rejected', (await dialog().textContent()).includes('Прибуття не може бути раніше'))
+    await page.fill('#tr-arrival', '2026-10-05T18:00')
+    await page.fill('#tr-origin', 'Київ')
+    await page.fill('#tr-destination', 'Львів')
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForURL(/\/trips\/\d+$/)
+    await page.waitForSelector('h1:has-text("Рейс #")')
+    const trip1 = Number(page.url().split('/').pop())
+    ok('trip created as PLANNED', (await page.textContent('h1')).includes('Запланований'))
+    ok('depart disabled without car/driver', await page.getByRole('button', { name: 'Виїхав' }).isDisabled())
+    await shot('01-trip-planned')
+
+    await page.getByRole('button', { name: 'Редагувати план' }).click()
+    await dialog().waitFor()
+    await r.pickSelect('tr-car', plate)
+    await r.pickSelect('tr-driver', u)
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(600)
+    ok('car and driver assigned', !(await page.getByRole('button', { name: 'Виїхав' }).isDisabled()))
+
+    await page.getByRole('button', { name: 'Запланувати посилки' }).click()
+    await dialog().waitFor()
+    await pickParcel(p1.barcode)
+    await pickParcel(p2.barcode)
+    await dialog().getByRole('button', { name: 'Додати' }).click()
+    await page.waitForSelector(`table tbody tr:has-text("${p2.barcode}")`)
+    ok('two parcels planned', (await page.textContent('body')).includes('План (2)'))
+    await shot('02-trip-plan')
+
+    await page.locator(`table tbody tr:has-text("${p2.barcode}")`).getByRole('button', { name: 'Прибрати з плану' }).click()
+    await page.waitForSelector('text=План (1)')
+    ok('parcel unplanned', true)
+    await page.getByRole('button', { name: 'Запланувати посилки' }).click()
+    await dialog().waitFor()
+    await pickParcel(p2.barcode)
+    await dialog().getByRole('button', { name: 'Додати' }).click()
+    await page.waitForSelector('text=План (2)')
+
+    // driver loads p1 (in plan) and p3 (outside the plan) via scan API
+    const load1 = await driver.post('/api/scan/load', { code: p1.barcode, tripId: trip1 })
+    const load3 = await driver.post('/api/scan/load', { code: p3.barcode, tripId: trip1 })
+    ok('driver load scans accepted', load1.status === 'IN_CAR' && load3.status === 'IN_CAR', JSON.stringify(load1).slice(0, 120))
+    await page.reload()
+    await page.waitForSelector('h1:has-text("Завантаження")')
+    const body1 = await page.textContent('body')
+    ok('trip is PREPARING with loaded section', body1.includes('У машині / видано (2)') && body1.includes('План (1)'))
+    ok('outside-plan badge shown', body1.includes('поза планом'))
+    ok('seat progress shown', body1.includes('Завантажено місць: 2 з 2'))
+    await shot('03-trip-preparing')
+
+    await page.getByRole('button', { name: 'Редагувати план' }).click()
+    await dialog().waitFor()
+    ok('car/driver locked while preparing', (await dialog().textContent()).includes('Після початку завантаження'))
+    await dialog().getByRole('button', { name: 'Скасувати' }).click()
+
+    await page.getByRole('button', { name: 'Виїхав' }).click()
+    await dialog().waitFor()
+    await page.fill('#dp-odo', '120000')
+    await dialog().getByRole('button', { name: 'Виїхав' }).click()
+    await page.waitForSelector('h1:has-text("У дорозі")')
+    const body2 = await page.textContent('body')
+    ok('departed: plan section gone', !body2.includes('План ('))
+    ok('history records unplanned parcel', body2.includes('Прибрано з плану') && body2.includes(p2.barcode))
+    ok('history shows depart', body2.includes('Статус змінено'))
+    await shot('04-trip-in-progress')
+
+    // deliver p3, keep p1 in the car → complete must 409
+    const deliver = await driver.post('/api/scan/deliver', { code: p3.barcode })
+    ok('driver deliver scan accepted', deliver.status === 'DELIVERED_TO_CLIENT')
+    await page.getByRole('button', { name: 'Завершити' }).click()
+    await dialog().waitFor()
+    await page.fill('#cp-odo', '100')
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(300)
+    ok('end odometer < start rejected', (await dialog().textContent()).includes('Не може бути менше'))
+    await page.fill('#cp-odo', '120350')
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await dialog().getByText('У машині ще є посилки').waitFor()
+    ok('409 shows undelivered parcels', (await dialog().textContent()).includes(p1.barcode))
+    await shot('05-complete-409')
+    await r.pickSelect('cp-warehouse', 'Склад ' + u)
+    await dialog().getByRole('button', { name: 'Перемістити на склад і завершити' }).click()
+    await page.waitForSelector('h1:has-text("Завершений")')
+    const done = await page.textContent('body')
+    ok('trip completed after moving to warehouse', done.includes('120350'))
+    ok('no actions after completion', (await page.getByRole('button', { name: 'Завершити' }).count()) === 0)
+    await shot('06-trip-completed')
+    const p1Now = await manager.get(`/api/parcels/${p1.id}`)
+    ok('undelivered parcel is at warehouse', p1Now.status === 'AT_WAREHOUSE' && p1Now.warehouseId === warehouse.id)
+
+    // parcel page links to trip
+    await page.goto(BASE + `/parcels/${p3.id}`)
+    await page.waitForSelector('h1:has-text("PT")')
+    ok('parcel page links to trip', (await page.textContent('body')).includes(`Рейс #${trip1}`))
+
+    // --- trip 2: plan from warehouse, load, depart, cancel to warehouse ---
+    const trip2 = await createTrip()
+    await page.getByRole('button', { name: 'Запланувати посилки' }).click()
+    await dialog().waitFor()
+    await pickParcel(p1.barcode)
+    ok('warehouse parcel offered with warehouse name', (await dialog().textContent()).includes('Склад ' + u))
+    await dialog().getByRole('button', { name: 'Додати' }).click()
+    await page.waitForSelector('text=План (1)')
+    await driver.post('/api/scan/load', { code: p1.barcode, tripId: trip2 })
+    await page.reload()
+    await page.waitForSelector('h1:has-text("Завантаження")')
+    await page.getByRole('button', { name: 'Скасувати рейс' }).click()
+    await dialog().waitFor()
+    await page.getByText('На склад', { exact: true }).click()
+    await r.pickSelect('cn-warehouse', 'Склад ' + u)
+    await dialog().getByRole('button', { name: 'Скасувати рейс' }).click()
+    await page.waitForSelector('h1:has-text("Скасований")')
+    const p1After = await manager.get(`/api/parcels/${p1.id}`)
+    ok('cancelled trip moved loaded parcel to warehouse', p1After.status === 'AT_WAREHOUSE' && p1After.tripId == null)
+    await shot('07-trip-cancelled')
+
+    // list filter
+    await page.goto(BASE + '/trips?status=COMPLETED')
+    await page.waitForSelector(`table tbody tr:has-text("${trip1}")`)
+    ok('status filter lists completed trip', !(await page.textContent('body')).includes(`Рейс #${trip2}`))
+    await shot('08-trips-list')
+    return r.finish()
+  } catch (e) {
+    return r.finish(e)
+  }
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) process.exit((await run()) ? 0 : 1)
