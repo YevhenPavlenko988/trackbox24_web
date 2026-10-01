@@ -1,0 +1,188 @@
+// Phase 1: auth, parcels, clients, labels, role guards.
+import { apiAs, BASE, createRunner, ensureSeed, MANAGER, ADMIN, uniq } from './lib.mjs'
+
+export async function run() {
+  await ensureSeed()
+  const manager = await apiAs(MANAGER)
+  const parcel = (await manager.get('/api/parcels?size=1&sort=createdAt,asc')).content[0]
+  if (parcel.status !== 'RECEIVED_BY_REPRESENTATIVE') {
+    await manager.post(`/api/parcels/${parcel.id}/status`, { status: 'RECEIVED_BY_REPRESENTATIVE', force: true, comment: 'e2e reset' })
+  }
+  const r = await createRunner('parcels-clients')
+  const { page, ok, shot, dialog } = r
+  const apiCalls = []
+  page.on('request', (q) => {
+    if (q.url().includes('/api/')) apiCalls.push({ method: q.method(), url: q.url().replace(BASE, ''), body: q.postData() })
+  })
+
+  try {
+    await page.goto(BASE + '/parcels')
+    await page.waitForURL('**/login**')
+    ok('redirect to /login when logged out', page.url().includes('/login'))
+    await shot('01-login')
+
+    await page.fill('#email', MANAGER.email)
+    await page.fill('#password', 'wrong')
+    await page.click('button[type=submit]')
+    await page.waitForSelector('[data-slot=alert]')
+    ok('wrong password shows error', (await page.textContent('body')).includes('Невірний email або пароль'))
+
+    await page.fill('#password', MANAGER.password)
+    await page.click('button[type=submit]')
+    await page.waitForURL('**/parcels')
+    ok('manager lands on /parcels', page.url().endsWith('/parcels'))
+    await page.waitForSelector('table tbody tr:has-text("PT")')
+    await shot('02-parcels-list')
+
+    await page.reload()
+    await page.waitForSelector('table tbody tr:has-text("PT")')
+    ok('session survives reload', !page.url().includes('/login'))
+
+    await page.getByRole('button', { name: 'Потребують уточнення' }).click()
+    await page.waitForURL('**/parcels?*needsEnrichment=true*')
+    await page.waitForTimeout(400)
+    ok('needsEnrichment chip hits API', apiCalls.some((c) => c.url.includes('needsEnrichment=true')))
+    await page.getByRole('button', { name: 'Скинути' }).click()
+    await page.waitForURL('**/parcels')
+
+    await page.fill('input[placeholder*="Штрих-код"]', 'Взуття')
+    await page.waitForURL('**/parcels?*query=*')
+    ok('search syncs to URL', page.url().includes('query='))
+
+    await page.click('a[href="/clients"]')
+    await page.waitForURL('**/clients')
+    await page.waitForSelector('table tbody tr:has-text("Коваль")')
+    await shot('03-clients-list')
+
+    await page.click('a[href="/clients/new"]')
+    await page.waitForURL('**/clients/new')
+    await page.fill('#lastName', 'Тестовий')
+    await page.fill('#firstName', 'Клієнт')
+    await page.fill('#phone', '123')
+    await page.click('button[type=submit]')
+    await page.waitForSelector('[data-slot=field-error]')
+    ok('invalid phone shows inline error', (await page.locator('[data-slot=field-error]').first().textContent()).includes('380'))
+
+    const phone = '38099' + String(Date.now()).slice(-7)
+    await page.fill('#phone', phone)
+    await page.fill('#city', 'Одеса')
+    await page.click('button[type=submit]')
+    await page.waitForURL(/\/clients\/\d+$/)
+    ok('client created and opened', true, page.url())
+    const clientId = page.url().split('/').pop()
+    await shot('04-client-detail')
+
+    await page.goto(BASE + '/clients/new')
+    await page.fill('#lastName', 'Дубль')
+    await page.fill('#firstName', 'Дубль')
+    await page.fill('#phone', phone)
+    await page.click('button[type=submit]')
+    await page.waitForTimeout(1200)
+    ok('duplicate phone shows feedback', /Конфлікт|Некоректні|exists/i.test(await page.textContent('body')))
+
+    await page.goto(BASE + '/clients/' + clientId)
+    await page.getByRole('button', { name: 'Редагувати' }).click()
+    await dialog().waitFor()
+    await page.fill('[data-slot=dialog-content] #city', 'Харків')
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(800)
+    ok('client edit saved', (await page.textContent('body')).includes('Харків'))
+
+    await page.goto(BASE + `/clients/${parcel.clientId}?tab=parcels`)
+    await page.waitForSelector('table tbody tr:has-text("PT")')
+    ok('client parcels tab lists parcels', true)
+
+    await page.goto(BASE + `/parcels/${parcel.id}`)
+    await page.waitForSelector('h1:has-text("PT")')
+    await page.waitForTimeout(400)
+    await shot('05-parcel-detail')
+    const detail = await page.textContent('body')
+    ok('parcel detail shows seats & history', detail.includes(`${parcel.barcode}-1`) && detail.includes('Історія'))
+
+    await page.getByRole('button', { name: 'Редагувати' }).click()
+    await dialog().waitFor()
+    await page.fill('#e-description', 'Документи (оновлено ' + uniq() + ')')
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(800)
+    const put = apiCalls.filter((c) => c.method === 'PUT' && c.url.includes(`/api/parcels/${parcel.id}`)).pop()
+    const putBody = put ? JSON.parse(put.body) : {}
+    ok('parcel PUT keeps clientId & needsEnrichment', putBody.clientId === parcel.clientId && putBody.needsEnrichment === false, put?.body)
+
+    await page.getByRole('button', { name: 'Змінити статус' }).click()
+    await dialog().waitFor()
+    await shot('06-status-dialog')
+    await page.click('[data-slot=dialog-content] #status')
+    await page.waitForSelector('[data-slot=select-item]')
+    const items = await page.locator('[data-slot=select-item]').allTextContents()
+    ok('allowed transitions only', items.length === 2 && items.includes('У машині') && items.includes('Скасовано'), items.join(','))
+    await page.locator('[data-slot=select-item]', { hasText: 'У машині' }).click()
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(800)
+    ok('status changed to IN_CAR', (await page.locator('h1').textContent()).includes('У машині'))
+
+    await page.getByRole('button', { name: 'Змінити статус' }).click()
+    await dialog().waitFor()
+    await dialog().getByRole('switch').click()
+    await page.click('[data-slot=dialog-content] #status')
+    await page.waitForSelector('[data-slot=select-item]')
+    ok('force shows all other statuses', (await page.locator('[data-slot=select-item]').count()) === 4)
+    await page.locator('[data-slot=select-item]', { hasText: 'Отримано представником' }).click()
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(400)
+    ok('force without comment blocked', (await dialog().count()) === 1 && (await dialog().locator('[data-slot=field-error]').count()) >= 1)
+    await page.fill('#comment', 'Вивантажили')
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(800)
+    ok('forced status change applied', (await page.locator('h1').textContent()).includes('Отримано представником'))
+
+    await page.goto(BASE + '/parcels/new')
+    await page.getByText('Без ТТН').click()
+    await page.fill('#description', 'E2E посилка')
+    await page.fill('#seatsAmount', '2')
+    await page.fill('#senderName', 'Автотест')
+    await page.click('#clientId')
+    await page.waitForSelector('[data-slot=command-item]')
+    await page.locator('[data-slot=command-item]').first().click()
+    await shot('07-parcel-create')
+    await page.click('button[type=submit]')
+    await page.waitForURL(/\/parcels\/\d+$/)
+    await page.waitForSelector('h1:has-text("PT")')
+    ok('manual parcel created with barcode', (await page.textContent('body')).includes('Отримано представником'), page.url())
+
+    await page.goto(BASE + '/parcels/new')
+    await page.fill('#npTtn', '20451549454007')
+    await page.click('button[type=submit]')
+    await page.waitForTimeout(3000)
+    const ttnTxt = await page.textContent('body')
+    const createdByTtn = /\/parcels\/\d+$/.test(page.url()) && ttnTxt.includes('У Новій Пошті')
+    ok('TTN parcel created or NP error shown', createdByTtn || /Нової Пошти/.test(ttnTxt), page.url())
+
+    await page.addInitScript(() => {
+      window.print = () => {
+        window.__printed = true
+      }
+    })
+    await page.goto(BASE + `/parcels/${parcel.id}/labels`)
+    await page.waitForSelector('svg rect')
+    await page.waitForTimeout(600)
+    const labels = await page.locator('.label').count()
+    const printed = await page.evaluate(() => window.__printed === true)
+    ok('labels page renders one label per seat & calls print', labels === (parcel.seatsAmount ?? 1) && printed, `labels=${labels}`)
+    await shot('08-labels')
+
+    await r.login(ADMIN)
+    await page.waitForURL('**/companies')
+    ok('admin lands on /companies', true)
+    await page.goto(BASE + '/parcels')
+    await page.waitForTimeout(500)
+    ok('admin gets 403 page on /parcels', (await page.textContent('body')).includes('403'))
+    await page.getByRole('button', { name: 'Вийти' }).click()
+    await page.waitForURL('**/login**')
+    ok('logout returns to /login', true)
+    return r.finish()
+  } catch (e) {
+    return r.finish(e)
+  }
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) process.exit((await run()) ? 0 : 1)
