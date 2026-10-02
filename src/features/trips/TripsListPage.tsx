@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { DataTable, type Column } from '@/components/common/DataTable'
+import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { Pagination } from '@/components/common/Pagination'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,7 @@ import { emptyPage } from '@/lib/api/page'
 import type { TripResponse, TripStatus } from '@/lib/api/types'
 import { formatDateTime } from '@/lib/format'
 import { useCreateTrip, useTrips } from './queries'
-import { routeText, TRIP_STATUSES } from './status'
+import { TRIP_STATUSES, isTripDeletable, routeText } from './status'
 import { TripDialog } from './TripDialog'
 import { TripStatusBadge } from './TripStatusBadge'
 
@@ -48,6 +49,20 @@ export function TripsListPage() {
     },
     { key: 'departed', header: t('trips:fields.departedAt'), cell: (s) => formatDateTime(s.departedAt) },
     { key: 'arrived', header: t('trips:fields.arrivedAt'), cell: (s) => formatDateTime(s.arrivedAt) },
+    ...(canEdit
+      ? [
+          {
+            key: 'actions',
+            header: '',
+            className: 'w-12 text-right',
+            cell: (s: TripResponse) => (
+              <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                {isTripDeletable(s) && <DeleteEntityButton entity="trips" id={s.id!} iconOnly />}
+              </div>
+            ),
+          },
+        ]
+      : []),
   ]
 
   return (

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import type { NpState, ParcelResponse } from '@/lib/api/types'
+import { npStateOf, npStatusTextOf } from './npStatus'
 
 const STYLES: Record<NpState, string> = {
   CREATED: 'border-slate-300 text-slate-700',
@@ -16,29 +17,30 @@ const STYLES: Record<NpState, string> = {
 }
 
 /** Our `status` says where the parcel is in our flow; `npState` is what Nova Poshta says. Both are shown side by side. */
-export function NpStateBadge({ parcel }: { parcel: Pick<ParcelResponse, 'npState' | 'npStatusText'> }) {
+export function NpStateBadge({ parcel }: { parcel: Pick<ParcelResponse, 'npState' | 'npStatusCode' | 'npStatusText'> }) {
   const { t } = useTranslation('parcels')
-  const state = parcel.npState
+  const state = npStateOf(parcel)
   if (!state) return null
-  const label = state === 'OTHER' ? (parcel.npStatusText ?? t('npState.OTHER')) : t(`npState.${state}`)
+  const text = npStatusTextOf(parcel)
+  const label = state === 'OTHER' ? (text ?? t('npState.OTHER')) : t(`npState.${state}`)
   const badge = (
     <Badge variant="outline" className={`gap-1 ${STYLES[state]}`}>
       <span className="text-[10px] uppercase opacity-70">НП</span>
       {label}
     </Badge>
   )
-  if (!parcel.npStatusText || state === 'OTHER') return badge
+  if (!text || state === 'OTHER') return badge
   return (
     <Tooltip>
       <TooltipTrigger render={<span />}>{badge}</TooltipTrigger>
-      <TooltipContent>{parcel.npStatusText}</TooltipContent>
+      <TooltipContent>{text}</TooltipContent>
     </Tooltip>
   )
 }
 
 /** Picked up at the branch (per Nova Poshta) but not yet scanned in by our representative. */
-export function isPickedUpNotScanned(p: Pick<ParcelResponse, 'status' | 'npState'>): boolean {
-  return p.status === 'IN_NOVA_POSHTA' && p.npState === 'RECEIVED'
+export function isPickedUpNotScanned(p: Pick<ParcelResponse, 'status' | 'npState' | 'npStatusCode' | 'npStatusText'>): boolean {
+  return p.status === 'IN_NOVA_POSHTA' && npStateOf(p) === 'RECEIVED'
 }
 
 export function PickedUpNotScannedBadge() {

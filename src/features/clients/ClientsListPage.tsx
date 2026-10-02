@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { DataTable, type Column } from '@/components/common/DataTable'
+import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { LinkButton } from '@/components/common/LinkButton'
 import { Pagination } from '@/components/common/Pagination'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -37,6 +38,20 @@ export function ClientsListPage() {
     { key: 'type', header: t('clients:fields.type'), cell: (c) => (c.type ? t(`common:clientType.${c.type}`) : '—') },
     { key: 'phone', header: t('clients:fields.phone'), cell: (c) => formatPhone(c.phone) },
     { key: 'city', header: t('clients:fields.city'), cell: (c) => c.city ?? '—' },
+    ...(canEdit
+      ? [
+          {
+            key: 'actions',
+            header: '',
+            className: 'w-12 text-right',
+            cell: (c: ClientResponse) => (
+              <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                <DeleteEntityButton entity="clients" id={c.id!} iconOnly />
+              </div>
+            ),
+          },
+        ]
+      : []),
   ]
 
   return (

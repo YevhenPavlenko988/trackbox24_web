@@ -35,12 +35,7 @@ export function ParcelHistory({ entries, isLoading }: { entries?: ParcelHistoryR
             {e.source && <span className="text-xs text-muted-foreground">{t(`common:historySource.${e.source}`)}</span>}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2 text-sm">
-            {e.npStatusText ? (
-              <span>
-                {t('parcels:fields.npStatus')}: <span className="font-medium">{e.npStatusText}</span>
-                {e.npStatusCode && <span className="text-muted-foreground"> ({e.npStatusCode})</span>}
-              </span>
-            ) : (
+            {showsOurStatus(e) && (
               <>
                 {e.previousStatus && (
                   <>
@@ -51,6 +46,12 @@ export function ParcelHistory({ entries, isLoading }: { entries?: ParcelHistoryR
                 <ParcelStatusBadge status={e.status} />
                 {e.warehouseName && <span className="text-xs text-muted-foreground">{e.warehouseName}</span>}
               </>
+            )}
+            {showsNpStatus(e) && (
+              <span>
+                {t('parcels:fields.npStatus')}: <span className="font-medium">{e.npStatusText}</span>
+                {e.npStatusCode && <span className="text-muted-foreground"> ({e.npStatusCode})</span>}
+              </span>
             )}
           </div>
           {(e.changedByName || e.comment) && (
@@ -64,4 +65,19 @@ export function ParcelHistory({ entries, isLoading }: { entries?: ParcelHistoryR
       ))}
     </ol>
   )
+}
+
+/**
+ * Every entry carries the parcel's NP status as a snapshot, so a scan ("received by representative") must still show
+ * OUR status change; the NP line is only the point for tracking/import entries or when nothing else changed.
+ */
+function showsOurStatus(e: ParcelHistoryResponse): boolean {
+  if (!e.status) return false
+  if (e.source !== 'NOVA_POSHTA') return true
+  return !!e.previousStatus && e.previousStatus !== e.status
+}
+
+function showsNpStatus(e: ParcelHistoryResponse): boolean {
+  if (!e.npStatusText) return false
+  return e.source === 'NOVA_POSHTA' || e.source === 'SYSTEM' || !showsOurStatus(e)
 }

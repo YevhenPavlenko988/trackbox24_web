@@ -80,9 +80,13 @@ export function restoreDeleted(entity: TrashEntity, id: number): Promise<unknown
   }
 }
 
-export function deleteEntity(entity: Exclude<TrashEntity, 'parcels' | 'trips'>, id: number): Promise<unknown> {
+export function deleteEntity(entity: TrashEntity, id: number): Promise<unknown> {
   const path = { params: { path: { id } } }
   switch (entity) {
+    case 'parcels':
+      return unwrap(api.DELETE('/api/parcels/{id}', path))
+    case 'trips':
+      return unwrap(api.DELETE('/api/trips/{id}', path))
     case 'clients':
       return unwrap(api.DELETE('/api/clients/{id}', path))
     case 'cars':

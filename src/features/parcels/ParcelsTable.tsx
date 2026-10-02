@@ -9,9 +9,13 @@ import { useAccess } from '@/features/auth/access'
 import type { ParcelResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
 import { isPickedUpNotScanned, NpStateBadge, PickedUpNotScannedBadge } from './NpStateBadge'
+import { NpPaymentSummary } from './NpPaymentCard'
+import { isGoneFromNp, npStateOf, npStatusTextOf } from './npStatus'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 
 export function seatsProgress(p: ParcelResponse): string {
+  // Parcels imported without NP tracking have no seatsAmount yet: say so instead of pretending it is 1.
+  if (p.seatsAmount == null && !p.seats?.length) return '?'
   const total = p.seatsAmount ?? p.seats?.length ?? 1
   if (!p.seats?.length || !p.status) return String(total)
   const reached = p.seats.filter((s) => s.status === p.status).length
@@ -61,7 +65,6 @@ export function ParcelsTable({
       cell: (p) => (
         <div className="flex flex-wrap items-center gap-1.5">
           <ParcelStatusBadge status={p.status} />
-          {p.status === 'IN_NOVA_POSHTA' && <NpStateBadge parcel={p} />}
           {isPickedUpNotScanned(p) && <PickedUpNotScannedBadge />}
           {p.status === 'AT_WAREHOUSE' && p.warehouseName && <span className="text-xs text-muted-foreground">{p.warehouseName}</span>}
           {extra?.(p)}
@@ -75,6 +78,29 @@ export function ParcelsTable({
           )}
         </div>
       ),
+    },
+    {
+      key: 'npState',
+      header: t('parcels:fields.npState'),
+      cell: (p) => {
+        const state = npStateOf(p)
+        const text = npStatusTextOf(p)
+        return state ? (
+          <div className="flex flex-col items-start gap-0.5">
+            <NpStateBadge parcel={p} />
+            {text && state !== 'OTHER' && (
+              <span className="line-clamp-2 max-w-56 text-xs text-muted-foreground" title={text}>
+                {text}
+              </span>
+            )}
+            {p.npStatusUpdatedAt && <span className="text-xs text-muted-foreground">{formatDateTime(p.npStatusUpdatedAt)}</span>}
+          </div>
+        ) : p.npTtn ? (
+          <span className="text-xs text-muted-foreground">{t('parcels:np.noTracking')}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )
+      },
     },
     ...(hideClient
       ? []
@@ -101,7 +127,15 @@ export function ParcelsTable({
         </div>
       ),
     },
-    { key: 'seats', header: t('parcels:fields.seats'), cell: (p) => seatsProgress(p), className: 'text-center' },
+    {
+      key: 'seats',
+      header: t('parcels:fields.seats'),
+      cell: (p) => {
+        const v = seatsProgress(p)
+        return v === '?' ? <span title={t('parcels:np.seatsUnknownShort')}>?</span> : v
+      },
+      className: 'text-center',
+    },
     { key: 'delivery', header: t('parcels:fields.npScheduledDeliveryAt'), cell: (p) => formatDate(p.npScheduledDeliveryAt) },
     {
       key: 'paidStorage',
@@ -113,6 +147,7 @@ export function ParcelsTable({
           formatDate(p.npPaidStorageFrom)
         ),
     },
+    { key: 'npPayment', header: t('parcels:np.columnTitle'), cell: (p) => <NpPaymentSummary parcel={p} /> },
     ...(canSeeMoney
       ? [
           {
@@ -154,7 +189,9 @@ export function ParcelsTable({
       rows={rows}
       rowKey={(p) => p.id ?? 0}
       onRowClick={(p) => navigate(`/parcels/${p.id}`)}
-      rowClassName={(p) => (isPaidStorageDue(p) ? 'bg-destructive/5' : undefined)}
+      rowClassName={(p) =>
+        isPaidStorageDue(p) ? 'bg-destructive/5' : p.status === 'IN_NOVA_POSHTA' && p.npTtn && isGoneFromNp(p) ? 'opacity-60' : undefined
+      }
       isLoading={isLoading}
       emptyText={emptyText}
       selection={selection}

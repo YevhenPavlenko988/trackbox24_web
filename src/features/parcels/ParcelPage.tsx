@@ -24,7 +24,7 @@ import { ParcelHistory } from './ParcelHistory'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 import { MarkPaidDialog } from './PaymentDialog'
 import { useDeleteParcel, useParcel, useParcelHistory, useRefreshParcelFromNp, useSetParcelPayment } from './queries'
-import { canEditParcel, isFinalStatus } from './status'
+import { canEditParcel, isFinalStatus, isParcelDeletable } from './status'
 import { StatusChangeDialog } from './StatusChangeDialog'
 
 export function ParcelPage() {
@@ -58,7 +58,7 @@ export function ParcelPage() {
   const hasPrice = p.deliveryPrice != null
   const hasSeatWarehouse = !!p.seats?.some((s) => s.warehouseName)
   // Backend rule: a parcel can be deleted while it is not in a car and not delivered.
-  const deletable = canEdit && (p.status === 'IN_NOVA_POSHTA' || p.status === 'RECEIVED_BY_REPRESENTATIVE' || p.status === 'AT_WAREHOUSE' || p.status === 'CANCELLED')
+  const deletable = canEdit && isParcelDeletable(p)
 
   const onRefresh = async () => {
     try {
@@ -201,7 +201,9 @@ export function ParcelPage() {
                 </TableBody>
               </Table>
             ) : (
-              <p className="text-sm text-muted-foreground">{t('parcels:sections.seatsPending', { count: p.seatsAmount ?? 1 })}</p>
+              <p className="text-sm text-muted-foreground">
+                {p.seatsAmount == null ? t('parcels:sections.seatsUnknown') : t('parcels:sections.seatsPending', { count: p.seatsAmount })}
+              </p>
             )}
           </CardContent>
         </Card>
@@ -285,8 +287,8 @@ export function ParcelPage() {
                   },
                   { label: t('parcels:payment.paidAt'), value: formatDateTime(p.paidAt) },
                   { label: t('parcels:payment.paidBy'), value: p.paidBy },
-                  { label: t('parcels:fields.npDeliveryCost'), value: formatMoney(p.npDeliveryCost) },
-                  { label: t('parcels:fields.npCodAmount'), value: formatMoney(p.npCodAmount) },
+                  { label: t('parcels:fields.npDeliveryCost'), value: p.npDeliveryCost ? formatMoney(p.npDeliveryCost) : undefined },
+                  { label: t('parcels:fields.npCodAmount'), value: p.npCodAmount ? formatMoney(p.npCodAmount) : undefined },
                 ]}
               />
             </CardContent>
@@ -301,6 +303,7 @@ export function ParcelPage() {
               <CardTitle>{t('parcels:sections.novaPoshta')}</CardTitle>
             </CardHeader>
             <CardContent>
+              {!p.npStatusUpdatedAt && <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{t('parcels:np.noTrackingHint')}</p>}
               <DetailsList
                 items={[
                   { label: t('parcels:fields.npTtn'), value: <CopyableCode value={p.npTtn} /> },

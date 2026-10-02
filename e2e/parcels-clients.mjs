@@ -61,7 +61,7 @@ export async function run() {
     await page.fill('#phone', '123')
     await page.click('button[type=submit]')
     await page.waitForSelector('[data-slot=field-error]')
-    ok('invalid phone shows inline error', (await page.locator('[data-slot=field-error]').first().textContent()).includes('380'))
+    ok('invalid phone shows inline error', (await page.locator('[data-slot=field-error]').first().textContent()).includes('цифри'))
 
     const phone = '38099' + String(Date.now()).slice(-7)
     await page.fill('#phone', phone)

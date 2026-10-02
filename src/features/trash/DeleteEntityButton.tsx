@@ -8,14 +8,14 @@ import { Button } from '@/components/ui/button'
 import { showApiError } from '@/lib/api/problem'
 import { deleteEntity, type TrashEntity } from './api'
 
-/** Soft-deletes a client / car / warehouse / user after confirmation; the backend decides whether it is allowed. */
+/** Soft-deletes a record after confirmation; the backend decides whether it is allowed. */
 export function DeleteEntityButton({
   entity,
   id,
   iconOnly = false,
   onDeleted,
 }: {
-  entity: Exclude<TrashEntity, 'parcels' | 'trips'>
+  entity: TrashEntity
   id: number
   iconOnly?: boolean
   onDeleted?: () => void

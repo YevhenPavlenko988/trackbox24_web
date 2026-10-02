@@ -20,7 +20,7 @@ import { NotFoundPage } from '@/routes/ErrorPages'
 import { ParcelPickerDialog } from './ParcelPickerDialog'
 import { downloadTripRegister } from './api'
 import { useDeleteTrip, usePlanTripParcels, useTrip, useTripHistory, useTripParcels, useUnplanTripParcel, useUpdateTrip } from './queries'
-import { acceptsLoading, canDepart, isOutsidePlan, seatProgress, splitTripParcels } from './status'
+import { acceptsLoading, canDepart, isOutsidePlan, isTripDeletable, seatProgress, splitTripParcels } from './status'
 import { CancelTripDialog, CompleteDialog, DepartDialog } from './TripActionDialogs'
 import { TripDialog } from './TripDialog'
 import { TripHistory } from './TripHistory'
@@ -54,7 +54,7 @@ export function TripPage() {
   const progress = seatProgress(loaded)
   const excludeIds = (parcels.data ?? []).map((p) => p.id!)
   // Backend rule: only a planned trip with nothing loaded, or a cancelled one, may be deleted.
-  const deletable = canEdit && ((trip.status === 'PLANNED' && !trip.loadedCount) || trip.status === 'CANCELLED')
+  const deletable = canEdit && isTripDeletable(trip)
 
   const run = async (fn: () => Promise<unknown>) => {
     try {

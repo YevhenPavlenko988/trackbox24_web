@@ -37,3 +37,8 @@ export function seatProgress(parcels: ParcelResponse[]): { loaded: number; deliv
 export function routeText(s: { origin?: string; destination?: string }): string {
   return [s.origin, s.destination].filter(Boolean).join(' → ') || '—'
 }
+
+/** Mirrors the backend: only a planned trip with nothing loaded, or a cancelled one. */
+export function isTripDeletable(trip: Pick<TripResponse, 'status' | 'loadedCount'>): boolean {
+  return (trip.status === 'PLANNED' && !trip.loadedCount) || trip.status === 'CANCELLED'
+}

@@ -98,7 +98,7 @@ export function ClientForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.phone}>
             <FieldLabel htmlFor={`${idPrefix}phone`}>{t('clients:fields.phone')}</FieldLabel>
-            <Input id={`${idPrefix}phone`} inputMode="tel" placeholder="380XXXXXXXXX" aria-invalid={!!errors.phone} {...form.register('phone')} />
+            <Input id={`${idPrefix}phone`} inputMode="tel" placeholder="+380 XX XXX XX XX" aria-invalid={!!errors.phone} {...form.register('phone')} />
             <FieldErrorText error={errors.phone} />
           </Field>
           <Field data-invalid={!!errors.email}>

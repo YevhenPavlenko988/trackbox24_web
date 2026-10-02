@@ -45,3 +45,11 @@ export function parseNumber(s?: string): number | undefined {
 }
 
 export const orUndefined = (s?: string) => (s && s.trim().length > 0 ? s.trim() : undefined)
+
+/** Mirrors the backend: only a parcel that is not in a car and not delivered, and not sitting in a trip. */
+export function isParcelDeletable(p: Pick<ParcelResponse, 'status' | 'tripId'>): boolean {
+  return (
+    (p.status === 'IN_NOVA_POSHTA' || p.status === 'RECEIVED_BY_REPRESENTATIVE' || p.status === 'AT_WAREHOUSE' || p.status === 'CANCELLED') &&
+    p.tripId == null
+  )
+}

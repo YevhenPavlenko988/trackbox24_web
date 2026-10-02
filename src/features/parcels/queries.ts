@@ -11,6 +11,7 @@ import {
   listDeletedParcels,
   listParcels,
   refreshParcelFromNp,
+  syncNovaPoshta,
   restoreParcel,
   setParcelPayment,
   updateParcel,
@@ -86,6 +87,17 @@ export function useChangeParcelStatus(id: number) {
 
 export function useRefreshParcelFromNp(id: number) {
   return useParcelMutation(() => refreshParcelFromNp(id))
+}
+
+export function useSyncNovaPoshta() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: syncNovaPoshta,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: parcelKeys.all })
+      queryClient.invalidateQueries({ queryKey: clientKeys.all })
+    },
+  })
 }
 
 export function useSetParcelPayment(id: number) {

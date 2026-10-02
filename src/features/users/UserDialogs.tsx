@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { z } from 'zod'
 import { FieldErrorText } from '@/components/common/FieldErrorText'
+import { PasswordInput } from '@/components/common/PasswordInput'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -54,7 +55,7 @@ const createSchema = z
   })
   .superRefine((v, ctx) => {
     if (v.roles.includes('REPRESENTATIVE') && !v.phone) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'required' })
-    if (v.phone && !PHONE.test(v.phone)) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phone' })
+    if (v.phone && !PHONE.test(v.phone)) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phoneUa' })
   })
 
 type CreateValues = z.infer<typeof createSchema>
@@ -138,7 +139,7 @@ function CreateForm({ companyId, onClose }: { companyId?: number; onClose: () =>
           </Field>
           <Field data-invalid={!!errors.password}>
             <FieldLabel htmlFor="u-password">{t('users:fields.password')}</FieldLabel>
-            <Input id="u-password" type="password" autoComplete="new-password" aria-invalid={!!errors.password} {...form.register('password')} />
+            <PasswordInput id="u-password" autoComplete="new-password" aria-invalid={!!errors.password} {...form.register('password')} />
             <FieldErrorText error={errors.password} />
           </Field>
         </div>
@@ -185,7 +186,7 @@ const editSchema = z
   })
   .superRefine((v, ctx) => {
     if (v.roles.includes('REPRESENTATIVE') && !v.phone) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'required' })
-    if (v.phone && !PHONE.test(v.phone)) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phone' })
+    if (v.phone && !PHONE.test(v.phone)) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phoneUa' })
   })
 
 type EditValues = z.infer<typeof editSchema>
@@ -352,7 +353,7 @@ export function ResetPasswordDialog({ user, onClose }: { user: UserResponse; onC
           <FieldGroup>
             <Field data-invalid={!!errors.newPassword}>
               <FieldLabel htmlFor="rp-password">{t('users:resetPassword.newPassword')}</FieldLabel>
-              <Input id="rp-password" type="text" autoComplete="off" aria-invalid={!!errors.newPassword} {...form.register('newPassword')} />
+              <PasswordInput id="rp-password" autoComplete="off" aria-invalid={!!errors.newPassword} {...form.register('newPassword')} />
               <FieldErrorText error={errors.newPassword} />
             </Field>
             <div className="flex justify-end gap-2">

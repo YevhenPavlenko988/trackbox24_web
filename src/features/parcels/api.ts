@@ -1,6 +1,7 @@
 import { api } from '@/lib/api/client'
 import { normalizePage, type Page, type PageParams } from '@/lib/api/page'
 import { unwrap } from '@/lib/api/problem'
+import type { components } from '@/lib/api/schema'
 import type {
   DeletedItem,
   ParcelCreateRequest,
@@ -87,4 +88,11 @@ export function setParcelPayment(id: number, body: ParcelPaymentRequest): Promis
 
 export function refreshParcelFromNp(id: number): Promise<ParcelResponse> {
   return unwrap(api.POST('/api/parcels/{id}/nova-poshta/refresh', { params: { path: { id } } }))
+}
+
+export type NpSyncResult = components['schemas']['SyncResult']
+
+/** Same job the backend cron does: import incoming waybills of the company's representatives and refresh NP statuses. */
+export function syncNovaPoshta(): Promise<NpSyncResult> {
+  return unwrap(api.POST('/api/nova-poshta/sync'))
 }

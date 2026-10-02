@@ -42,3 +42,35 @@ function Row({ label, value }: { label: string; value: string }) {
     </div>
   )
 }
+
+/** Compact version for the parcels table: NP delivery cost, who pays it, and what is still due at the branch. */
+export function NpPaymentSummary({ parcel: p }: { parcel: ParcelResponse }) {
+  const { t } = useTranslation('parcels')
+  if (!p.npTtn) return <span className="text-muted-foreground">—</span>
+  const payer = p.npPayerType
+  const who =
+    payer === 'Sender'
+      ? t('np.paidBySender')
+      : payer === 'ThirdPerson'
+        ? t('np.paidByThirdPerson')
+        : payer === 'Recipient'
+          ? `${t('np.recipientPays')}${p.npPaymentMethod ? `, ${t(`np.method.${p.npPaymentMethod}`)}` : ''}`
+          : undefined
+  const due = p.npAmountToPay
+  return (
+    <div className="flex flex-col">
+      <span>{p.npDeliveryCost ? formatMoney(p.npDeliveryCost) : '—'}</span>
+      {who && <span className={`text-xs ${payer === 'Recipient' ? 'text-amber-700' : 'text-emerald-700'}`}>{who}</span>}
+      {(p.npCodAmount ?? 0) > 0 && (
+        <span className="text-xs text-muted-foreground">
+          {t('fields.npCodAmount')}: {formatMoney(p.npCodAmount)}
+        </span>
+      )}
+      {due != null && due > 0 && (
+        <span className="text-xs font-medium">
+          {t('np.dueShort')}: {formatMoney(due)}
+        </span>
+      )}
+    </div>
+  )
+}

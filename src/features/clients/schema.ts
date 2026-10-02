@@ -1,7 +1,13 @@
 import { z } from 'zod'
 import type { ClientRequest, ClientResponse } from '@/lib/api/types'
 
-export const PHONE_REGEX = /^380\d{9}$/
+/** Any international number: optional "+", 7–15 digits (E.164). Spaces, dashes and parentheses are stripped first. */
+export const PHONE_REGEX = /^\+?\d{7,15}$/
+
+/** "+380 (50) 123-45-67" → "380501234567": what the backend stores and what Nova Poshta matches on. */
+export function normalizePhone(raw: string): string {
+  return raw.replace(/[\s\-().]/g, '').replace(/^\+/, '').replace(/^00/, '')
+}
 
 const optionalText = z.string().trim().optional()
 
@@ -12,7 +18,11 @@ export const clientSchema = z
     firstName: z.string().trim().min(1, 'required'),
     middleName: optionalText,
     organizationName: optionalText,
-    phone: z.string().trim().regex(PHONE_REGEX, 'phone'),
+    phone: z
+      .string()
+      .trim()
+      .min(1, 'required')
+      .refine((v) => PHONE_REGEX.test(normalizePhone(v)), 'phone'),
     email: z.union([z.literal(''), z.email('email')]).optional(),
     city: optionalText,
     address: optionalText,
@@ -63,7 +73,7 @@ export function formValuesToRequest(v: ClientFormValues): ClientRequest {
     firstName: v.firstName,
     middleName: orUndefined(v.middleName),
     organizationName: v.type === 'ORGANIZATION' ? orUndefined(v.organizationName) : undefined,
-    phone: v.phone,
+    phone: normalizePhone(v.phone),
     email: orUndefined(v.email),
     city: orUndefined(v.city),
     address: orUndefined(v.address),
