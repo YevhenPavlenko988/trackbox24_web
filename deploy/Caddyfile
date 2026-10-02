@@ -33,3 +33,8 @@ trackbox24.com {
 api.trackbox24.com {
 	reverse_proxy api:8080
 }
+
+# Grafana (logs). Lives in the infra compose file; Caddy only proxies to it.
+logs.trackbox24.com {
+	reverse_proxy grafana:3000
+}
