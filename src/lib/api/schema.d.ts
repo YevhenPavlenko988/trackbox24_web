@@ -1768,10 +1768,21 @@ export interface components {
              */
             npTtn?: string;
             /**
+             * @description Попередня ТТН, якщо НП переадресувала посилку під новим номером
+             * @example 20451546560339
+             */
+            npPreviousTtn?: string;
+            /**
              * @description Код статусу НП
              * @example 7
              */
             npStatusCode?: string;
+            /**
+             * @description Статус НП, згрупований для відображення: CREATED — створена, ще не передана в НП; IN_TRANSIT — в дорозі;                 ARRIVED — у відділенні / поштоматі; RECEIVED — забрали з НП; REDIRECTED — змінено адресу (нова ТТН);                 RETURNING — відмова / повернення; DELIVERY_FAILED — невдала доставка кур'єром; NOT_FOUND — видалена / не знайдена;                 OTHER — невідомий код
+             * @example ARRIVED
+             * @enum {string}
+             */
+            npState?: "CREATED" | "IN_TRANSIT" | "ARRIVED" | "RECEIVED" | "REDIRECTED" | "RETURNING" | "DELIVERY_FAILED" | "NOT_FOUND" | "OTHER";
             /**
              * @description Статус НП
              * @example Прибув у відділення
@@ -1834,6 +1845,26 @@ export interface components {
              * @example 0
              */
             npCodAmount?: number;
+            /**
+             * @description Хто платить за доставку НП: Sender, Recipient, ThirdPerson
+             * @example Recipient
+             */
+            npPayerType?: string;
+            /**
+             * @description Спосіб оплати доставки НП: Cash, NonCash
+             * @example Cash
+             */
+            npPaymentMethod?: string;
+            /**
+             * @description Неоплачена вартість доставки за попередньою ТТН (після переадресації), грн
+             * @example 173.1
+             */
+            npPreviousDeliveryCost?: number;
+            /**
+             * @description Скільки заплатити на пошті при отриманні, грн: доставка (якщо платить отримувач, разом із попередньою ТТН)                 + накладений платіж. Комісія НП за грошовий переказ не входить
+             * @example 253.1
+             */
+            npAmountToPay?: number;
             /**
              * @description Об'ємна вага за даними НП, кг (немає — НП не міряла)
              * @example 4.2

@@ -19,7 +19,8 @@
     "allSeats": "Усі місця ({{count}})",
     "createdManually": "Створено вручну",
     "createdManuallyReceived": "Створено вручну як уже отриману",
-    "manualStatusChange": "Ручна зміна статусу на «{{status}}»"
+    "manualStatusChange": "Ручна зміна статусу на «{{status}}»",
+    "npRedirected": "Переадресовано Новою Поштою: ЕН {{from}} → {{to}}, посилку #{{id}} об'єднано"
   },
   "nav": {
     "parcels": "Посилки",

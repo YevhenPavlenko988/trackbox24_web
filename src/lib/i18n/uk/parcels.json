@@ -120,10 +120,48 @@
     "dimensions": "Габарити, см",
     "deliveryCity": "Місто доставки",
     "deliveryCityHint": "Порожнє — місто клієнта",
-    "npVolumeWeight": "Об'ємна вага НП, кг"
+    "npVolumeWeight": "Об'ємна вага НП, кг",
+    "npState": "Статус НП"
   },
   "deleteConfirm": {
     "title": "Видалити посилку?",
     "description": "Посилка зникне зі списків і сканів, її знімуть з плану рейсу. Можна лише для посилки, яка не в машині й не видана. Відновити можна з кошика."
+  },
+  "npState": {
+    "CREATED": "Створена, ще не в НП",
+    "IN_TRANSIT": "В дорозі",
+    "ARRIVED": "У відділенні",
+    "RECEIVED": "Забрали з НП",
+    "REDIRECTED": "Змінено адресу",
+    "RETURNING": "Відмова / повернення",
+    "DELIVERY_FAILED": "Невдала доставка",
+    "NOT_FOUND": "Видалена / не знайдена",
+    "OTHER": "Статус НП"
+  },
+  "np": {
+    "pickedUpNotScanned": "Забрана з НП, не відсканована",
+    "amountToPayTitle": "До сплати на пошті",
+    "delivery": "Доставка",
+    "deliveryRecipient": "Доставка (платить отримувач, {{method}})",
+    "method": {
+      "Cash": "готівка",
+      "NonCash": "безготівково"
+    },
+    "paidBySender": "оплачено відправником",
+    "paidByThirdPerson": "платить третя сторона",
+    "previousDelivery": "Доставка за попередньою ТТН",
+    "total": "До сплати",
+    "unknown": "невідомо",
+    "previousTtn": "Переадресовано з ЕН {{ttn}}",
+    "payerType": "Платник доставки НП",
+    "payer": {
+      "Sender": "відправник",
+      "Recipient": "отримувач",
+      "ThirdPerson": "третя сторона"
+    },
+    "paymentMethod": "Спосіб оплати НП",
+    "copied": "Скопійовано",
+    "gone": "Посилку об'єднано з іншою або видалено — список оновлено",
+    "previousTtnLabel": "Попередня ТТН"
   }
 }

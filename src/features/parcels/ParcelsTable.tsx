@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useAccess } from '@/features/auth/access'
 import type { ParcelResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
+import { isPickedUpNotScanned, NpStateBadge, PickedUpNotScannedBadge } from './NpStateBadge'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 
 export function seatsProgress(p: ParcelResponse): string {
@@ -60,6 +61,8 @@ export function ParcelsTable({
       cell: (p) => (
         <div className="flex flex-wrap items-center gap-1.5">
           <ParcelStatusBadge status={p.status} />
+          {p.status === 'IN_NOVA_POSHTA' && <NpStateBadge parcel={p} />}
+          {isPickedUpNotScanned(p) && <PickedUpNotScannedBadge />}
           {p.status === 'AT_WAREHOUSE' && p.warehouseName && <span className="text-xs text-muted-foreground">{p.warehouseName}</span>}
           {extra?.(p)}
           {p.needsEnrichment && (

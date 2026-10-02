@@ -1,5 +1,5 @@
-import { AlertCircle, ArrowLeft, BadgeCheck, BadgeX, Pencil, Printer, RefreshCw, Repeat, Trash2 } from 'lucide-react'
-import { useState } from 'react'
+import { AlertCircle, ArrowLeft, BadgeCheck, BadgeX, Copy, Pencil, Printer, RefreshCw, Repeat, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -14,10 +14,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAccess } from '@/features/auth/access'
-import { showApiError } from '@/lib/api/problem'
+import { isApiError, showApiError } from '@/lib/api/problem'
 import { formatDate, formatDateTime, formatMoney, formatPhone, formatWeight } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { ParcelEditDialog } from './ParcelEditDialog'
+import { NpPaymentCard } from './NpPaymentCard'
+import { isPickedUpNotScanned, NpStateBadge, PickedUpNotScannedBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 import { MarkPaidDialog } from './PaymentDialog'
@@ -41,6 +43,14 @@ export function ParcelPage() {
   const [deleting, setDeleting] = useState(false)
   const remove = useDeleteParcel()
   const navigate = useNavigate()
+  // A parcel can vanish between requests when Nova Poshta redirects it and the backend merges it into another one.
+  const gone = query.isError && isApiError(query.error) && query.error.status === 404
+  useEffect(() => {
+    if (gone) {
+      toast.info(t('parcels:np.gone'))
+      navigate('/parcels', { replace: true })
+    }
+  }, [gone]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (query.isPending) return <Skeleton className="h-60 w-full" />
   if (query.isError || !query.data) return <NotFoundPage />
@@ -88,6 +98,8 @@ export function ParcelPage() {
           <span className="flex flex-wrap items-center gap-3">
             <span className="font-mono">{p.barcode ?? (p.npTtn ? `${t('parcels:fields.npTtnShort')} ${p.npTtn}` : `#${p.id}`)}</span>
             <ParcelStatusBadge status={p.status} />
+            {p.status === 'IN_NOVA_POSHTA' && <NpStateBadge parcel={p} />}
+            {isPickedUpNotScanned(p) && <PickedUpNotScannedBadge />}
             {p.warehouseName && <span className="text-sm text-muted-foreground">{p.warehouseName}</span>}
             {p.needsEnrichment && (
               <Badge variant="outline" className="border-amber-400 text-amber-700">
@@ -281,6 +293,8 @@ export function ParcelPage() {
           </Card>
         )}
 
+        {p.npTtn && <NpPaymentCard parcel={p} />}
+
         {p.npTtn && (
           <Card>
             <CardHeader>
@@ -289,7 +303,13 @@ export function ParcelPage() {
             <CardContent>
               <DetailsList
                 items={[
-                  { label: t('parcels:fields.npTtn'), value: <span className="font-mono">{p.npTtn}</span> },
+                  { label: t('parcels:fields.npTtn'), value: <CopyableCode value={p.npTtn} /> },
+                  {
+                    label: t('parcels:np.previousTtnLabel'),
+                    value: p.npPreviousTtn ? <CopyableCode value={p.npPreviousTtn} hint={t('parcels:np.previousTtn', { ttn: p.npPreviousTtn })} /> : undefined,
+                  },
+                  { label: t('parcels:np.payerType'), value: p.npPayerType ? t(`parcels:np.payer.${p.npPayerType}`, { defaultValue: p.npPayerType }) : undefined },
+                  { label: t('parcels:np.paymentMethod'), value: p.npPaymentMethod ? t(`parcels:np.method.${p.npPaymentMethod}`, { defaultValue: p.npPaymentMethod }) : undefined },
                   { label: t('parcels:fields.npStatus'), value: p.npStatusText ? `${p.npStatusText}${p.npStatusCode ? ` (${p.npStatusCode})` : ''}` : undefined },
                   { label: t('parcels:fields.npStatusUpdatedAt'), value: formatDateTime(p.npStatusUpdatedAt) },
                   { label: t('parcels:fields.npRecipientWarehouse'), value: p.npRecipientWarehouse },
@@ -320,5 +340,22 @@ export function ParcelPage() {
       <MarkPaidDialog parcel={p} open={markingPaid} onOpenChange={setMarkingPaid} />
       <ConfirmDialog open={unpaying} onOpenChange={setUnpaying} title={t('parcels:payment.unpaidConfirm')} confirmLabel={t('parcels:payment.markUnpaid')} destructive pending={setPayment.isPending} onConfirm={onUnpaid} />
     </>
+  )
+}
+
+/** Monospace code with a copy button (TTN numbers are typed into the Nova Poshta site/app by hand otherwise). */
+function CopyableCode({ value, hint }: { value: string; hint?: string }) {
+  const { t } = useTranslation('parcels')
+  const copy = () => navigator.clipboard?.writeText(value).then(() => toast.success(t('np.copied')))
+  return (
+    <span className="inline-flex flex-col">
+      <span className="inline-flex items-center gap-1">
+        <span className="font-mono">{value}</span>
+        <Button variant="ghost" size="icon-sm" aria-label={t('np.copied')} onClick={copy}>
+          <Copy />
+        </Button>
+      </span>
+      {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+    </span>
   )
 }

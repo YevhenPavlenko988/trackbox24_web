@@ -15,6 +15,7 @@ export type ParcelCreateRequest = Schemas['ParcelCreateRequest']
 export type ParcelUpdateRequest = Schemas['ParcelUpdateRequest']
 export type ParcelStatusChangeRequest = Schemas['ParcelStatusChangeRequest']
 export type ParcelPaymentRequest = Schemas['ParcelPaymentRequest']
+export type NpState = NonNullable<ParcelResponse['npState']>
 
 /** Trash entry: the record as it was plus who deleted it and when (same shape for every entity). */
 export type DeletedItem<T> = { item?: T; deletedAt?: string; deletedBy?: string }

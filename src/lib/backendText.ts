@@ -21,6 +21,11 @@ const RULES: { re: RegExp; key: string; args?: (m: RegExpMatchArray) => Record<s
   { re: /^All (\d+) seats$/, key: 'allSeats', args: (m) => ({ count: m[1] }) },
   { re: /^Created manually$/, key: 'createdManually' },
   { re: /^Created manually as already received$/, key: 'createdManuallyReceived' },
+  {
+    re: /^Redirected by Nova Poshta: waybill (\d+) -> (\d+), parcel #(\d+) merged$/,
+    key: 'npRedirected',
+    args: (m) => ({ from: m[1], to: m[2], id: m[3] }),
+  },
   { re: /^Manual status change to ([A-Z_]+)$/, key: 'manualStatusChange', args: (m) => ({ status: i18n.t(`common:parcelStatus.${m[1]}`, { defaultValue: m[1] }) }) },
 ]
 
