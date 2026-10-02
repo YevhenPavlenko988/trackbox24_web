@@ -1,13 +1,14 @@
-import { Check, ChevronsUpDown, X } from 'lucide-react'
+import { Check, ChevronsUpDown, Plus, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command'
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from '@/components/ui/command'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useDebounce } from '@/hooks/use-debounce'
 import type { ClientResponse } from '@/lib/api/types'
 import { formatPhone } from '@/lib/format'
 import { clientDisplayName } from './api'
+import { ClientCreateDialog } from './ClientCreateDialog'
 import { useClient, useClients } from './queries'
 
 export function ClientPicker({
@@ -17,6 +18,7 @@ export function ClientPicker({
   id,
   invalid,
   clearable = true,
+  allowCreate = false,
 }: {
   value?: number
   onChange: (id: number | undefined, client?: ClientResponse) => void
@@ -24,10 +26,13 @@ export function ClientPicker({
   id?: string
   invalid?: boolean
   clearable?: boolean
+  /** Show a "create new client" entry at the bottom of the list (forms only, not filters). */
+  allowCreate?: boolean
 }) {
   const { t } = useTranslation(['clients', 'common'])
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
+  const [creating, setCreating] = useState(false)
   const debounced = useDebounce(search)
 
   const options = useClients({ search: debounced, size: 20 }, open)
@@ -75,10 +80,39 @@ export function ClientPicker({
                   </CommandItem>
                 ))}
               </CommandGroup>
+              {allowCreate && (
+                <>
+                  <CommandSeparator alwaysRender />
+                  <CommandGroup forceMount>
+                    <CommandItem
+                      value="__create__"
+                      data-testid="client-create-inline"
+                      onSelect={() => {
+                        setOpen(false)
+                        setCreating(true)
+                      }}
+                    >
+                      <Plus />
+                      {t('clients:createInline')}
+                    </CommandItem>
+                  </CommandGroup>
+                </>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
+      {allowCreate && (
+        <ClientCreateDialog
+          open={creating}
+          onOpenChange={setCreating}
+          initialSearch={search}
+          onCreated={(c) => {
+            onChange(c.id, c)
+            setSearch('')
+          }}
+        />
+      )}
       {clearable && value != null && (
         <Button type="button" variant="ghost" size="icon" aria-label={t('common:actions.clear')} onClick={() => onChange(undefined)}>
           <X />

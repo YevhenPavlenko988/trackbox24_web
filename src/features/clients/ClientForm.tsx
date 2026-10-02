@@ -17,11 +17,14 @@ export function ClientForm({
   onSubmit,
   onCancel,
   submitLabel,
+  idPrefix = '',
 }: {
   defaultValues?: ClientFormValues
   onSubmit: (body: ClientRequest) => Promise<unknown>
   onCancel?: () => void
   submitLabel: string
+  /** Prefix for input ids when the form is rendered inside another form's page (avoids duplicate ids). */
+  idPrefix?: string
 }) {
   const { t } = useTranslation(['clients', 'common'])
   const form = useForm<ClientFormValues>({ resolver: zodResolver(clientSchema), defaultValues })
@@ -38,7 +41,15 @@ export function ClientForm({
   })
 
   return (
-    <form onSubmit={submit} noValidate>
+    // stopPropagation: when rendered in a dialog opened from another form (parcel create/edit), React bubbles the
+    // submit event through the portal and would submit the outer form as well.
+    <form
+      onSubmit={(e) => {
+        e.stopPropagation()
+        void submit(e)
+      }}
+      noValidate
+    >
       <FieldGroup>
         <Controller
           control={form.control}
@@ -60,59 +71,59 @@ export function ClientForm({
 
         {type === 'ORGANIZATION' && (
           <Field data-invalid={!!errors.organizationName}>
-            <FieldLabel htmlFor="organizationName">{t('clients:fields.organizationName')}</FieldLabel>
-            <Input id="organizationName" aria-invalid={!!errors.organizationName} {...form.register('organizationName')} />
+            <FieldLabel htmlFor={`${idPrefix}organizationName`}>{t('clients:fields.organizationName')}</FieldLabel>
+            <Input id={`${idPrefix}organizationName`} aria-invalid={!!errors.organizationName} {...form.register('organizationName')} />
             <FieldErrorText error={errors.organizationName} />
           </Field>
         )}
 
         <div className="grid gap-4 sm:grid-cols-3">
           <Field data-invalid={!!errors.lastName}>
-            <FieldLabel htmlFor="lastName">{t('clients:fields.lastName')}</FieldLabel>
-            <Input id="lastName" aria-invalid={!!errors.lastName} {...form.register('lastName')} />
+            <FieldLabel htmlFor={`${idPrefix}lastName`}>{t('clients:fields.lastName')}</FieldLabel>
+            <Input id={`${idPrefix}lastName`} aria-invalid={!!errors.lastName} {...form.register('lastName')} />
             <FieldErrorText error={errors.lastName} />
           </Field>
           <Field data-invalid={!!errors.firstName}>
-            <FieldLabel htmlFor="firstName">{t('clients:fields.firstName')}</FieldLabel>
-            <Input id="firstName" aria-invalid={!!errors.firstName} {...form.register('firstName')} />
+            <FieldLabel htmlFor={`${idPrefix}firstName`}>{t('clients:fields.firstName')}</FieldLabel>
+            <Input id={`${idPrefix}firstName`} aria-invalid={!!errors.firstName} {...form.register('firstName')} />
             <FieldErrorText error={errors.firstName} />
           </Field>
           <Field data-invalid={!!errors.middleName}>
-            <FieldLabel htmlFor="middleName">{t('clients:fields.middleName')}</FieldLabel>
-            <Input id="middleName" {...form.register('middleName')} />
+            <FieldLabel htmlFor={`${idPrefix}middleName`}>{t('clients:fields.middleName')}</FieldLabel>
+            <Input id={`${idPrefix}middleName`} {...form.register('middleName')} />
             <FieldErrorText error={errors.middleName} />
           </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.phone}>
-            <FieldLabel htmlFor="phone">{t('clients:fields.phone')}</FieldLabel>
-            <Input id="phone" inputMode="tel" placeholder="380XXXXXXXXX" aria-invalid={!!errors.phone} {...form.register('phone')} />
+            <FieldLabel htmlFor={`${idPrefix}phone`}>{t('clients:fields.phone')}</FieldLabel>
+            <Input id={`${idPrefix}phone`} inputMode="tel" placeholder="380XXXXXXXXX" aria-invalid={!!errors.phone} {...form.register('phone')} />
             <FieldErrorText error={errors.phone} />
           </Field>
           <Field data-invalid={!!errors.email}>
-            <FieldLabel htmlFor="email">{t('clients:fields.email')}</FieldLabel>
-            <Input id="email" type="email" aria-invalid={!!errors.email} {...form.register('email')} />
+            <FieldLabel htmlFor={`${idPrefix}email`}>{t('clients:fields.email')}</FieldLabel>
+            <Input id={`${idPrefix}email`} type="email" aria-invalid={!!errors.email} {...form.register('email')} />
             <FieldErrorText error={errors.email} />
           </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.city}>
-            <FieldLabel htmlFor="city">{t('clients:fields.city')}</FieldLabel>
-            <Input id="city" {...form.register('city')} />
+            <FieldLabel htmlFor={`${idPrefix}city`}>{t('clients:fields.city')}</FieldLabel>
+            <Input id={`${idPrefix}city`} {...form.register('city')} />
             <FieldErrorText error={errors.city} />
           </Field>
           <Field data-invalid={!!errors.address}>
-            <FieldLabel htmlFor="address">{t('clients:fields.address')}</FieldLabel>
-            <Input id="address" {...form.register('address')} />
+            <FieldLabel htmlFor={`${idPrefix}address`}>{t('clients:fields.address')}</FieldLabel>
+            <Input id={`${idPrefix}address`} {...form.register('address')} />
             <FieldErrorText error={errors.address} />
           </Field>
         </div>
 
         <Field data-invalid={!!errors.notes}>
-          <FieldLabel htmlFor="notes">{t('clients:fields.notes')}</FieldLabel>
-          <Textarea id="notes" rows={3} {...form.register('notes')} />
+          <FieldLabel htmlFor={`${idPrefix}notes`}>{t('clients:fields.notes')}</FieldLabel>
+          <Textarea id={`${idPrefix}notes`} rows={3} {...form.register('notes')} />
           <FieldErrorText error={errors.notes} />
         </Field>
 

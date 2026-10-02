@@ -4,6 +4,7 @@
   "editTitle": "Редагувати клієнта",
   "searchPlaceholder": "Пошук за ПІБ, організацією або телефоном",
   "pickerPlaceholder": "Оберіть клієнта",
+  "createInline": "Створити нового клієнта",
   "tabs": {
     "info": "Дані",
     "parcels": "Посилки"

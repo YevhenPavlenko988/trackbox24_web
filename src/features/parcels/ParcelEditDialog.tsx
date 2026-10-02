@@ -156,7 +156,7 @@ function EditForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => 
               render={({ field }) => (
                 <Field data-invalid={!!errors.clientId}>
                   <FieldLabel htmlFor="e-clientId">{t('parcels:fields.client')}</FieldLabel>
-                  <ClientPicker id="e-clientId" value={field.value} onChange={(id) => field.onChange(id)} />
+                  <ClientPicker id="e-clientId" value={field.value} onChange={(id) => field.onChange(id)} allowCreate />
                   <FieldErrorText error={errors.clientId} />
                 </Field>
               )}

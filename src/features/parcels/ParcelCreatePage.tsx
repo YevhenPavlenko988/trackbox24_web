@@ -178,7 +178,7 @@ export function ParcelCreatePage() {
                   render={({ field }) => (
                     <Field data-invalid={!!errors.clientId}>
                       <FieldLabel htmlFor="clientId">{t('parcels:fields.client')}</FieldLabel>
-                      <ClientPicker id="clientId" value={field.value} onChange={(id) => field.onChange(id)} />
+                      <ClientPicker id="clientId" value={field.value} onChange={(id) => field.onChange(id)} allowCreate />
                       <FieldErrorText error={errors.clientId} />
                     </Field>
                   )}
