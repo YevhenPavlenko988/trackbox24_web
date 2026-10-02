@@ -3,6 +3,7 @@ import { normalizePage, type Page, type PageParams } from '@/lib/api/page'
 import { unwrap } from '@/lib/api/problem'
 import type { components } from '@/lib/api/schema'
 import type {
+  Channel,
   DeletedItem,
   ParcelCreateRequest,
   ParcelHistoryResponse,
@@ -22,6 +23,7 @@ export type ParcelListParams = PageParams & {
   paymentStatus?: PaymentStatus
   warehouseId?: number
   deliveryCity?: string
+  channel?: Channel
   query?: string
 }
 
@@ -37,6 +39,7 @@ export async function listParcels(params: ParcelListParams): Promise<Page<Parcel
           paymentStatus: params.paymentStatus,
           warehouseId: params.warehouseId,
           deliveryCity: params.deliveryCity || undefined,
+          channel: params.channel,
           query: params.query || undefined,
           page: params.page,
           size: params.size,

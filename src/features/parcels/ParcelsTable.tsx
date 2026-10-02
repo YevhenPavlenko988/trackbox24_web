@@ -10,6 +10,7 @@ import type { ParcelResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
 import { isPickedUpNotScanned, NpStateBadge, PickedUpNotScannedBadge } from './NpStateBadge'
 import { NpPaymentSummary } from './NpPaymentCard'
+import { ChannelBadge } from '@/features/channels/channel'
 import { isGoneFromNp, npStateOf, npStatusTextOf } from './npStatus'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 
@@ -110,7 +111,10 @@ export function ParcelsTable({
             header: t('parcels:fields.client'),
             cell: (p: ParcelResponse) => (
               <div className="flex flex-col">
-                <span>{p.clientName ?? '—'}</span>
+                <span className="inline-flex items-center gap-1.5">
+                  {p.channel && <ChannelBadge channel={p.channel} compact />}
+                  {p.clientName ?? '—'}
+                </span>
                 {p.clientPhone && <span className="text-xs text-muted-foreground">{formatPhone(p.clientPhone)}</span>}
                 {p.deliveryCity && <span className="text-xs text-muted-foreground">→ {p.deliveryCity}</span>}
               </div>

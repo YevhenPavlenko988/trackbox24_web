@@ -1245,7 +1245,7 @@ export interface components {
              */
             lastName: string;
             /**
-             * @description Телефон 380XXXXXXXXX
+             * @description Телефон у міжнародному форматі без +, лише цифри з кодом країни (8–15 цифр)
              * @example 380672209213
              */
             phone?: string;
@@ -1591,6 +1591,17 @@ export interface components {
              */
             notes?: string;
             /**
+             * @description Звідки прийшла посилка; не вказано — береться з клієнта: TELEGRAM, VIBER, WHATSAPP, INSTAGRAM, FACEBOOK, TIKTOK, WEBSITE, PHONE_CALL, REFERRAL, OTHER
+             * @example INSTAGRAM
+             * @enum {string}
+             */
+            channel?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
+            /**
+             * @description Уточнення джерела: нік, посилання, назва групи
+             * @example @kyivkraut_shop
+             */
+            channelDetails?: string;
+            /**
              * @description false — дані заповнено (зняти прапорець), true — знову позначити; не передано — не змінюється
              * @example false
              */
@@ -1762,6 +1773,17 @@ export interface components {
              * @example Крихке
              */
             notes?: string;
+            /**
+             * @description Звідки прийшла посилка
+             * @example INSTAGRAM
+             * @enum {string}
+             */
+            channel?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
+            /**
+             * @description Уточнення джерела
+             * @example @kyivkraut_shop
+             */
+            channelDetails?: string;
             /**
              * @description Номер ТТН Нової Пошти
              * @example 20451549454007
@@ -2072,7 +2094,7 @@ export interface components {
              */
             organizationName?: string;
             /**
-             * @description Телефон 380XXXXXXXXX, унікальний у межах компанії
+             * @description Телефон у міжнародному форматі без +, лише цифри з кодом країни (8–15 цифр), унікальний у межах компанії
              * @example 380671234567
              */
             phone: string;
@@ -2097,6 +2119,17 @@ export interface components {
              * @example Дзвонити за годину до приїзду
              */
             notes?: string;
+            /**
+             * @description Звідки прийшов: TELEGRAM, VIBER, WHATSAPP, INSTAGRAM, FACEBOOK, TIKTOK, WEBSITE, PHONE_CALL, REFERRAL, OTHER
+             * @example INSTAGRAM
+             * @enum {string}
+             */
+            channel?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
+            /**
+             * @description Уточнення джерела: нік, посилання, назва групи
+             * @example @kyivkraut_shop
+             */
+            channelDetails?: string;
         };
         ClientResponse: {
             /**
@@ -2156,6 +2189,17 @@ export interface components {
              * @example Дзвонити за годину до приїзду
              */
             notes?: string;
+            /**
+             * @description Звідки прийшов клієнт
+             * @example INSTAGRAM
+             * @enum {string}
+             */
+            channel?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
+            /**
+             * @description Уточнення джерела
+             * @example @kyivkraut_shop
+             */
+            channelDetails?: string;
         };
         CarRequest: {
             /**
@@ -2299,7 +2343,7 @@ export interface components {
              */
             lastName: string;
             /**
-             * @description Телефон 380XXXXXXXXX; для представника — номер отримувача в НП
+             * @description Телефон у міжнародному форматі без +, лише цифри з кодом країни (8–15 цифр); для представника з імпортом з НП — український номер отримувача в НП (380…)
              * @example 380672209213
              */
             phone?: string;
@@ -2478,6 +2522,17 @@ export interface components {
              * @example Крихке
              */
             notes?: string;
+            /**
+             * @description Звідки прийшла посилка; не вказано — береться з клієнта: TELEGRAM, VIBER, WHATSAPP, INSTAGRAM, FACEBOOK, TIKTOK, WEBSITE, PHONE_CALL, REFERRAL, OTHER
+             * @example INSTAGRAM
+             * @enum {string}
+             */
+            channel?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
+            /**
+             * @description Уточнення джерела: нік, посилання, назва групи
+             * @example @kyivkraut_shop
+             */
+            channelDetails?: string;
             /**
              * @description Посилка вже в руках представника (для ТТН); без ТТН завжди вважається отриманою
              * @example false
@@ -2777,12 +2832,12 @@ export interface components {
              */
             warehouseName?: string;
             /**
-             * @description Код статусу НП на момент зміни
+             * @description Код статусу НП; лише в подіях source = NOVA_POSHTA
              * @example 7
              */
             npStatusCode?: string;
             /**
-             * @description Статус НП на момент зміни
+             * @description Статус НП; лише в подіях source = NOVA_POSHTA
              * @example Прибув у відділення
              */
             npStatusText?: string;
@@ -7329,6 +7384,11 @@ export interface operations {
                  */
                 warehouseId?: number;
                 /**
+                 * @description Звідки прийшла посилка
+                 * @example INSTAGRAM
+                 */
+                channel?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
+                /**
                  * @description Частина назви міста доставки
                  * @example Варшава
                  */
@@ -8127,6 +8187,11 @@ export interface operations {
                  * @example Коваль
                  */
                 search?: string;
+                /**
+                 * @description Звідки прийшов клієнт
+                 * @example INSTAGRAM
+                 */
+                channel?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */

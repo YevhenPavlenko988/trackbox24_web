@@ -1,8 +1,9 @@
 import { z } from 'zod'
-import type { ClientRequest, ClientResponse } from '@/lib/api/types'
+import type { Channel, ClientRequest, ClientResponse } from '@/lib/api/types'
+import { CHANNELS } from '@/features/channels/channel'
 
-/** Any international number: optional "+", 7–15 digits (E.164). Spaces, dashes and parentheses are stripped first. */
-export const PHONE_REGEX = /^\+?\d{7,15}$/
+/** Backend rule (PhoneNumber.REGEXP): country code first, digits only, 8–15 digits, no leading 0. Checked after [normalizePhone]. */
+export const PHONE_REGEX = /^[1-9]\d{7,14}$/
 
 /** "+380 (50) 123-45-67" → "380501234567": what the backend stores and what Nova Poshta matches on. */
 export function normalizePhone(raw: string): string {
@@ -27,6 +28,8 @@ export const clientSchema = z
     city: optionalText,
     address: optionalText,
     notes: optionalText,
+    channel: z.union([z.enum(CHANNELS as [Channel, ...Channel[]]), z.literal('')]),
+    channelDetails: z.string().trim().max(255),
   })
   .superRefine((v, ctx) => {
     if (v.type === 'ORGANIZATION' && !v.organizationName) {
@@ -47,6 +50,8 @@ export const emptyClientValues: ClientFormValues = {
   city: '',
   address: '',
   notes: '',
+  channel: '',
+  channelDetails: '',
 }
 
 export function clientToFormValues(c: ClientResponse): ClientFormValues {
@@ -61,6 +66,8 @@ export function clientToFormValues(c: ClientResponse): ClientFormValues {
     city: c.city ?? '',
     address: c.address ?? '',
     notes: c.notes ?? '',
+    channel: c.channel ?? '',
+    channelDetails: c.channelDetails ?? '',
   }
 }
 
@@ -78,5 +85,7 @@ export function formValuesToRequest(v: ClientFormValues): ClientRequest {
     city: orUndefined(v.city),
     address: orUndefined(v.address),
     notes: orUndefined(v.notes),
+    channel: v.channel || undefined,
+    channelDetails: v.channel ? orUndefined(v.channelDetails) : undefined,
   }
 }

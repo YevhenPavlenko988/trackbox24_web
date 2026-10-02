@@ -25,6 +25,7 @@ import { inNpStateGroup, isNpStateGroup, NP_STATE_GROUPS, type NpStateGroup } fr
 import { useParcels, useSyncNovaPoshta } from './queries'
 import { isParcelDeletable } from './status'
 import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
+import { ChannelSelect, isChannel } from '@/features/channels/channel'
 
 const PAID_STORAGE_SORT = 'npPaidStorageFrom,asc'
 const ALL = '__all__'
@@ -57,6 +58,8 @@ export function ParcelsListPage() {
   const representativeId = get('representativeId') ? Number(get('representativeId')) : undefined
   const warehouseId = get('warehouseId') ? Number(get('warehouseId')) : undefined
   const paymentStatus = get('paymentStatus') as PaymentStatus | undefined
+  const channelParam = get('channel')
+  const channel = isChannel(channelParam) ? channelParam : undefined
   const deliveryCity = get('deliveryCity') ?? ''
   const [cityInput, setCityInput] = useState(deliveryCity)
   const debouncedCity = useDebounce(cityInput)
@@ -68,7 +71,7 @@ export function ParcelsListPage() {
   // No backend filter by npState yet: filter the loaded page on the client, with a bigger page so it is useful.
   const npGroupParam = get('npState')
   const npGroup: NpStateGroup | undefined = isNpStateGroup(npGroupParam) ? npGroupParam : undefined
-  const hasFilters = !!(urlQuery || status || clientId || representativeId || warehouseId || paymentStatus || deliveryCity || needsEnrichment || sort || npGroup)
+  const hasFilters = !!(urlQuery || status || clientId || representativeId || warehouseId || paymentStatus || deliveryCity || needsEnrichment || sort || npGroup || channel)
 
   const query = useParcels({
     query: urlQuery,
@@ -78,6 +81,7 @@ export function ParcelsListPage() {
     warehouseId,
     paymentStatus,
     deliveryCity,
+    channel,
     needsEnrichment,
     page,
     size: npGroup ? Math.max(size, 100) : size,
@@ -95,7 +99,7 @@ export function ParcelsListPage() {
   const reset = () => {
     setSearch('')
     setCityInput('')
-    set({ query: undefined, deliveryCity: undefined, status: undefined, clientId: undefined, representativeId: undefined, warehouseId: undefined, paymentStatus: undefined, needsEnrichment: undefined, sort: undefined, npState: undefined })
+    set({ query: undefined, deliveryCity: undefined, status: undefined, clientId: undefined, representativeId: undefined, warehouseId: undefined, paymentStatus: undefined, needsEnrichment: undefined, sort: undefined, npState: undefined, channel: undefined })
   }
 
   return (
@@ -159,6 +163,7 @@ export function ParcelsListPage() {
             ))}
           </SelectContent>
         </Select>
+        <ChannelSelect className="w-44" value={channel ?? ''} onChange={(v) => set({ channel: v })} noneLabel={t('common:channelField.all')} />
         <Input className="w-44" placeholder={t('parcels:filters.deliveryCity')} value={cityInput} onChange={(e) => setCityInput(e.target.value)} />
         <div className="w-64">
           <ClientPicker value={clientId} onChange={(v) => set({ clientId: v })} placeholder={t('parcels:filters.client')} />

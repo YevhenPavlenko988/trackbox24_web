@@ -19,6 +19,7 @@ import { formatDate, formatDateTime, formatMoney, formatPhone, formatWeight } fr
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { ParcelEditDialog } from './ParcelEditDialog'
 import { NpPaymentCard } from './NpPaymentCard'
+import { ChannelBadge } from '@/features/channels/channel'
 import { isPickedUpNotScanned, NpStateBadge, PickedUpNotScannedBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
@@ -228,6 +229,7 @@ export function ParcelPage() {
                 { label: t('parcels:fields.clientAddress'), value: p.clientAddress },
                 { label: t('parcels:fields.representative'), value: p.representativeName },
                 { label: t('parcels:fields.source'), value: p.source ? t(`parcels:source.${p.source}`) : undefined },
+                { label: t('common:channelField.label'), value: p.channel ? <ChannelBadge channel={p.channel} details={p.channelDetails} /> : undefined },
                 { label: t('parcels:fields.description'), value: p.description },
                 { label: t('parcels:fields.seatsAmount'), value: p.seatsAmount },
                 { label: t('parcels:fields.weightKg'), value: formatWeight(p.weightKg) },

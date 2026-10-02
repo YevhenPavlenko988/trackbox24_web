@@ -17,8 +17,9 @@ import { useMutationError } from '@/lib/api/problem'
 import type { Role, UserResponse } from '@/lib/api/types'
 import { COMPANY_ROLES, userDisplayName } from './api'
 import { useCreateUser, useResetUserPassword, useUpdateUser } from './queries'
+import { normalizePhone, PHONE_REGEX } from '@/features/clients/schema'
 
-const PHONE = /^380\d{9}$/
+const PHONE = PHONE_REGEX
 const rolesSchema = z.array(z.enum(['MANAGER', 'REPRESENTATIVE', 'DRIVER', 'VIEWER'])).min(1, 'rolesRequired')
 
 function RolesField({ value, onChange, error }: { value: Role[]; onChange: (roles: Role[]) => void; error?: { message?: string } }) {
@@ -55,7 +56,7 @@ const createSchema = z
   })
   .superRefine((v, ctx) => {
     if (v.roles.includes('REPRESENTATIVE') && !v.phone) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'required' })
-    if (v.phone && !PHONE.test(v.phone)) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phoneUa' })
+    if (v.phone && !PHONE.test(normalizePhone(v.phone))) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phone' })
   })
 
 type CreateValues = z.infer<typeof createSchema>
@@ -103,7 +104,7 @@ function CreateForm({ companyId, onClose }: { companyId?: number; onClose: () =>
         password: v.password,
         lastName: v.lastName,
         firstName: v.firstName,
-        phone: orUndefined(v.phone),
+        phone: v.phone ? normalizePhone(v.phone) : undefined,
         roles: v.roles,
         driverLicenseNumber: v.roles.includes('DRIVER') ? orUndefined(v.driverLicenseNumber) : undefined,
         notes: orUndefined(v.notes),
@@ -145,7 +146,7 @@ function CreateForm({ companyId, onClose }: { companyId?: number; onClose: () =>
         </div>
         <Field data-invalid={!!errors.phone}>
           <FieldLabel htmlFor="u-phone">{t('users:fields.phone')}</FieldLabel>
-          <Input id="u-phone" inputMode="tel" placeholder="380XXXXXXXXX" aria-invalid={!!errors.phone} {...form.register('phone')} />
+          <Input id="u-phone" inputMode="tel" placeholder="380671234567" aria-invalid={!!errors.phone} {...form.register('phone')} />
           {roles.includes('REPRESENTATIVE') && <FieldDescription>{t('users:hints.phoneRepresentative')}</FieldDescription>}
           <FieldErrorText error={errors.phone} />
         </Field>
@@ -186,7 +187,7 @@ const editSchema = z
   })
   .superRefine((v, ctx) => {
     if (v.roles.includes('REPRESENTATIVE') && !v.phone) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'required' })
-    if (v.phone && !PHONE.test(v.phone)) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phoneUa' })
+    if (v.phone && !PHONE.test(normalizePhone(v.phone))) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phone' })
   })
 
 type EditValues = z.infer<typeof editSchema>
@@ -239,7 +240,7 @@ function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }
       await update.mutateAsync({
         lastName: v.lastName,
         firstName: v.firstName,
-        phone: orUndefined(v.phone),
+        phone: v.phone ? normalizePhone(v.phone) : undefined,
         roles: isAdminUser ? undefined : v.roles,
         driverLicenseNumber: v.roles.includes('DRIVER') ? orUndefined(v.driverLicenseNumber) : undefined,
         notes: orUndefined(v.notes),
@@ -282,7 +283,7 @@ function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }
         </div>
         <Field data-invalid={!!errors.phone}>
           <FieldLabel htmlFor="ue-phone">{t('users:fields.phone')}</FieldLabel>
-          <Input id="ue-phone" inputMode="tel" placeholder="380XXXXXXXXX" aria-invalid={!!errors.phone} {...form.register('phone')} />
+          <Input id="ue-phone" inputMode="tel" placeholder="380671234567" aria-invalid={!!errors.phone} {...form.register('phone')} />
           <FieldErrorText error={errors.phone} />
         </Field>
         {roles.includes('DRIVER') && (

@@ -1,9 +1,9 @@
 import { api } from '@/lib/api/client'
 import { normalizePage, type Page, type PageParams } from '@/lib/api/page'
 import { unwrap } from '@/lib/api/problem'
-import type { ClientRequest, ClientResponse, ParcelResponse, ParcelStatus } from '@/lib/api/types'
+import type { Channel, ClientRequest, ClientResponse, ParcelResponse, ParcelStatus } from '@/lib/api/types'
 
-export type ClientListParams = PageParams & { search?: string }
+export type ClientListParams = PageParams & { search?: string; channel?: Channel }
 
 export async function listClients(params: ClientListParams): Promise<Page<ClientResponse>> {
   const data = await unwrap(
@@ -11,6 +11,7 @@ export async function listClients(params: ClientListParams): Promise<Page<Client
       params: {
         query: {
           search: params.search || undefined,
+          channel: params.channel,
           page: params.page,
           size: params.size,
           sort: [params.sort ?? 'lastName,asc'],

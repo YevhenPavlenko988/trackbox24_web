@@ -160,6 +160,7 @@ function UserNpDialog({ user, onClose }: { user: UserResponse; onClose: () => vo
       clearHint={t('npDialog.clearHint')}
       syncLabel={t('npDialog.syncEnabled')}
       syncEnabled={user.novaPoshtaSyncEnabled ?? true}
+      syncHint={user.phone && !user.phone.startsWith('380') ? t('npDialog.needsUaPhone') : undefined}
       onSubmit={(body) => setNp.mutateAsync(body)}
     />
   )

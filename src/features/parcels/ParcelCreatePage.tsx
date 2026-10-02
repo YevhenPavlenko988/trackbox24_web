@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +19,8 @@ import { useAccess } from '@/features/auth/access'
 import { ClientPicker } from '@/features/clients/ClientPicker'
 import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
+import { CHANNELS, ChannelFields } from '@/features/channels/channel'
+import type { Channel } from '@/lib/api/types'
 import { DimensionFields } from './DimensionFields'
 import { PriceFields } from './PriceFields'
 import { useCreateParcel } from './queries'
@@ -49,6 +52,8 @@ const schema = z
     notes: z.string().trim(),
     deliveryPrice: numberField,
     deliveryPriceCurrency: z.enum(['UAH', 'EUR']),
+    channel: z.union([z.enum(CHANNELS as [Channel, ...Channel[]]), z.literal('')]),
+    channelDetails: z.string().trim().max(255),
   })
   .superRefine((v, ctx) => {
     if (v.mode === 'ttn' && !/^\d{14}$/.test(v.npTtn)) {
@@ -77,6 +82,8 @@ export function ParcelCreatePage() {
       widthCm: '',
       heightCm: '',
       deliveryCity: '',
+      channel: '',
+      channelDetails: '',
       senderName: '',
       senderPhone: '',
       senderCity: '',
@@ -89,6 +96,7 @@ export function ParcelCreatePage() {
   const onError = useMutationError(form)
   const mode = form.watch('mode')
   const { isManager } = useAccess()
+  const [channelFromClient, setChannelFromClient] = useState(false)
 
   const submit = form.handleSubmit(async (v) => {
     try {
@@ -109,6 +117,8 @@ export function ParcelCreatePage() {
         senderPhone: orUndefined(v.senderPhone),
         senderCity: orUndefined(v.senderCity),
         notes: orUndefined(v.notes),
+        channel: v.channel || undefined,
+        channelDetails: v.channel ? orUndefined(v.channelDetails) : undefined,
         deliveryPrice: isManager ? parseNumber(v.deliveryPrice) : undefined,
         deliveryPriceCurrency: isManager && v.deliveryPrice ? v.deliveryPriceCurrency : undefined,
       })
@@ -178,7 +188,20 @@ export function ParcelCreatePage() {
                   render={({ field }) => (
                     <Field data-invalid={!!errors.clientId}>
                       <FieldLabel htmlFor="clientId">{t('parcels:fields.client')}</FieldLabel>
-                      <ClientPicker id="clientId" value={field.value} onChange={(id) => field.onChange(id)} allowCreate />
+                      <ClientPicker
+                        id="clientId"
+                        value={field.value}
+                        onChange={(id, client) => {
+                          field.onChange(id)
+                          // The backend would default the channel from the client anyway; show it so the user can override.
+                          if (client?.channel && !form.getValues('channel')) {
+                            form.setValue('channel', client.channel)
+                            form.setValue('channelDetails', client.channelDetails ?? '')
+                            setChannelFromClient(true)
+                          }
+                        }}
+                        allowCreate
+                      />
                       <FieldErrorText error={errors.clientId} />
                     </Field>
                   )}
@@ -243,6 +266,8 @@ export function ParcelCreatePage() {
                   <FieldErrorText error={errors.senderCity} />
                 </Field>
               </div>
+
+              <ChannelFields form={form} hint={channelFromClient ? t('common:channelField.fromClient') : undefined} />
 
               <Field data-invalid={!!errors.notes}>
                 <FieldLabel htmlFor="notes">{t('parcels:fields.notes')}</FieldLabel>

@@ -15,6 +15,8 @@ import { ClientPicker } from '@/features/clients/ClientPicker'
 import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
 import type { ParcelResponse } from '@/lib/api/types'
+import { CHANNELS, ChannelFields } from '@/features/channels/channel'
+import type { Channel } from '@/lib/api/types'
 import { DimensionFields } from './DimensionFields'
 import { PriceFields } from './PriceFields'
 import { useUpdateParcel } from './queries'
@@ -43,6 +45,8 @@ const schema = z.object({
   notes: z.string().trim(),
   deliveryPrice: numberField,
   deliveryPriceCurrency: z.enum(['UAH', 'EUR']),
+  channel: z.union([z.enum(CHANNELS as [Channel, ...Channel[]]), z.literal('')]),
+  channelDetails: z.string().trim().max(255),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -66,6 +70,8 @@ function toFormValues(p: ParcelResponse): FormValues {
     notes: p.notes ?? '',
     deliveryPrice: p.deliveryPrice != null ? String(p.deliveryPrice) : '',
     deliveryPriceCurrency: p.deliveryPriceCurrency ?? 'UAH',
+    channel: p.channel ?? '',
+    channelDetails: p.channelDetails ?? '',
   }
 }
 
@@ -117,6 +123,9 @@ function EditForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => 
         senderPhone: orUndefined(v.senderPhone),
         senderCity: orUndefined(v.senderCity),
         notes: orUndefined(v.notes),
+        // PUT is partial: a cleared channel cannot be removed, only replaced.
+        channel: v.channel || undefined,
+        channelDetails: v.channel ? orUndefined(v.channelDetails) : undefined,
       })
       toast.success(t('common:common.saved'))
       onClose()
@@ -209,6 +218,8 @@ function EditForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => 
               <FieldErrorText error={errors.senderCity} />
             </Field>
           </div>
+
+          <ChannelFields form={form} idPrefix="e-" />
 
           <Field data-invalid={!!errors.notes}>
             <FieldLabel htmlFor="e-notes">{t('parcels:fields.notes')}</FieldLabel>

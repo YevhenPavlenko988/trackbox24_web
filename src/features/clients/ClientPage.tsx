@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAccess } from '@/features/auth/access'
 import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
+import { ChannelBadge } from '@/features/channels/channel'
 import { ParcelStatusSelect } from '@/features/parcels/ParcelStatusSelect'
 import { ParcelsTable } from '@/features/parcels/ParcelsTable'
 import { useListParams } from '@/hooks/use-list-params'
@@ -76,6 +77,7 @@ export function ClientPage() {
                   { label: t('clients:fields.email'), value: client.email },
                   { label: t('clients:fields.city'), value: client.city },
                   { label: t('clients:fields.address'), value: client.address },
+                  { label: t('common:channelField.label'), value: client.channel ? <ChannelBadge channel={client.channel} details={client.channelDetails} /> : undefined },
                   { label: t('clients:fields.notes'), value: client.notes },
                 ]}
               />

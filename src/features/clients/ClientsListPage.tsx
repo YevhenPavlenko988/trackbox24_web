@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { DataTable, type Column } from '@/components/common/DataTable'
 import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
+import { ChannelBadge, ChannelSelect, isChannel } from '@/features/channels/channel'
 import { LinkButton } from '@/components/common/LinkButton'
 import { Pagination } from '@/components/common/Pagination'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -30,7 +31,8 @@ export function ClientsListPage() {
     if (debounced !== urlSearch) set({ search: debounced })
   }, [debounced]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const query = useClients({ search: urlSearch, page, size })
+  const channel = isChannel(get('channel')) ? get('channel') : undefined
+  const query = useClients({ search: urlSearch, channel: isChannel(channel) ? channel : undefined, page, size })
   const data = query.data ?? emptyPage<ClientResponse>()
 
   const columns: Column<ClientResponse>[] = [
@@ -38,6 +40,7 @@ export function ClientsListPage() {
     { key: 'type', header: t('clients:fields.type'), cell: (c) => (c.type ? t(`common:clientType.${c.type}`) : '—') },
     { key: 'phone', header: t('clients:fields.phone'), cell: (c) => formatPhone(c.phone) },
     { key: 'city', header: t('clients:fields.city'), cell: (c) => c.city ?? '—' },
+    { key: 'channel', header: t('common:channelField.label'), cell: (c) => (c.channel ? <ChannelBadge channel={c.channel} details={c.channelDetails} /> : '—') },
     ...(canEdit
       ? [
           {
@@ -74,6 +77,7 @@ export function ClientsListPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <ChannelSelect className="w-56" value={isChannel(channel) ? channel : ''} onChange={(v) => set({ channel: v })} noneLabel={t('common:channelField.all')} />
       </div>
       <DataTable
         columns={columns}

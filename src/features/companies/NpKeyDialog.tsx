@@ -30,6 +30,8 @@ type Props = {
   clearHint?: string
   syncLabel?: string
   syncEnabled?: boolean
+  /** Shown under the sync switch (e.g. the representative's phone is not Ukrainian, so import cannot be enabled). */
+  syncHint?: ReactNode
   onSubmit: (body: NovaPoshtaKeyRequest) => Promise<unknown>
 }
 
@@ -48,7 +50,7 @@ export function NpKeyDialog(props: Props) {
   )
 }
 
-function NpKeyForm({ onOpenChange, apiKeyLabel, apiKeyPlaceholder, clearHint, syncLabel, syncEnabled, onSubmit }: Props) {
+function NpKeyForm({ onOpenChange, apiKeyLabel, apiKeyPlaceholder, clearHint, syncLabel, syncEnabled, syncHint, onSubmit }: Props) {
   const { t } = useTranslation()
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -92,6 +94,7 @@ function NpKeyForm({ onOpenChange, apiKeyLabel, apiKeyPlaceholder, clearHint, sy
               <Field orientation="horizontal">
                 <FieldContent>
                   <FieldLabel htmlFor="np-sync">{syncLabel}</FieldLabel>
+                  {syncHint && <FieldDescription>{syncHint}</FieldDescription>}
                 </FieldContent>
                 <Switch id="np-sync" checked={field.value} onCheckedChange={(c) => field.onChange(c)} />
               </Field>

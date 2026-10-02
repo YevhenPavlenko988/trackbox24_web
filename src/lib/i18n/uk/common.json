@@ -87,8 +87,7 @@
     "502": "Помилка Нової Пошти",
     "default": "Помилка сервера",
     "required": "Обов'язкове поле",
-    "phone": "Лише цифри (7–15), можна з + на початку",
-    "phoneUa": "Формат: 380XXXXXXXXX",
+    "phone": "З кодом країни, лише цифри (8–15), напр. 380671234567",
     "email": "Некоректний email",
     "ttn": "ТТН має містити 14 цифр",
     "min1": "Мінімум 1",
@@ -124,5 +123,26 @@
     "MANUAL": "Вручну",
     "NOVA_POSHTA": "Нова Пошта",
     "SYSTEM": "Система"
+  },
+  "channel": {
+    "TELEGRAM": "Telegram",
+    "VIBER": "Viber",
+    "WHATSAPP": "WhatsApp",
+    "INSTAGRAM": "Instagram",
+    "FACEBOOK": "Facebook",
+    "TIKTOK": "TikTok",
+    "WEBSITE": "Сайт",
+    "PHONE_CALL": "Дзвінок",
+    "REFERRAL": "Рекомендація",
+    "OTHER": "Інше"
+  },
+  "channelField": {
+    "label": "Джерело",
+    "details": "Уточнення джерела",
+    "detailsPlaceholder": "Нік, посилання, назва групи чи чату",
+    "detailsOtherPlaceholder": "Опишіть джерело",
+    "none": "Не вказано",
+    "all": "Джерело: усі",
+    "fromClient": "Підставлено з клієнта, можна змінити"
   }
 }

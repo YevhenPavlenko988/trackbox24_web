@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
+import { ChannelFields } from '@/features/channels/channel'
 import { useMutationError } from '@/lib/api/problem'
 import type { ClientRequest } from '@/lib/api/types'
 import { clientSchema, emptyClientValues, formValuesToRequest, type ClientFormValues } from './schema'
@@ -98,7 +99,7 @@ export function ClientForm({
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.phone}>
             <FieldLabel htmlFor={`${idPrefix}phone`}>{t('clients:fields.phone')}</FieldLabel>
-            <Input id={`${idPrefix}phone`} inputMode="tel" placeholder="+380 XX XXX XX XX" aria-invalid={!!errors.phone} {...form.register('phone')} />
+            <Input id={`${idPrefix}phone`} inputMode="tel" placeholder="380671234567" aria-invalid={!!errors.phone} {...form.register('phone')} />
             <FieldErrorText error={errors.phone} />
           </Field>
           <Field data-invalid={!!errors.email}>
@@ -120,6 +121,8 @@ export function ClientForm({
             <FieldErrorText error={errors.address} />
           </Field>
         </div>
+
+        <ChannelFields form={form} idPrefix={idPrefix} />
 
         <Field data-invalid={!!errors.notes}>
           <FieldLabel htmlFor={`${idPrefix}notes`}>{t('clients:fields.notes')}</FieldLabel>
