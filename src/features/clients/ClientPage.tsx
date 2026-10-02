@@ -1,7 +1,7 @@
 import { Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { DetailsList } from '@/components/common/DetailsList'
 import { Pagination } from '@/components/common/Pagination'
@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAccess } from '@/features/auth/access'
+import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { ParcelStatusSelect } from '@/features/parcels/ParcelStatusSelect'
 import { ParcelsTable } from '@/features/parcels/ParcelsTable'
 import { useListParams } from '@/hooks/use-list-params'
@@ -30,6 +31,7 @@ export function ClientPage() {
   const { t } = useTranslation(['clients', 'common'])
   const query = useClient(clientId)
   const { canEdit } = useAccess()
+  const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const { get, set } = useListParams()
   const tab = get('tab') ?? 'info'
@@ -45,10 +47,13 @@ export function ClientPage() {
         description={client.type ? t(`common:clientType.${client.type}`) : undefined}
         actions={
           canEdit && (
-            <Button variant="outline" onClick={() => setEditing(true)}>
-              <Pencil />
-              {t('common:actions.edit')}
-            </Button>
+            <>
+              <Button variant="outline" onClick={() => setEditing(true)}>
+                <Pencil />
+                {t('common:actions.edit')}
+              </Button>
+              <DeleteEntityButton entity="clients" id={client.id!} onDeleted={() => navigate('/clients')} />
+            </>
           )
         }
       />

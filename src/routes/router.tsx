@@ -44,6 +44,7 @@ export const router = createBrowserRouter([
               { path: 'trips', lazy: page(() => import('@/features/trips/TripsListPage'), 'TripsListPage') },
               { path: 'trips/:id', lazy: page(() => import('@/features/trips/TripPage'), 'TripPage') },
               { path: 'warehouses', lazy: page(() => import('@/features/warehouses/WarehousesListPage'), 'WarehousesListPage') },
+              { path: 'trash', lazy: page(() => import('@/features/trash/TrashPage'), 'TrashPage') },
             ],
           },
           {

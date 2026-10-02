@@ -1,13 +1,17 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { clientKeys } from '@/features/clients/queries'
+import type { PageParams } from '@/lib/api/page'
 import type { ParcelCreateRequest, ParcelPaymentRequest, ParcelResponse, ParcelStatusChangeRequest, ParcelUpdateRequest } from '@/lib/api/types'
 import {
   changeParcelStatus,
   createParcel,
+  deleteParcel,
   getParcel,
   getParcelHistory,
+  listDeletedParcels,
   listParcels,
   refreshParcelFromNp,
+  restoreParcel,
   setParcelPayment,
   updateParcel,
   type ParcelListParams,
@@ -18,6 +22,7 @@ export const parcelKeys = {
   list: (params: ParcelListParams) => ['parcels', 'list', params] as const,
   detail: (id: number) => ['parcels', 'detail', id] as const,
   history: (id: number) => ['parcels', 'detail', id, 'history'] as const,
+  deleted: (params: PageParams) => ['parcels', 'deleted', params] as const,
 }
 
 export function useParcels(params: ParcelListParams) {
@@ -46,6 +51,25 @@ function useParcelMutation<TVars>(mutationFn: (vars: TVars) => Promise<ParcelRes
       queryClient.invalidateQueries({ queryKey: clientKeys.all })
     },
   })
+}
+
+export function useDeleteParcel() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => deleteParcel(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: parcelKeys.all })
+      queryClient.invalidateQueries({ queryKey: clientKeys.all })
+    },
+  })
+}
+
+export function useRestoreParcel() {
+  return useParcelMutation((id: number) => restoreParcel(id))
+}
+
+export function useDeletedParcels(params: PageParams) {
+  return useQuery({ queryKey: parcelKeys.deleted(params), queryFn: () => listDeletedParcels(params), placeholderData: keepPreviousData })
 }
 
 export function useCreateParcel() {

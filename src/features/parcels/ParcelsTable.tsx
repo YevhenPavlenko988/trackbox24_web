@@ -83,6 +83,7 @@ export function ParcelsTable({
               <div className="flex flex-col">
                 <span>{p.clientName ?? '—'}</span>
                 {p.clientPhone && <span className="text-xs text-muted-foreground">{formatPhone(p.clientPhone)}</span>}
+                {p.deliveryCity && <span className="text-xs text-muted-foreground">→ {p.deliveryCity}</span>}
               </div>
             ),
           },

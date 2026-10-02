@@ -18,6 +18,7 @@ import { useAccess } from '@/features/auth/access'
 import { ClientPicker } from '@/features/clients/ClientPicker'
 import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
+import { DimensionFields } from './DimensionFields'
 import { PriceFields } from './PriceFields'
 import { useCreateParcel } from './queries'
 import { orUndefined, parseNumber } from './status'
@@ -38,6 +39,10 @@ const schema = z
     weightKg: numberField,
     seatsAmount: z.string().trim().refine((s) => s === '' || /^\d+$/.test(s), 'number').refine((s) => s === '' || Number(s) >= 1, 'min1'),
     declaredValue: numberField,
+    lengthCm: numberField,
+    widthCm: numberField,
+    heightCm: numberField,
+    deliveryCity: z.string().trim().max(255),
     senderName: z.string().trim(),
     senderPhone: z.string().trim(),
     senderCity: z.string().trim(),
@@ -68,6 +73,10 @@ export function ParcelCreatePage() {
       weightKg: '',
       seatsAmount: '1',
       declaredValue: '',
+      lengthCm: '',
+      widthCm: '',
+      heightCm: '',
+      deliveryCity: '',
       senderName: '',
       senderPhone: '',
       senderCity: '',
@@ -92,6 +101,10 @@ export function ParcelCreatePage() {
         weightKg: parseNumber(v.weightKg),
         seatsAmount: parseNumber(v.seatsAmount),
         declaredValue: parseNumber(v.declaredValue),
+        lengthCm: parseNumber(v.lengthCm),
+        widthCm: parseNumber(v.widthCm),
+        heightCm: parseNumber(v.heightCm),
+        deliveryCity: orUndefined(v.deliveryCity),
         senderName: orUndefined(v.senderName),
         senderPhone: orUndefined(v.senderPhone),
         senderCity: orUndefined(v.senderCity),
@@ -208,6 +221,8 @@ export function ParcelCreatePage() {
                   <FieldErrorText error={errors.declaredValue} />
                 </Field>
               </div>
+
+              <DimensionFields form={form} />
 
               {isManager && <PriceFields form={form} />}
 

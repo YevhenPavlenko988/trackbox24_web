@@ -1,7 +1,7 @@
-import { AlertCircle, ArrowLeft, BadgeCheck, BadgeX, Pencil, Printer, RefreshCw, Repeat } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BadgeCheck, BadgeX, Pencil, Printer, RefreshCw, Repeat, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DetailsList } from '@/components/common/DetailsList'
@@ -21,7 +21,7 @@ import { ParcelEditDialog } from './ParcelEditDialog'
 import { ParcelHistory } from './ParcelHistory'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 import { MarkPaidDialog } from './PaymentDialog'
-import { useParcel, useParcelHistory, useRefreshParcelFromNp, useSetParcelPayment } from './queries'
+import { useDeleteParcel, useParcel, useParcelHistory, useRefreshParcelFromNp, useSetParcelPayment } from './queries'
 import { canEditParcel, isFinalStatus } from './status'
 import { StatusChangeDialog } from './StatusChangeDialog'
 
@@ -38,12 +38,17 @@ export function ParcelPage() {
   const [changingStatus, setChangingStatus] = useState(false)
   const [markingPaid, setMarkingPaid] = useState(false)
   const [unpaying, setUnpaying] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const remove = useDeleteParcel()
+  const navigate = useNavigate()
 
   if (query.isPending) return <Skeleton className="h-60 w-full" />
   if (query.isError || !query.data) return <NotFoundPage />
   const p = query.data
   const hasPrice = p.deliveryPrice != null
   const hasSeatWarehouse = !!p.seats?.some((s) => s.warehouseName)
+  // Backend rule: a parcel can be deleted while it is not in a car and not delivered.
+  const deletable = canEdit && (p.status === 'IN_NOVA_POSHTA' || p.status === 'RECEIVED_BY_REPRESENTATIVE' || p.status === 'AT_WAREHOUSE' || p.status === 'CANCELLED')
 
   const onRefresh = async () => {
     try {
@@ -119,8 +124,32 @@ export function ParcelPage() {
                 {t('common:actions.edit')}
               </Button>
             )}
+            {deletable && (
+              <Button variant="destructive" onClick={() => setDeleting(true)}>
+                <Trash2 />
+                {t('parcels:actions.delete')}
+              </Button>
+            )}
           </>
         }
+      />
+      <ConfirmDialog
+        open={deleting}
+        onOpenChange={setDeleting}
+        title={t('parcels:deleteConfirm.title')}
+        description={t('parcels:deleteConfirm.description')}
+        confirmLabel={t('parcels:actions.delete')}
+        destructive
+        pending={remove.isPending}
+        onConfirm={async () => {
+          try {
+            await remove.mutateAsync(p.id!)
+            toast.success(t('common:common.saved'))
+            navigate('/parcels')
+          } catch (e) {
+            showApiError(e)
+          }
+        }}
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -188,6 +217,12 @@ export function ParcelPage() {
                 { label: t('parcels:fields.description'), value: p.description },
                 { label: t('parcels:fields.seatsAmount'), value: p.seatsAmount },
                 { label: t('parcels:fields.weightKg'), value: formatWeight(p.weightKg) },
+                { label: t('parcels:fields.npVolumeWeight'), value: formatWeight(p.npVolumeWeight) },
+                {
+                  label: t('parcels:fields.dimensions'),
+                  value: p.lengthCm != null || p.widthCm != null || p.heightCm != null ? [p.lengthCm, p.widthCm, p.heightCm].map((v) => v ?? '?').join(' × ') : undefined,
+                },
+                { label: t('parcels:fields.deliveryCity'), value: p.deliveryCity },
                 { label: t('parcels:fields.declaredValue'), value: formatMoney(p.declaredValue) },
                 { label: t('parcels:fields.senderName'), value: p.senderName },
                 { label: t('parcels:fields.senderPhone'), value: formatPhone(p.senderPhone) },

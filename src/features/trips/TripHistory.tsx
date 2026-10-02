@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarPlus, ListMinus, ListPlus, PackageCheck, PackageMinus, PackagePlus, Pencil, RefreshCw } from 'lucide-react'
+import { ArrowRight, CalendarPlus, ListMinus, ListPlus, PackageCheck, PackageMinus, PackagePlus, Pencil, RefreshCw, RotateCcw, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -17,6 +17,8 @@ const ICONS: Record<TripEvent, ReactNode> = {
   PARCEL_LOADED: <PackagePlus className="size-4" />,
   PARCEL_DELIVERED: <PackageCheck className="size-4" />,
   PARCEL_UNLOADED: <PackageMinus className="size-4" />,
+  DELETED: <Trash2 className="size-4" />,
+  RESTORED: <RotateCcw className="size-4" />,
 }
 
 export function TripHistory({ entries, isLoading }: { entries?: TripHistoryResponse[]; isLoading: boolean }) {

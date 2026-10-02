@@ -2,6 +2,7 @@ import { api } from '@/lib/api/client'
 import { normalizePage, type Page, type PageParams } from '@/lib/api/page'
 import { unwrap } from '@/lib/api/problem'
 import type {
+  DeletedItem,
   ParcelCreateRequest,
   ParcelHistoryResponse,
   ParcelPaymentRequest,
@@ -19,6 +20,7 @@ export type ParcelListParams = PageParams & {
   needsEnrichment?: boolean
   paymentStatus?: PaymentStatus
   warehouseId?: number
+  deliveryCity?: string
   query?: string
 }
 
@@ -33,6 +35,7 @@ export async function listParcels(params: ParcelListParams): Promise<Page<Parcel
           needsEnrichment: params.needsEnrichment,
           paymentStatus: params.paymentStatus,
           warehouseId: params.warehouseId,
+          deliveryCity: params.deliveryCity || undefined,
           query: params.query || undefined,
           page: params.page,
           size: params.size,
@@ -48,8 +51,22 @@ export function getParcel(id: number): Promise<ParcelResponse> {
   return unwrap(api.GET('/api/parcels/{id}', { params: { path: { id } } }))
 }
 
-export function getParcelHistory(id: number): Promise<ParcelHistoryResponse[]> {
-  return unwrap(api.GET('/api/parcels/{id}/history', { params: { path: { id } } }))
+export async function getParcelHistory(id: number): Promise<ParcelHistoryResponse[]> {
+  const data = await unwrap(api.GET('/api/parcels/{id}/history', { params: { path: { id }, query: { size: 200, sort: ['changedAt', 'id'] } } }))
+  return data.content ?? []
+}
+
+export function deleteParcel(id: number): Promise<unknown> {
+  return unwrap(api.DELETE('/api/parcels/{id}', { params: { path: { id } } }))
+}
+
+export function restoreParcel(id: number): Promise<ParcelResponse> {
+  return unwrap(api.POST('/api/parcels/{id}/restore', { params: { path: { id } } }))
+}
+
+export async function listDeletedParcels(params: PageParams): Promise<Page<DeletedItem<ParcelResponse>>> {
+  const data = await unwrap(api.GET('/api/parcels/deleted', { params: { query: { page: params.page, size: params.size } } }))
+  return normalizePage(data)
 }
 
 export function createParcel(body: ParcelCreateRequest): Promise<ParcelResponse> {

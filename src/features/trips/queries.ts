@@ -1,16 +1,20 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { parcelKeys } from '@/features/parcels/queries'
+import type { PageParams } from '@/lib/api/page'
 import type { TripCompleteRequest, TripDepartRequest, TripRequest } from '@/lib/api/types'
 import {
   cancelTrip,
   completeTrip,
   createTrip,
+  deleteTrip,
   departTrip,
   getTrip,
   getTripHistory,
   getTripParcels,
   listTrips,
+  listDeletedTrips,
   planTripParcels,
+  restoreTrip,
   unplanTripParcel,
   updateTrip,
   type TripListParams,
@@ -22,6 +26,7 @@ export const tripKeys = {
   detail: (id: number) => ['trips', 'detail', id] as const,
   parcels: (id: number) => ['trips', 'detail', id, 'parcels'] as const,
   history: (id: number) => ['trips', 'detail', id, 'history'] as const,
+  deleted: (params: PageParams) => ['trips', 'deleted', params] as const,
 }
 
 function useInvalidateTrips() {
@@ -76,6 +81,20 @@ export function useDepartTrip(id: number) {
 export function useCompleteTrip(id: number) {
   const invalidate = useInvalidateTrips()
   return useMutation({ mutationFn: (body: TripCompleteRequest) => completeTrip(id, body), onSuccess: invalidate })
+}
+
+export function useDeleteTrip() {
+  const invalidate = useInvalidateTrips()
+  return useMutation({ mutationFn: (id: number) => deleteTrip(id), onSuccess: invalidate })
+}
+
+export function useRestoreTrip() {
+  const invalidate = useInvalidateTrips()
+  return useMutation({ mutationFn: (id: number) => restoreTrip(id), onSuccess: invalidate })
+}
+
+export function useDeletedTrips(params: PageParams) {
+  return useQuery({ queryKey: tripKeys.deleted(params), queryFn: () => listDeletedTrips(params), placeholderData: keepPreviousData })
 }
 
 export function useCancelTrip(id: number) {

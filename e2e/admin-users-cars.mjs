@@ -91,7 +91,7 @@ export async function run() {
     const modeBody = await page.textContent('body')
     ok('company mode banner shown', modeBody.includes('Перегляд компанії «Тест Логістик»'))
     const navMode = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
-    ok('company mode nav has company pages + companies', navMode.length === 8, navMode.join(','))
+    ok('company mode nav has company pages + trash + companies', navMode.length === 9 && navMode.includes('Кошик'), navMode.join(','))
     ok('company mode hides add button', (await page.getByRole('link', { name: 'Додати' }).count()) === 0)
     ok('company mode hides row selection', (await page.locator('table thead').getByRole('checkbox').count()) === 0)
     await shot('04-admin-company-mode')
@@ -108,7 +108,7 @@ export async function run() {
     // ===== MANAGER =====
     await r.login(MANAGER)
     const navM = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
-    ok('manager nav has 7 items', navM.length === 7, navM.join(','))
+    ok('manager nav has 8 items incl. trash', navM.length === 8 && navM.includes('Кошик'), navM.join(','))
 
     await page.goto(BASE + '/users?size=100')
     await page.waitForSelector('table tbody tr:has-text("rep@test.ua")')

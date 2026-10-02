@@ -31,7 +31,8 @@
     "trips": "Рейси",
     "warehouses": "Склади",
     "logout": "Вийти",
-    "changePassword": "Змінити пароль"
+    "changePassword": "Змінити пароль",
+    "trash": "Кошик"
   },
   "companyMode": {
     "banner": "Перегляд компанії «{{name}}» — лише читання",
@@ -54,7 +55,9 @@
     "confirm": "Підтвердити",
     "print": "Друк",
     "refresh": "Оновити",
-    "clear": "Очистити"
+    "clear": "Очистити",
+    "delete": "Видалити",
+    "restore": "Відновити"
   },
   "common": {
     "loading": "Завантаження…",

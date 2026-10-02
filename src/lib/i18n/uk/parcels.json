@@ -14,7 +14,8 @@
     "allWarehouses": "Усі склади",
     "allPayments": "Оплата: усі",
     "unpaid": "Неоплачені",
-    "paid": "Оплачені"
+    "paid": "Оплачені",
+    "deliveryCity": "Місто доставки"
   },
   "selection": {
     "count": "Обрано: {{count}}"
@@ -48,7 +49,9 @@
     "changeStatus": "Змінити статус",
     "refreshNp": "Оновити з НП",
     "refreshed": "Дані оновлено з Нової Пошти",
-    "printLabels": "Етикетки"
+    "printLabels": "Етикетки",
+    "delete": "Видалити",
+    "restore": "Відновити"
   },
   "statusDialog": {
     "title": "Зміна статусу",
@@ -110,6 +113,17 @@
     "statusChangedBy": "Хто змінив",
     "warehouse": "Склад",
     "clientCity": "Місто клієнта",
-    "clientAddress": "Адреса клієнта"
+    "clientAddress": "Адреса клієнта",
+    "lengthCm": "Довжина, см",
+    "widthCm": "Ширина, см",
+    "heightCm": "Висота, см",
+    "dimensions": "Габарити, см",
+    "deliveryCity": "Місто доставки",
+    "deliveryCityHint": "Порожнє — місто клієнта",
+    "npVolumeWeight": "Об'ємна вага НП, кг"
+  },
+  "deleteConfirm": {
+    "title": "Видалити посилку?",
+    "description": "Посилка зникне зі списків і сканів, її знімуть з плану рейсу. Можна лише для посилки, яка не в машині й не видана. Відновити можна з кошика."
   }
 }

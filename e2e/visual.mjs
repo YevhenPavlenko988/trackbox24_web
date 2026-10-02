@@ -25,7 +25,7 @@ const pLoaded = await mk('Документи')
 const pOutside = await mk('Побутова техніка', { seatsAmount: 3, weightKg: 24.5, declaredValue: 12000 })
 const pDelivered = await mk('Одяг')
 const pWarehouse = await mk('Взуття')
-const pCancelled = await mk('Скасована')
+await mk('Скасована')
 await manager.post(`/api/warehouses/${warehouse.id}/parcels`, { parcelIds: [pWarehouse.id] })
 await fetch('http://localhost:8080/api/parcels/' + pWarehouse.id + '/payment', { method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (await (await fetch('http://localhost:8080/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(MANAGER) })).json()).accessToken }, body: JSON.stringify({ status: 'PAID' }) })
 

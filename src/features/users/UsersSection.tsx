@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAccess } from '@/features/auth/access'
+import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { NpKeyDialog } from '@/features/companies/NpKeyDialog'
 import { useListParams } from '@/hooks/use-list-params'
 import { emptyPage } from '@/lib/api/page'
@@ -95,6 +96,7 @@ export function UsersSection({ companyId }: { companyId?: number }) {
                 <Button variant="ghost" size="icon-sm" aria-label={t('common:actions.edit')} onClick={() => setEditing(u)}>
                   <Pencil />
                 </Button>
+                <DeleteEntityButton entity="users" id={u.id!} iconOnly />
               </div>
             ),
           },

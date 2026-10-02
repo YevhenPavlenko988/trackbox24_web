@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useAccess } from '@/features/auth/access'
+import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { useListParams } from '@/hooks/use-list-params'
 import { emptyPage } from '@/lib/api/page'
 import type { CarResponse } from '@/lib/api/types'
@@ -34,6 +35,20 @@ export function CarsListPage() {
       header: t('cars:fields.active'),
       cell: (c) => (c.active === false ? <Badge variant="destructive">{t('cars:status.inactive')}</Badge> : <Badge variant="secondary">{t('cars:status.active')}</Badge>),
     },
+    ...(canEdit
+      ? [
+          {
+            key: 'actions',
+            header: '',
+            className: 'w-12 text-right',
+            cell: (c: CarResponse) => (
+              <div className="flex justify-end" onClick={(e) => e.stopPropagation()}>
+                <DeleteEntityButton entity="cars" id={c.id!} iconOnly />
+              </div>
+            ),
+          },
+        ]
+      : []),
   ]
 
   return (

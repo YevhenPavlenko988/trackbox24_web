@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useAccess } from '@/features/auth/access'
+import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { useListParams } from '@/hooks/use-list-params'
 import { emptyPage } from '@/lib/api/page'
 import type { WarehouseResponse } from '@/lib/api/types'
@@ -38,9 +39,12 @@ export function WarehousesListPage() {
       header: '',
       className: 'text-right',
       cell: (w) => (
-        <Link to={`/parcels?status=AT_WAREHOUSE&warehouseId=${w.id}`} className="text-sm underline underline-offset-4" onClick={(e) => e.stopPropagation()}>
-          {t('common:nav.parcels')}
-        </Link>
+        <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+          <Link to={`/parcels?status=AT_WAREHOUSE&warehouseId=${w.id}`} className="text-sm underline underline-offset-4">
+            {t('common:nav.parcels')}
+          </Link>
+          {canEdit && <DeleteEntityButton entity="warehouses" id={w.id!} iconOnly />}
+        </div>
       ),
     },
   ]

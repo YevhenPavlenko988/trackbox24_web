@@ -22,10 +22,11 @@ export function TripsListPage() {
   const { canEdit } = useAccess()
   const { page, size, get, set, setPage, setSize } = useListParams()
   const status = get('status') as TripStatus | undefined
+  const open = get('open') === 'true'
   const [creating, setCreating] = useState(false)
   const create = useCreateTrip()
 
-  const query = useTrips({ status, page, size })
+  const query = useTrips({ status: status ? [status] : undefined, open, page, size })
   const data = query.data ?? emptyPage<TripResponse>()
 
   const columns: Column<TripResponse>[] = [
@@ -35,6 +36,16 @@ export function TripsListPage() {
     { key: 'route', header: t('trips:fields.route'), cell: (s) => routeText(s) },
     { key: 'car', header: t('trips:fields.car'), cell: (s) => s.carPlateNumber ?? '—' },
     { key: 'driver', header: t('trips:fields.driver'), cell: (s) => s.driverName ?? '—' },
+    {
+      key: 'counters',
+      header: t('trips:fields.counters'),
+      className: 'whitespace-nowrap text-center',
+      cell: (s) => (
+        <span className="font-mono text-sm">
+          {s.plannedCount ?? 0} / {s.loadedCount ?? 0} / {s.deliveredCount ?? 0}
+        </span>
+      ),
+    },
     { key: 'departed', header: t('trips:fields.departedAt'), cell: (s) => formatDateTime(s.departedAt) },
     { key: 'arrived', header: t('trips:fields.arrivedAt'), cell: (s) => formatDateTime(s.arrivedAt) },
   ]
@@ -53,11 +64,14 @@ export function TripsListPage() {
         }
       />
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Button size="sm" variant={status ? 'outline' : 'default'} onClick={() => set({ status: undefined })}>
+        <Button size="sm" variant={status || open ? 'outline' : 'default'} onClick={() => set({ status: undefined, open: undefined })}>
           {t('trips:filters.all')}
         </Button>
+        <Button size="sm" variant={open ? 'default' : 'outline'} onClick={() => set({ status: undefined, open: open ? undefined : 'true' })}>
+          {t('trips:filters.open')}
+        </Button>
         {TRIP_STATUSES.map((s) => (
-          <Button key={s} size="sm" variant={status === s ? 'default' : 'outline'} onClick={() => set({ status: s })}>
+          <Button key={s} size="sm" variant={status === s ? 'default' : 'outline'} onClick={() => set({ status: s, open: undefined })}>
             {t(`trips:status.${s}`)}
           </Button>
         ))}

@@ -40,11 +40,17 @@ export function ParcelsListPage() {
   const representativeId = get('representativeId') ? Number(get('representativeId')) : undefined
   const warehouseId = get('warehouseId') ? Number(get('warehouseId')) : undefined
   const paymentStatus = get('paymentStatus') as PaymentStatus | undefined
+  const deliveryCity = get('deliveryCity') ?? ''
+  const [cityInput, setCityInput] = useState(deliveryCity)
+  const debouncedCity = useDebounce(cityInput)
+  useEffect(() => {
+    if (debouncedCity !== deliveryCity) set({ deliveryCity: debouncedCity || undefined })
+  }, [debouncedCity]) // eslint-disable-line react-hooks/exhaustive-deps
   const needsEnrichment = get('needsEnrichment') === 'true' ? true : undefined
   const paidStorage = status === 'IN_NOVA_POSHTA' && sort === PAID_STORAGE_SORT
-  const hasFilters = !!(urlQuery || status || clientId || representativeId || warehouseId || paymentStatus || needsEnrichment || sort)
+  const hasFilters = !!(urlQuery || status || clientId || representativeId || warehouseId || paymentStatus || deliveryCity || needsEnrichment || sort)
 
-  const query = useParcels({ query: urlQuery, status, clientId, representativeId, warehouseId, paymentStatus, needsEnrichment, page, size, sort })
+  const query = useParcels({ query: urlQuery, status, clientId, representativeId, warehouseId, paymentStatus, deliveryCity, needsEnrichment, page, size, sort })
   const data = query.data ?? emptyPage<ParcelResponse>()
 
   const [rawSelected, setSelected] = useState<Set<string | number>>(new Set())
@@ -55,7 +61,8 @@ export function ParcelsListPage() {
 
   const reset = () => {
     setSearch('')
-    set({ query: undefined, status: undefined, clientId: undefined, representativeId: undefined, warehouseId: undefined, paymentStatus: undefined, needsEnrichment: undefined, sort: undefined })
+    setCityInput('')
+    set({ query: undefined, deliveryCity: undefined, status: undefined, clientId: undefined, representativeId: undefined, warehouseId: undefined, paymentStatus: undefined, needsEnrichment: undefined, sort: undefined })
   }
 
   return (
@@ -91,6 +98,7 @@ export function ParcelsListPage() {
             </SelectContent>
           </Select>
         )}
+        <Input className="w-44" placeholder={t('parcels:filters.deliveryCity')} value={cityInput} onChange={(e) => setCityInput(e.target.value)} />
         <div className="w-64">
           <ClientPicker value={clientId} onChange={(v) => set({ clientId: v })} placeholder={t('parcels:filters.client')} />
         </div>

@@ -1,8 +1,9 @@
-import { ArrowLeft, Flag, Pencil, Play, Plus, Trash2, X } from 'lucide-react'
+import { ArrowLeft, FileSpreadsheet, Flag, Pencil, Play, Plus, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DetailsList } from '@/components/common/DetailsList'
 import { LinkButton } from '@/components/common/LinkButton'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -17,7 +18,8 @@ import { showApiError } from '@/lib/api/problem'
 import { formatDateTime } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { ParcelPickerDialog } from './ParcelPickerDialog'
-import { usePlanTripParcels, useTrip, useTripHistory, useTripParcels, useUnplanTripParcel, useUpdateTrip } from './queries'
+import { downloadTripRegister } from './api'
+import { useDeleteTrip, usePlanTripParcels, useTrip, useTripHistory, useTripParcels, useUnplanTripParcel, useUpdateTrip } from './queries'
 import { acceptsLoading, canDepart, isOutsidePlan, seatProgress, splitTripParcels } from './status'
 import { CancelTripDialog, CompleteDialog, DepartDialog } from './TripActionDialogs'
 import { TripDialog } from './TripDialog'
@@ -35,7 +37,10 @@ export function TripPage() {
   const update = useUpdateTrip(tripId)
   const plan = usePlanTripParcels(tripId)
   const unplan = useUnplanTripParcel(tripId)
+  const remove = useDeleteTrip()
+  const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const [picking, setPicking] = useState(false)
   const [departing, setDeparting] = useState(false)
   const [completing, setCompleting] = useState(false)
@@ -48,6 +53,8 @@ export function TripPage() {
   const { planned, loaded } = splitTripParcels(tripId, parcels.data ?? [])
   const progress = seatProgress(loaded)
   const excludeIds = (parcels.data ?? []).map((p) => p.id!)
+  // Backend rule: only a planned trip with nothing loaded, or a cancelled one, may be deleted.
+  const deletable = canEdit && ((trip.status === 'PLANNED' && !trip.loadedCount) || trip.status === 'CANCELLED')
 
   const run = async (fn: () => Promise<unknown>) => {
     try {
@@ -73,7 +80,12 @@ export function TripPage() {
         }
         description={`${t('trips:fields.plannedDepartureAt')}: ${formatDateTime(trip.plannedDepartureAt)}${trip.departedAt ? ` · ${t('trips:fields.departedAt')}: ${formatDateTime(trip.departedAt)}` : ''}`}
         actions={
-          canEdit && (
+          <>
+            <Button variant="outline" onClick={() => downloadTripRegister(tripId).catch(showApiError)}>
+              <FileSpreadsheet />
+              {t('trips:actions.register')}
+            </Button>
+            {canEdit && (
             <>
               {acceptsLoading(trip.status) && (
                 <Tooltip>
@@ -104,9 +116,34 @@ export function TripPage() {
                   {t('trips:actions.cancel')}
                 </Button>
               )}
+              {deletable && (
+                <Button variant="destructive" onClick={() => setDeleting(true)}>
+                  <Trash2 />
+                  {t('trips:actions.delete')}
+                </Button>
+              )}
             </>
-          )
+            )}
+          </>
         }
+      />
+      <ConfirmDialog
+        open={deleting}
+        onOpenChange={setDeleting}
+        title={t('trips:deleteConfirm.title')}
+        description={t('trips:deleteConfirm.description')}
+        confirmLabel={t('trips:actions.delete')}
+        destructive
+        pending={remove.isPending}
+        onConfirm={async () => {
+          try {
+            await remove.mutateAsync(tripId)
+            toast.success(t('common:common.saved'))
+            navigate('/trips')
+          } catch (e) {
+            showApiError(e)
+          }
+        }}
       />
 
       <div className="flex flex-col gap-4">
