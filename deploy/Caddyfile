@@ -1,0 +1,35 @@
+# Baked into the trackbox24-web image (see ../Dockerfile). Caddy terminates TLS for every host.
+{
+	email admin@trackbox24.com
+}
+
+www.trackbox24.com {
+	redir https://trackbox24.com{uri} permanent
+}
+
+trackbox24.com {
+	encode zstd gzip
+
+	# Same-origin API for the web app — the backend has no CORS configuration.
+	handle /api/* {
+		reverse_proxy api:8080
+	}
+
+	# SPA: everything else is the built front-end, unknown paths fall back to index.html.
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+	}
+}
+
+# Mobile app talks to the backend directly.
+api.trackbox24.com {
+	reverse_proxy api:8080
+}
