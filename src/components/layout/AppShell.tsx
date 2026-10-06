@@ -56,7 +56,10 @@ export function AppShell() {
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="px-4 py-3 text-lg font-semibold">{t('app.name')}</SidebarHeader>
+        <SidebarHeader className="flex-row items-center gap-2 px-4 py-3 text-lg font-semibold">
+          <img src="/logo.png" alt="" className="size-7 shrink-0" />
+          {t('app.name')}
+        </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
             <SidebarGroupContent>

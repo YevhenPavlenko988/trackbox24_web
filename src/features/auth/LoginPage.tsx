@@ -48,7 +48,8 @@ export function LoginPage() {
   })
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/40 p-4">
+    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40 p-4">
+      <img src="/logo-full.png" alt="TrackBox24" className="h-24 w-auto" />
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>{t('auth:title')}</CardTitle>
