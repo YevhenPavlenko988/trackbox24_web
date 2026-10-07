@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { DataTable, type Column, type Selection } from '@/components/common/DataTable'
-import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAccess } from '@/features/auth/access'
 import type { ParcelResponse } from '@/lib/api/types'
@@ -31,6 +30,7 @@ export function ParcelsTable({
   rows,
   isLoading,
   hideClient = false,
+  hideNp = false,
   emptyText,
   actions,
   extra,
@@ -39,6 +39,8 @@ export function ParcelsTable({
   rows: ParcelResponse[]
   isLoading?: boolean
   hideClient?: boolean
+  /** Nova Poshta state, dates and payment: nothing to add once the parcel is in a trip. */
+  hideNp?: boolean
   emptyText?: ReactNode
   actions?: (p: ParcelResponse) => ReactNode
   /** Rendered next to the status badge (e.g. "outside the plan"). */
@@ -126,6 +128,7 @@ export function ParcelsTable({
       cell: (p) => (
         <div className="flex flex-col">
           <span>{p.senderName ?? '—'}</span>
+          {p.senderPhone && <span className="text-xs text-muted-foreground">{formatPhone(p.senderPhone)}</span>}
           {p.senderCity && <span className="text-xs text-muted-foreground">{p.senderCity}</span>}
         </div>
       ),
@@ -139,15 +142,21 @@ export function ParcelsTable({
       },
       className: 'text-center',
     },
-    { key: 'delivery', header: t('parcels:fields.npScheduledDeliveryAt'), cell: (p) => formatDate(p.npScheduledDeliveryAt) },
     {
-      key: 'paidStorage',
-      header: t('parcels:fields.npPaidStorageFrom'),
+      key: 'npDates',
+      header: t('parcels:fields.npDates'),
       cell: (p) =>
-        isPaidStorageDue(p) ? (
-          <Badge variant="destructive">{formatDate(p.npPaidStorageFrom)}</Badge>
+        p.npScheduledDeliveryAt || p.npPaidStorageFrom ? (
+          <div className="flex flex-col">
+            {p.npScheduledDeliveryAt && <span>{formatDate(p.npScheduledDeliveryAt)}</span>}
+            {p.npPaidStorageFrom && (
+              <span className={isPaidStorageDue(p) ? 'text-xs font-medium text-destructive' : 'text-xs text-muted-foreground'}>
+                {t('parcels:fields.npPaidStorageShort', { date: formatDate(p.npPaidStorageFrom) })}
+              </span>
+            )}
+          </div>
         ) : (
-          formatDate(p.npPaidStorageFrom)
+          <span className="text-muted-foreground">—</span>
         ),
     },
     { key: 'npPayment', header: t('parcels:np.columnTitle'), cell: (p) => <NpPaymentSummary parcel={p} /> },
@@ -186,9 +195,11 @@ export function ParcelsTable({
       : []),
   ]
 
+  const visible = hideNp ? columns.filter((c) => !['npState', 'npDates', 'npPayment'].includes(c.key)) : columns
+
   return (
     <DataTable
-      columns={columns}
+      columns={visible}
       rows={rows}
       rowKey={(p) => p.id ?? 0}
       onRowClick={(p) => navigate(`/parcels/${p.id}`)}

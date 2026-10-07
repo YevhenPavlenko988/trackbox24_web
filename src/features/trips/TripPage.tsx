@@ -181,6 +181,7 @@ export function TripPage() {
             </CardHeader>
             <CardContent>
               <ParcelsTable
+                hideNp
                 rows={planned}
                 isLoading={parcels.isPending}
                 emptyText={t('trips:sections.noPlan')}
@@ -209,6 +210,7 @@ export function TripPage() {
           </CardHeader>
           <CardContent>
             <ParcelsTable
+              hideNp
               rows={loaded}
               isLoading={parcels.isPending}
               emptyText={t(acceptsLoading(trip.status) ? 'trips:sections.noLoaded' : 'trips:sections.noLoadedClosed')}

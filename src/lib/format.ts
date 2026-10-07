@@ -1,3 +1,4 @@
+import { parsePhoneNumberFromString } from 'libphonenumber-js'
 import { format, parseISO } from 'date-fns'
 import { uk } from 'date-fns/locale'
 
@@ -9,11 +10,16 @@ export function formatDate(iso?: string): string {
   return iso ? format(parseISO(iso), 'dd.MM.yyyy', { locale: uk }) : '—'
 }
 
-/** 380501234567 → +380 50 123 45 67 */
+/**
+ * Digits as stored by the backend → a readable international number.
+ * Ukrainian numbers keep the grouping people here are used to; everything else goes through libphonenumber.
+ */
 export function formatPhone(phone?: string): string {
   if (!phone) return '—'
-  const m = /^380(\d{2})(\d{3})(\d{2})(\d{2})$/.exec(phone)
-  return m ? `+380 ${m[1]} ${m[2]} ${m[3]} ${m[4]}` : phone
+  const ua = /^380(\d{2})(\d{3})(\d{2})(\d{2})$/.exec(phone)
+  if (ua) return `+380 ${ua[1]} ${ua[2]} ${ua[3]} ${ua[4]}`
+  const parsed = parsePhoneNumberFromString(`+${phone.replace(/\D/g, '')}`)
+  return parsed?.isValid() ? parsed.formatInternational() : phone
 }
 
 /** ISO instant → value for <input type="datetime-local"> in the browser's timezone. */

@@ -134,7 +134,9 @@
     "deliveryCity": "Місто доставки",
     "deliveryCityHint": "Порожнє — місто клієнта",
     "npVolumeWeight": "Об'ємна вага НП, кг",
-    "npState": "Статус НП"
+    "npState": "Статус НП",
+    "npDates": "Доставка / зберігання",
+    "npPaidStorageShort": "платне з {{date}}"
   },
   "deleteConfirm": {
     "title": "Видалити посилку?",
