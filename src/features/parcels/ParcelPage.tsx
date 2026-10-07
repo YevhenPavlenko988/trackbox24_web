@@ -20,7 +20,7 @@ import { NotFoundPage } from '@/routes/ErrorPages'
 import { ParcelEditDialog } from './ParcelEditDialog'
 import { NpPaymentCard } from './NpPaymentCard'
 import { ChannelBadge } from '@/features/channels/channel'
-import { isPickedUpNotScanned, NpStateBadge, PickedUpNotScannedBadge } from './NpStateBadge'
+import { NpStateBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 import { MarkPaidDialog } from './PaymentDialog'
@@ -100,7 +100,6 @@ export function ParcelPage() {
           <>
             <ParcelStatusBadge status={p.status} />
             {p.status === 'IN_NOVA_POSHTA' && <NpStateBadge parcel={p} />}
-            {isPickedUpNotScanned(p) && <PickedUpNotScannedBadge />}
             {p.warehouseName && <span className="text-sm text-muted-foreground">{p.warehouseName}</span>}
             {p.needsEnrichment && (
               <Badge variant="outline" className="border-amber-400 text-amber-700">

@@ -5,6 +5,7 @@ import type { ParcelStatus } from '@/lib/api/types'
 
 const STYLES: Record<ParcelStatus, string> = {
   IN_NOVA_POSHTA: 'bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200',
+  PICKED_UP_FROM_NOVA_POSHTA: 'bg-orange-100 text-orange-900 dark:bg-orange-900/40 dark:text-orange-200',
   RECEIVED_BY_REPRESENTATIVE: 'bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200',
   AT_WAREHOUSE: 'bg-teal-100 text-teal-900 dark:bg-teal-900/40 dark:text-teal-200',
   IN_CAR: 'bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-200',

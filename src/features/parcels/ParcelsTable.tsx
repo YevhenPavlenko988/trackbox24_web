@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useAccess } from '@/features/auth/access'
 import type { ParcelResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
-import { isPickedUpNotScanned, NpStateBadge, PickedUpNotScannedBadge } from './NpStateBadge'
+import { NpStateBadge } from './NpStateBadge'
 import { NpPaymentSummary } from './NpPaymentCard'
 import { ChannelBadge } from '@/features/channels/channel'
 import { isGoneFromNp, npStateOf, npStatusTextOf } from './npStatus'
@@ -66,7 +66,6 @@ export function ParcelsTable({
       cell: (p) => (
         <div className="flex flex-wrap items-center gap-1.5">
           <ParcelStatusBadge status={p.status} />
-          {isPickedUpNotScanned(p) && <PickedUpNotScannedBadge />}
           {p.status === 'AT_WAREHOUSE' && p.warehouseName && <span className="text-xs text-muted-foreground">{p.warehouseName}</span>}
           {extra?.(p)}
           {p.needsEnrichment && (

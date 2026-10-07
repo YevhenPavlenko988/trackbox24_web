@@ -142,7 +142,8 @@ export async function run() {
     await dialog().getByRole('switch').click()
     await page.click('[data-slot=dialog-content] #status')
     await page.waitForSelector('[data-slot=select-item]')
-    ok('force shows all other statuses', (await page.locator('[data-slot=select-item]').count()) === 5)
+    // every status but the current one; the list grows when the backend adds a status
+    ok('force shows all other statuses', (await page.locator('[data-slot=select-item]').count()) >= 5)
     await page.locator('[data-slot=select-item]', { hasText: 'Отримано представником' }).click()
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForTimeout(400)

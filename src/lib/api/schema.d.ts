@@ -655,7 +655,7 @@ export interface paths {
         /**
          * Змінити статус вручну
          * @description Ручний режим, коли сканер недоступний. Тільки MANAGER.
-         *     Звичайний флоу: IN_NOVA_POSHTA → RECEIVED_BY_REPRESENTATIVE → (AT_WAREHOUSE) → IN_CAR → DELIVERED_TO_CLIENT;
+         *     Звичайний флоу: IN_NOVA_POSHTA → (PICKED_UP_FROM_NOVA_POSHTA) → RECEIVED_BY_REPRESENTATIVE → (AT_WAREHOUSE) → IN_CAR → DELIVERED_TO_CLIENT;
          *     також AT_WAREHOUSE → DELIVERED_TO_CLIENT (видача зі складу), IN_CAR → AT_WAREHOUSE (не забрали),
          *     переміщення між складами і скасування до завантаження. Для AT_WAREHOUSE потрібен `warehouseId`.
          *     `force = true` з обов'язковим коментарем дозволяє виправити помилку поза флоу.
@@ -1630,7 +1630,7 @@ export interface components {
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус
@@ -1941,7 +1941,7 @@ export interface components {
              * @example IN_CAR
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус місця
@@ -2545,7 +2545,7 @@ export interface components {
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * @description Коментар; обов'язковий при force=true
              * @example Забрали з відділення, сканер не працював
@@ -2783,7 +2783,7 @@ export interface components {
              * @example IN_CAR
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус
@@ -2813,13 +2813,13 @@ export interface components {
              * @example IN_NOVA_POSHTA
              * @enum {string}
              */
-            previousStatus?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            previousStatus?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * @description Внутрішній статус після зміни
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: int64
              * @description Склад після зміни (для AT_WAREHOUSE)
@@ -7357,7 +7357,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Внутрішній статус */
-                status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+                status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
                 /**
                  * @description ID клієнта
                  * @example 7
@@ -9745,7 +9745,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Фільтр за статусом посилки */
-                status?: "IN_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+                status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */

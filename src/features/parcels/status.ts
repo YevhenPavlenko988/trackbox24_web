@@ -2,7 +2,8 @@ import type { ParcelResponse, ParcelStatus } from '@/lib/api/types'
 
 // Mirrors ParcelStatus.TRANSITIONS on the backend.
 export const TRANSITIONS: Record<ParcelStatus, ParcelStatus[]> = {
-  IN_NOVA_POSHTA: ['RECEIVED_BY_REPRESENTATIVE', 'CANCELLED'],
+  IN_NOVA_POSHTA: ['PICKED_UP_FROM_NOVA_POSHTA', 'RECEIVED_BY_REPRESENTATIVE', 'CANCELLED'],
+  PICKED_UP_FROM_NOVA_POSHTA: ['RECEIVED_BY_REPRESENTATIVE', 'CANCELLED'],
   RECEIVED_BY_REPRESENTATIVE: ['AT_WAREHOUSE', 'IN_CAR', 'CANCELLED'],
   AT_WAREHOUSE: ['AT_WAREHOUSE', 'IN_CAR', 'DELIVERED_TO_CLIENT', 'CANCELLED'],
   IN_CAR: ['DELIVERED_TO_CLIENT', 'AT_WAREHOUSE', 'RECEIVED_BY_REPRESENTATIVE'],
@@ -12,6 +13,7 @@ export const TRANSITIONS: Record<ParcelStatus, ParcelStatus[]> = {
 
 export const PARCEL_STATUSES: ParcelStatus[] = [
   'IN_NOVA_POSHTA',
+  'PICKED_UP_FROM_NOVA_POSHTA',
   'RECEIVED_BY_REPRESENTATIVE',
   'AT_WAREHOUSE',
   'IN_CAR',
@@ -31,7 +33,8 @@ export function canEditParcel(p: ParcelResponse): boolean {
 }
 
 export function canEditSeatsAmount(p: ParcelResponse): boolean {
-  const unloaded = (s?: ParcelStatus) => s === 'IN_NOVA_POSHTA' || s === 'RECEIVED_BY_REPRESENTATIVE' || s === 'AT_WAREHOUSE'
+  const unloaded = (s?: ParcelStatus) =>
+    s === 'IN_NOVA_POSHTA' || s === 'PICKED_UP_FROM_NOVA_POSHTA' || s === 'RECEIVED_BY_REPRESENTATIVE' || s === 'AT_WAREHOUSE'
   if (!p.seats?.length) return unloaded(p.status)
   return p.seats.every((s) => unloaded(s.status))
 }
@@ -49,7 +52,11 @@ export const orUndefined = (s?: string) => (s && s.trim().length > 0 ? s.trim() 
 /** Mirrors the backend: only a parcel that is not in a car and not delivered, and not sitting in a trip. */
 export function isParcelDeletable(p: Pick<ParcelResponse, 'status' | 'tripId'>): boolean {
   return (
-    (p.status === 'IN_NOVA_POSHTA' || p.status === 'RECEIVED_BY_REPRESENTATIVE' || p.status === 'AT_WAREHOUSE' || p.status === 'CANCELLED') &&
+    (p.status === 'IN_NOVA_POSHTA' ||
+      p.status === 'PICKED_UP_FROM_NOVA_POSHTA' ||
+      p.status === 'RECEIVED_BY_REPRESENTATIVE' ||
+      p.status === 'AT_WAREHOUSE' ||
+      p.status === 'CANCELLED') &&
     p.tripId == null
   )
 }

@@ -1,5 +1,4 @@
 import type { ParcelResponse, ParcelStatus } from '@/lib/api/types'
-import { npStateOf } from './npStatus'
 
 export const PARCEL_TABS = ['np', 'company', 'archive'] as const
 export type ParcelTab = (typeof PARCEL_TABS)[number]
@@ -14,31 +13,20 @@ export function isParcelTab(v: string | undefined): v is ParcelTab {
  */
 export const TAB_STATUSES: Record<ParcelTab, ParcelStatus[]> = {
   np: ['IN_NOVA_POSHTA'],
-  company: ['IN_NOVA_POSHTA', 'RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE', 'IN_CAR'],
+  company: ['PICKED_UP_FROM_NOVA_POSHTA', 'RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE', 'IN_CAR'],
   archive: ['DELIVERED_TO_CLIENT', 'CANCELLED'],
 }
 
 /** Statuses a parcel of this tab can have, for the status filter inside the tab. */
 export const TAB_FILTER_STATUSES: Record<ParcelTab, ParcelStatus[]> = {
   np: ['IN_NOVA_POSHTA'],
-  company: ['RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE', 'IN_CAR'],
+  company: ['PICKED_UP_FROM_NOVA_POSHTA', 'RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE', 'IN_CAR'],
   archive: ['DELIVERED_TO_CLIENT', 'CANCELLED'],
 }
 
-/**
- * Nova Poshta reporting RECEIVED means the parcel has left the branch even if nobody scanned it yet, so it counts
- * as being with the company rather than as still waiting to be collected.
- */
+/** The backend moves a parcel to PICKED_UP_FROM_NOVA_POSHTA as soon as Nova Poshta reports it as collected. */
 export function inParcelTab(p: ParcelResponse, tab: ParcelTab): boolean {
-  const leftTheBranch = p.status === 'IN_NOVA_POSHTA' && npStateOf(p) === 'RECEIVED'
-  switch (tab) {
-    case 'np':
-      return p.status === 'IN_NOVA_POSHTA' && !leftTheBranch
-    case 'company':
-      return leftTheBranch || p.status === 'RECEIVED_BY_REPRESENTATIVE' || p.status === 'AT_WAREHOUSE' || p.status === 'IN_CAR'
-    case 'archive':
-      return p.status === 'DELIVERED_TO_CLIENT' || p.status === 'CANCELLED'
-  }
+  return !!p.status && TAB_STATUSES[tab].includes(p.status)
 }
 
 /** Which tab an old `?status=` link belongs to, so such links keep working. */

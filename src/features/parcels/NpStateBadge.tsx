@@ -38,16 +38,3 @@ export function NpStateBadge({ parcel }: { parcel: Pick<ParcelResponse, 'npState
   )
 }
 
-/** Picked up at the branch (per Nova Poshta) but not yet scanned in by our representative. */
-export function isPickedUpNotScanned(p: Pick<ParcelResponse, 'status' | 'npState' | 'npStatusCode' | 'npStatusText'>): boolean {
-  return p.status === 'IN_NOVA_POSHTA' && npStateOf(p) === 'RECEIVED'
-}
-
-export function PickedUpNotScannedBadge() {
-  const { t } = useTranslation('parcels')
-  return (
-    <Badge variant="outline" className="border-orange-400 bg-orange-50 text-orange-800">
-      {t('np.pickedUpNotScanned')}
-    </Badge>
-  )
-}
