@@ -95,9 +95,9 @@ export function ParcelPage() {
         {t('parcels:title')}
       </LinkButton>
       <PageHeader
-        title={
-          <span className="flex flex-wrap items-center gap-3">
-            <span className="font-mono">{p.barcode ?? (p.npTtn ? `${t('parcels:fields.npTtnShort')} ${p.npTtn}` : `#${p.id}`)}</span>
+        title={<span className="font-mono break-all">{p.barcode ?? (p.npTtn ? `${t('parcels:fields.npTtnShort')} ${p.npTtn}` : `#${p.id}`)}</span>}
+        badges={
+          <>
             <ParcelStatusBadge status={p.status} />
             {p.status === 'IN_NOVA_POSHTA' && <NpStateBadge parcel={p} />}
             {isPickedUpNotScanned(p) && <PickedUpNotScannedBadge />}
@@ -108,7 +108,7 @@ export function ParcelPage() {
                 {t('parcels:needsEnrichment')}
               </Badge>
             )}
-          </span>
+          </>
         }
         description={`${t('parcels:fields.statusChangedAt')}: ${formatDateTime(p.statusChangedAt)}${p.statusChangedBy ? ` · ${p.statusChangedBy}` : ''}`}
         actions={

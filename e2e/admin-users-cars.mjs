@@ -2,7 +2,7 @@
 import { ADMIN, apiAs, BASE, createRunner, ensureSeed, MANAGER, uniq } from './lib.mjs'
 
 export async function run() {
-  await ensureSeed()
+  const { company: seedCompany } = await ensureSeed()
   const r = await createRunner('admin-users-cars')
   const { page, ok, shot, dialog } = r
   const u = uniq()
@@ -11,7 +11,7 @@ export async function run() {
   try {
     await r.login(ADMIN)
     await page.waitForURL('**/companies')
-    await page.waitForSelector('table tbody tr:has-text("Тест Логістик")')
+    await page.waitForSelector('table tbody tr')
     await shot('01-companies-list')
     const nav = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
     ok('admin nav shows only companies', nav.length === 1 && nav[0].includes('Компанії'), nav.join(','))
@@ -31,7 +31,7 @@ export async function run() {
     await page.fill('#c-notes', 'Тестова компанія')
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForURL(/\/companies\/\d+$/)
-    await page.waitForSelector(`h1:has-text("Компанія ${u}")`)
+    await page.waitForSelector(`[data-slot=page-header]:has-text("Компанія ${u}")`)
     ok('company created with notes', (await page.textContent('body')).includes('Тестова компанія'), page.url())
     const newCompanyUrl = page.url()
     await shot('02-company-page')
@@ -75,18 +75,20 @@ export async function run() {
     await page.getByRole('button', { name: 'Деактивувати' }).click()
     await dialog().waitFor()
     await dialog().getByRole('button', { name: 'Деактивувати' }).click()
-    await page.waitForSelector('h1:has-text("Деактивована")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Деактивована")')
     ok('company deactivated', true)
     await page.getByRole('button', { name: 'Активувати', exact: true }).click()
-    await page.waitForSelector('h1:has-text("Активна")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Активна")')
     ok('company activated', true)
 
     // read-only company mode on the seeded company
-    await page.goto(BASE + '/companies')
-    await page.locator('table tbody tr:has-text("Тест Логістик")').click()
+    // Straight to the seeded company: earlier runs leave enough companies to push it onto a later page.
+    await page.goto(BASE + '/companies/' + seedCompany.id)
     await page.waitForURL(/\/companies\/\d+$/)
     await page.getByRole('button', { name: 'Відкрити компанію' }).click()
     await page.waitForURL('**/parcels')
+    // Parcels with our barcode are in the "у компанії" tab, not in the Nova Poshta one the list opens on.
+    await page.goto(BASE + '/parcels?tab=company')
     await page.waitForSelector('table tbody tr:has-text("PT")')
     const modeBody = await page.textContent('body')
     ok('company mode banner shown', modeBody.includes('Перегляд компанії «Тест Логістик»'))
@@ -96,7 +98,7 @@ export async function run() {
     ok('company mode hides row selection', (await page.locator('table thead').getByRole('checkbox').count()) === 0)
     await shot('04-admin-company-mode')
     await page.goto(BASE + '/trips')
-    await page.waitForSelector('h1:has-text("Рейси")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Рейси")')
     ok('company mode trips page without add', (await page.getByRole('button', { name: 'Додати' }).count()) === 0)
     await page.goto(BASE + '/company')
     await page.waitForSelector('text=Тест Логістик')
@@ -166,7 +168,7 @@ export async function run() {
 
     // cars with notes
     await page.goto(BASE + '/cars')
-    await page.waitForSelector('h1:has-text("Машини")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Машини")')
     await page.getByRole('button', { name: 'Додати' }).click()
     await dialog().waitFor()
     await page.fill('#car-plate', 'AA' + u.slice(0, 4) + 'BB')
@@ -192,7 +194,7 @@ export async function run() {
 
     // my company + sync
     await page.goto(BASE + '/company')
-    await page.waitForSelector('h1:has-text("Моя компанія")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Моя компанія")')
     await page.waitForSelector('text=Тест Логістик')
     await page.getByRole('button', { name: 'Синхронізувати з НП' }).click()
     await page.waitForTimeout(2500)
@@ -214,7 +216,7 @@ export async function run() {
     await page.fill('#cp-current', 'oldpass123')
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForSelector('text=Пароль змінено')
-    await page.goto(BASE + '/parcels')
+    await page.goto(BASE + '/parcels?tab=company')
     await page.waitForSelector('table tbody tr:has-text("PT")')
     ok('session continues with the new token after password change', !page.url().includes('/login'))
     const relogin = await fetch('http://localhost:8080/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: pwEmail, password: 'brandnew123' }) })
@@ -225,12 +227,13 @@ export async function run() {
     await admin.post('/api/users', { companyId: company.id, email: viewerEmail, password: 'viewer123', firstName: 'Переглядач', lastName: u, roles: ['VIEWER'] })
     await r.login({ email: viewerEmail, password: 'viewer123' })
     await page.waitForURL('**/parcels')
+    await page.goto(BASE + '/parcels?tab=company')
     await page.waitForSelector('table tbody tr:has-text("PT")')
     const vBody = await page.textContent('body')
     ok('viewer sees parcels with money column', vBody.includes('Оплата'))
     ok('viewer has no add/select controls', (await page.getByRole('link', { name: 'Додати' }).count()) === 0 && (await page.locator('table thead').getByRole('checkbox').count()) === 0)
     await page.locator('table tbody tr:has-text("PT")').first().click()
-    await page.waitForSelector('h1:has-text("PT")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
     ok('viewer parcel page without edit/status', (await page.getByRole('button', { name: 'Редагувати' }).count()) === 0 && (await page.getByRole('button', { name: 'Змінити статус' }).count()) === 0)
     await shot('07-viewer')
     await page.goto(BASE + '/users?size=100')

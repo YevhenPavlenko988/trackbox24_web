@@ -17,12 +17,13 @@ import { MoveToWarehouseDialog } from '@/features/warehouses/MoveToWarehouseDial
 import { WarehouseSelect } from '@/features/warehouses/WarehouseSelect'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useListParams } from '@/hooks/use-list-params'
-import { emptyPage } from '@/lib/api/page'
+import type { Page } from '@/lib/api/page'
 import type { ParcelResponse, ParcelStatus, PaymentStatus } from '@/lib/api/types'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ParcelsTable } from './ParcelsTable'
-import { ParcelStatusSelect } from './ParcelStatusSelect'
 import { inNpStateGroup, isNpStateGroup, NP_STATE_GROUPS, type NpStateGroup } from './npStatus'
-import { useParcels, useSyncNovaPoshta } from './queries'
+import { useParcelGroup, useSyncNovaPoshta } from './queries'
+import { compareBySort, isParcelTab, PARCEL_TABS, TAB_FILTER_STATUSES, tabForStatus, type ParcelTab } from './tabs'
 import { isParcelDeletable } from './status'
 import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { ChannelSelect, isChannel } from '@/features/channels/channel'
@@ -54,6 +55,8 @@ export function ParcelsListPage() {
   }, [debounced]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const status = get('status') as ParcelStatus | undefined
+  // An old "?status=" link without a tab opens the tab that status belongs to.
+  const tab: ParcelTab = isParcelTab(get('tab')) ? (get('tab') as ParcelTab) : (tabForStatus(status) ?? 'np')
   const clientId = get('clientId') ? Number(get('clientId')) : undefined
   const representativeId = get('representativeId') ? Number(get('representativeId')) : undefined
   const warehouseId = get('warehouseId') ? Number(get('warehouseId')) : undefined
@@ -67,15 +70,14 @@ export function ParcelsListPage() {
     if (debouncedCity !== deliveryCity) set({ deliveryCity: debouncedCity || undefined })
   }, [debouncedCity]) // eslint-disable-line react-hooks/exhaustive-deps
   const needsEnrichment = get('needsEnrichment') === 'true' ? true : undefined
-  const paidStorage = status === 'IN_NOVA_POSHTA' && sort === PAID_STORAGE_SORT
+  const paidStorage = sort === PAID_STORAGE_SORT
   // No backend filter by npState yet: filter the loaded page on the client, with a bigger page so it is useful.
   const npGroupParam = get('npState')
   const npGroup: NpStateGroup | undefined = isNpStateGroup(npGroupParam) ? npGroupParam : undefined
   const hasFilters = !!(urlQuery || status || clientId || representativeId || warehouseId || paymentStatus || deliveryCity || needsEnrichment || sort || npGroup || channel)
 
-  const query = useParcels({
+  const query = useParcelGroup(tab, {
     query: urlQuery,
-    status,
     clientId,
     representativeId,
     warehouseId,
@@ -83,12 +85,24 @@ export function ParcelsListPage() {
     deliveryCity,
     channel,
     needsEnrichment,
-    page,
-    size: npGroup ? Math.max(size, 100) : size,
     sort,
   })
-  const loaded = query.data ?? emptyPage<ParcelResponse>()
-  const data = npGroup ? { ...loaded, content: loaded.content.filter((p) => inNpStateGroup(p, npGroup)) } : loaded
+
+  // The tab's statuses come from several requests, so narrowing, sorting and paging happen here.
+  const group = query.data
+  const rows = (group?.content ?? [])
+    .filter((p) => !status || p.status === status)
+    .filter((p) => !npGroup || inNpStateGroup(p, npGroup))
+    .sort((a, b) => compareBySort(a, b, sort))
+  const totalPages = Math.max(1, Math.ceil(rows.length / size))
+  const current = Math.min(page, totalPages - 1)
+  const data: Page<ParcelResponse> = {
+    content: rows.slice(current * size, current * size + size),
+    size,
+    number: current,
+    totalElements: rows.length,
+    totalPages,
+  }
 
   const [rawSelected, setSelected] = useState<Set<string | number>>(new Set())
   const [moving, setMoving] = useState(false)
@@ -131,9 +145,33 @@ export function ParcelsListPage() {
         }
       />
 
+      <Tabs value={tab} onValueChange={(v) => set({ tab: String(v) === 'np' ? undefined : String(v), status: undefined, sort: undefined, npState: undefined })} className="mb-4">
+        <TabsList>
+          {PARCEL_TABS.map((value) => (
+            <TabsTrigger key={value} value={value}>
+              {t(`parcels:tabs.${value}`)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Input className="w-72" placeholder={t('parcels:filters.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
-        <ParcelStatusSelect value={status} onChange={(v) => set({ status: v, sort: undefined })} />
+        {TAB_FILTER_STATUSES[tab].length > 1 && (
+          <Select value={status ?? ALL} onValueChange={(v) => set({ status: v === ALL || !v ? undefined : String(v) })}>
+            <SelectTrigger className="w-56" data-testid="status-filter">
+              <SelectValue>{status ? t(`common:parcelStatus.${status}`) : t('parcels:filters.allStatuses')}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{t('parcels:filters.allStatuses')}</SelectItem>
+              {TAB_FILTER_STATUSES[tab].map((v) => (
+                <SelectItem key={v} value={v}>
+                  {t(`common:parcelStatus.${v}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
         <UserSelect role="REPRESENTATIVE" value={representativeId} onChange={(v) => set({ representativeId: v })} noneLabel={t('parcels:filters.allRepresentatives')} />
         <div className="w-56">
           <WarehouseSelect value={warehouseId} onChange={(v) => set({ warehouseId: v })} noneLabel={t('parcels:filters.allWarehouses')} />
@@ -150,6 +188,7 @@ export function ParcelsListPage() {
             </SelectContent>
           </Select>
         )}
+        {tab === 'np' && (
         <Select value={npGroup ?? ALL} onValueChange={(v) => set({ npState: v === ALL || !v ? undefined : String(v) })}>
           <SelectTrigger className="w-56" data-testid="np-state-filter">
             <SelectValue>{npGroup ? t(`parcels:filters.npState.${npGroup}`) : t('parcels:filters.npStateAll')}</SelectValue>
@@ -163,6 +202,7 @@ export function ParcelsListPage() {
             ))}
           </SelectContent>
         </Select>
+        )}
         <ChannelSelect className="w-44" value={channel ?? ''} onChange={(v) => set({ channel: v })} noneLabel={t('common:channelField.all')} />
         <Input className="w-44" placeholder={t('parcels:filters.deliveryCity')} value={cityInput} onChange={(e) => setCityInput(e.target.value)} />
         <div className="w-64">
@@ -174,13 +214,11 @@ export function ParcelsListPage() {
         <Button size="sm" variant={needsEnrichment ? 'default' : 'outline'} onClick={() => set({ needsEnrichment: needsEnrichment ? undefined : true })}>
           {t('parcels:filters.needsEnrichment')}
         </Button>
-        <Button
-          size="sm"
-          variant={paidStorage ? 'default' : 'outline'}
-          onClick={() => (paidStorage ? set({ status: undefined, sort: undefined }) : set({ status: 'IN_NOVA_POSHTA', sort: PAID_STORAGE_SORT }))}
-        >
-          {t('parcels:filters.paidStorage')}
-        </Button>
+        {tab === 'np' && (
+          <Button size="sm" variant={paidStorage ? 'default' : 'outline'} onClick={() => set({ sort: paidStorage ? undefined : PAID_STORAGE_SORT })}>
+            {t('parcels:filters.paidStorage')}
+          </Button>
+        )}
         {hasFilters && (
           <Button size="sm" variant="ghost" onClick={reset}>
             <X />
@@ -201,10 +239,8 @@ export function ParcelsListPage() {
         )}
       </div>
 
-      {npGroup && !query.isPending && (
-        <p className="mb-2 text-xs text-muted-foreground">
-          {t('parcels:filters.npStateClientSide', { shown: data.content.length, total: loaded.content.length })}
-        </p>
+      {group && !group.loadedAll && (
+        <p className="mb-2 text-xs text-amber-700">{t('parcels:tabPartial', { shown: rows.length, total: group.serverTotal })}</p>
       )}
       <ParcelsTable
         rows={data.content}
@@ -213,7 +249,7 @@ export function ParcelsListPage() {
         actions={canEdit ? (p) => (isParcelDeletable(p) ? <DeleteEntityButton entity="parcels" id={p.id!} iconOnly /> : null) : undefined}
       />
       <div className="mt-4">
-        <Pagination page={loaded} onPageChange={setPage} onSizeChange={setSize} />
+        <Pagination page={data} onPageChange={setPage} onSizeChange={setSize} />
       </div>
 
       <MoveToWarehouseDialog open={moving} onOpenChange={setMoving} parcelIds={[...selected].map(Number)} onMoved={() => setSelected(new Set())} />

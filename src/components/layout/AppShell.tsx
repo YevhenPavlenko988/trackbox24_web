@@ -91,7 +91,8 @@ export function AppShell() {
           </Button>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset>
+      {/* min-w-0: without it this flex child grows to the widest table and the whole page scrolls sideways. */}
+      <SidebarInset className="min-w-0">
         <header className="flex h-12 items-center gap-2 border-b px-4">
           <SidebarTrigger />
           {access.companyMode && (
@@ -107,7 +108,7 @@ export function AppShell() {
             </div>
           )}
         </header>
-        <main className="flex-1 p-6">
+        <main className="min-w-0 flex-1 p-6">
           <Outlet />
         </main>
       </SidebarInset>

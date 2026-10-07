@@ -31,7 +31,12 @@ export async function run() {
     await page.click('button[type=submit]')
     await page.waitForURL('**/parcels')
     ok('manager lands on /parcels', page.url().endsWith('/parcels'))
+    await page.waitForSelector('[data-slot=tabs-list]')
+    ok('parcels list opens on the Nova Poshta tab', (await page.getByRole('tab', { name: 'У Новій Пошті' }).getAttribute('data-active')) !== null)
+    // Parcels with our barcode live in the "у компанії" tab; the first tab only holds what is still at Nova Poshta.
+    await page.getByRole('tab', { name: 'У компанії' }).click()
     await page.waitForSelector('table tbody tr:has-text("PT")')
+    ok('company tab lists parcels already collected', true)
     await shot('02-parcels-list')
 
     await page.reload()
@@ -43,7 +48,8 @@ export async function run() {
     await page.waitForTimeout(400)
     ok('needsEnrichment chip hits API', apiCalls.some((c) => c.url.includes('needsEnrichment=true')))
     await page.getByRole('button', { name: 'Скинути' }).click()
-    await page.waitForURL('**/parcels')
+    // Reset clears the filters but stays on the current tab.
+    await page.waitForURL(/\/parcels\?tab=company$/)
 
     await page.fill('input[placeholder*="Штрих-код"]', 'Взуття')
     await page.waitForURL('**/parcels?*query=*')
@@ -100,7 +106,7 @@ export async function run() {
     ok('client parcels tab lists parcels', true)
 
     await page.goto(BASE + `/parcels/${parcel.id}`)
-    await page.waitForSelector('h1:has-text("PT")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
     await page.waitForTimeout(400)
     await shot('05-parcel-detail')
     const detail = await page.textContent('body')
@@ -129,7 +135,7 @@ export async function run() {
     await page.locator('[data-slot=select-item]', { hasText: 'У машині' }).click()
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForTimeout(800)
-    ok('status changed to IN_CAR', (await page.locator('h1').textContent()).includes('У машині'))
+    ok('status changed to IN_CAR', (await page.locator('[data-slot=page-header]').textContent()).includes('У машині'))
 
     await page.getByRole('button', { name: 'Змінити статус' }).click()
     await dialog().waitFor()
@@ -144,7 +150,7 @@ export async function run() {
     await page.fill('#comment', 'Вивантажили')
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForTimeout(800)
-    ok('forced status change applied', (await page.locator('h1').textContent()).includes('Отримано представником'))
+    ok('forced status change applied', (await page.locator('[data-slot=page-header]').textContent()).includes('Отримано представником'))
 
     await page.goto(BASE + '/parcels/new')
     await page.getByText('Без ТТН').click()
@@ -171,12 +177,12 @@ export async function run() {
     await shot('07-parcel-create')
     await page.click('form button[type=submit]')
     await page.waitForURL(/\/parcels\/\d+$/)
-    await page.waitForSelector('h1:has-text("PT")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
     const createdBody = await page.textContent('body')
     ok('manual parcel created with barcode', createdBody.includes('Отримано представником'), page.url())
     ok('parcel card shows inline client', createdBody.includes('Інлайн Клієнт') || createdBody.includes('Інлайн'), page.url())
     ok('parcel card shows channel with link', createdBody.includes('Telegram') && (await page.locator('a[href="https://t.me/e2e_orders"]').count()) === 1)
-    await page.goto(BASE + '/parcels?channel=TELEGRAM')
+    await page.goto(BASE + '/parcels?tab=company&channel=TELEGRAM')
     await page.waitForSelector('table tbody tr [aria-label="Telegram"]')
     ok('parcels filtered by channel', (await page.locator('table tbody tr').count()) >= 1 && (await page.locator('table tbody tr:not(:has([aria-label="Telegram"]))').count()) === 0)
 
@@ -191,7 +197,7 @@ export async function run() {
     // --- warehouses: create, bulk move, status dialog requires a warehouse ---
     const u = uniq()
     await page.goto(BASE + '/warehouses')
-    await page.waitForSelector('h1:has-text("Склади")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Склади")')
     await page.getByRole('button', { name: 'Додати' }).click()
     await dialog().waitFor()
     await page.fill('#wh-name', 'Склад ' + u)
@@ -214,8 +220,8 @@ export async function run() {
     await dialog().getByRole('button', { name: 'Перемістити на склад' }).click()
     await page.waitForSelector('text=Переміщено на склад')
     await page.goto(BASE + `/parcels/${wp.id}`)
-    await page.waitForSelector('h1:has-text("На складі")')
-    ok('bulk move put parcel at warehouse', (await page.textContent('h1')).includes('Склад ' + u))
+    await page.waitForSelector('[data-slot=page-header]:has-text("На складі")')
+    ok('bulk move put parcel at warehouse', (await page.textContent('[data-slot=page-header]')).includes('Склад ' + u))
     await shot('10-parcel-at-warehouse')
 
     await page.getByRole('button', { name: 'Змінити статус' }).click()
@@ -240,7 +246,7 @@ export async function run() {
     await page.waitForSelector('[data-slot=badge]:has-text("Оплачено")')
     ok('parcel marked paid', true)
     await shot('11-parcel-paid')
-    await page.goto(BASE + '/parcels?paymentStatus=PAID')
+    await page.goto(BASE + '/parcels?tab=company&paymentStatus=PAID')
     await page.waitForSelector(`table tbody tr:has-text("${wp.barcode}")`)
     ok('payment filter lists paid parcel', true)
     await page.goto(BASE + `/parcels/${wp.id}`)

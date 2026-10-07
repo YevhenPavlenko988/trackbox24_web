@@ -72,12 +72,8 @@ export function TripPage() {
         {t('trips:title')}
       </LinkButton>
       <PageHeader
-        title={
-          <span className="flex items-center gap-3">
-            {t('trips:one', { id: trip.id })}
-            <TripStatusBadge status={trip.status} />
-          </span>
-        }
+        title={t('trips:one', { id: trip.id })}
+        badges={<TripStatusBadge status={trip.status} />}
         description={`${t('trips:fields.plannedDepartureAt')}: ${formatDateTime(trip.plannedDepartureAt)}${trip.departedAt ? ` · ${t('trips:fields.departedAt')}: ${formatDateTime(trip.departedAt)}` : ''}`}
         actions={
           <>

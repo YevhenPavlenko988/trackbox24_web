@@ -45,12 +45,8 @@ export function CompanyPage() {
   return (
     <>
       <PageHeader
-        title={
-          <span className="flex items-center gap-3">
-            {company.name}
-            <CompanyStatusBadge active={company.active} />
-          </span>
-        }
+        title={company.name}
+        badges={<CompanyStatusBadge active={company.active} />}
         actions={
           <>
             <Button

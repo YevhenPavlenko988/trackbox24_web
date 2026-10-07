@@ -24,7 +24,7 @@ export async function run() {
   }
   const createTrip = async () => {
     await page.goto(BASE + '/trips')
-    await page.waitForSelector('h1:has-text("Рейси")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Рейси")')
     await page.getByRole('button', { name: 'Додати' }).click()
     await dialog().waitFor()
     await page.fill('#tr-departure', '2026-10-05T08:00')
@@ -32,7 +32,7 @@ export async function run() {
     await r.pickSelect('tr-driver', u)
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForURL(/\/trips\/\d+$/)
-    await page.waitForSelector('h1:has-text("Рейс #")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Рейс #")')
     return Number(page.url().split('/').pop())
   }
 
@@ -41,7 +41,7 @@ export async function run() {
 
     // --- trip 1: validation, plan, load, depart, 409 on complete ---
     await page.goto(BASE + '/trips')
-    await page.waitForSelector('h1:has-text("Рейси")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Рейси")')
     await page.getByRole('button', { name: 'Додати' }).click()
     await dialog().waitFor()
     await page.click('[data-slot=dialog-content] button[type=submit]')
@@ -57,9 +57,9 @@ export async function run() {
     await page.fill('#tr-destination', 'Львів')
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForURL(/\/trips\/\d+$/)
-    await page.waitForSelector('h1:has-text("Рейс #")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Рейс #")')
     const trip1 = Number(page.url().split('/').pop())
-    ok('trip created as PLANNED', (await page.textContent('h1')).includes('Запланований'))
+    ok('trip created as PLANNED', (await page.textContent('[data-slot=page-header]')).includes('Запланований'))
     ok('depart disabled without car/driver', await page.getByRole('button', { name: 'Виїхав' }).isDisabled())
     await shot('01-trip-planned')
 
@@ -94,7 +94,7 @@ export async function run() {
     const load3 = await driver.post('/api/scan/load', { code: p3.barcode, tripId: trip1 })
     ok('driver load scans accepted', load1.status === 'IN_CAR' && load3.status === 'IN_CAR', JSON.stringify(load1).slice(0, 120))
     await page.reload()
-    await page.waitForSelector('h1:has-text("Завантаження")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Завантаження")')
     const body1 = await page.textContent('body')
     ok('trip is PREPARING with loaded section', body1.includes('У машині / видано (2)') && body1.includes('План (1)'))
     ok('outside-plan badge shown', body1.includes('поза планом'))
@@ -110,7 +110,7 @@ export async function run() {
     await dialog().waitFor()
     await page.fill('#dp-odo', '120000')
     await dialog().getByRole('button', { name: 'Виїхав' }).click()
-    await page.waitForSelector('h1:has-text("У дорозі")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("У дорозі")')
     const body2 = await page.textContent('body')
     ok('departed: plan section gone', !body2.includes('План ('))
     ok('history records unplanned parcel', body2.includes('Прибрано з плану') && body2.includes(p2.barcode))
@@ -133,7 +133,7 @@ export async function run() {
     await shot('05-complete-409')
     await r.pickSelect('cp-warehouse', 'Склад ' + u)
     await dialog().getByRole('button', { name: 'Перемістити на склад і завершити' }).click()
-    await page.waitForSelector('h1:has-text("Завершений")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Завершений")')
     const done = await page.textContent('body')
     ok('trip completed after moving to warehouse', done.includes('120350'))
     ok('no actions after completion', (await page.getByRole('button', { name: 'Завершити' }).count()) === 0)
@@ -143,7 +143,7 @@ export async function run() {
 
     // parcel page links to trip
     await page.goto(BASE + `/parcels/${p3.id}`)
-    await page.waitForSelector('h1:has-text("PT")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
     ok('parcel page links to trip', (await page.textContent('body')).includes(`Рейс #${trip1}`))
 
     // --- trip 2: plan from warehouse, load, depart, cancel to warehouse ---
@@ -156,13 +156,13 @@ export async function run() {
     await page.waitForSelector('text=План (1)')
     await driver.post('/api/scan/load', { code: p1.barcode, tripId: trip2 })
     await page.reload()
-    await page.waitForSelector('h1:has-text("Завантаження")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Завантаження")')
     await page.getByRole('button', { name: 'Скасувати рейс' }).click()
     await dialog().waitFor()
     await page.getByText('На склад', { exact: true }).click()
     await r.pickSelect('cn-warehouse', 'Склад ' + u)
     await dialog().getByRole('button', { name: 'Скасувати рейс' }).click()
-    await page.waitForSelector('h1:has-text("Скасований")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Скасований")')
     const p1After = await manager.get(`/api/parcels/${p1.id}`)
     ok('cancelled trip moved loaded parcel to warehouse', p1After.status === 'AT_WAREHOUSE' && p1After.tripId == null)
     await shot('07-trip-cancelled')
@@ -180,7 +180,7 @@ export async function run() {
 
     // register download + soft delete / restore of the cancelled trip
     await page.goto(BASE + `/trips/${trip2}`)
-    await page.waitForSelector('h1:has-text("Скасований")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Скасований")')
     const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Реєстр (Excel)' }).click()])
     ok('trip register downloads an xlsx', download.suggestedFilename().endsWith('.xlsx'), download.suggestedFilename())
     await page.getByRole('button', { name: 'Видалити рейс' }).click()
