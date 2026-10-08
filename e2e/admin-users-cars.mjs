@@ -240,8 +240,9 @@ export async function run() {
     await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
     ok('viewer parcel page without edit/status', (await page.getByRole('button', { name: 'Редагувати' }).count()) === 0 && (await page.getByRole('button', { name: 'Змінити статус' }).count()) === 0)
     await shot('07-viewer')
-    await page.goto(BASE + '/users?size=100')
-    await page.waitForSelector('table tbody tr:has-text("rep@test.ua")')
+    // The company gains users with every run, so the check only needs the table to render, not a particular row.
+    await page.goto(BASE + '/users')
+    await page.waitForSelector('table tbody tr td')
     ok('viewer lists users without actions', (await page.getByRole('button', { name: 'Додати' }).count()) === 0)
 
     // ===== pure DRIVER → mobile-only page =====

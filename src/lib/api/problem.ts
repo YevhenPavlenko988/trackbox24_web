@@ -23,7 +23,7 @@ export class ApiError extends Error {
   }
 }
 
-const KNOWN_STATUSES = [400, 401, 403, 404, 409, 502] as const
+const KNOWN_STATUSES = [400, 401, 403, 404, 409, 502, 503] as const
 
 export function statusTitle(status: number): string {
   const key = (KNOWN_STATUSES as readonly number[]).includes(status) ? String(status) : 'default'
@@ -32,10 +32,19 @@ export function statusTitle(status: number): string {
 
 type ProblemLike = { title?: string; detail?: string; errors?: FieldErrors } & Record<string, unknown>
 
+/**
+ * The backend writes its own title only for problems it names itself, in Ukrainian ("У машині лишились посилки",
+ * "Помилка API Нової Пошти"); for everything else the framework fills in an English reason phrase ("Bad Request"),
+ * which must not reach a Ukrainian UI. So a Ukrainian title wins, anything else falls back to our own wording.
+ */
+function titleFor(title: string | undefined, status: number): string {
+  return title && /[Ѐ-ӿ]/.test(title) ? title : statusTitle(status)
+}
+
 /** Spring Security answers 401/403 with an empty body, so `error` may be undefined or a string. */
 export function toApiError(error: unknown, response: Response): ApiError {
   const p: ProblemLike = error && typeof error === 'object' ? (error as ProblemLike) : {}
-  return new ApiError(response.status, statusTitle(response.status), p.detail, p.errors, p)
+  return new ApiError(response.status, titleFor(p.title, response.status), p.detail, p.errors, p)
 }
 
 type FetchResult<T> = { data?: T; error?: unknown; response: Response }

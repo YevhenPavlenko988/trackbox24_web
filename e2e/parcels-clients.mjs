@@ -57,6 +57,8 @@ export async function run() {
 
     await page.click('a[href="/clients"]')
     await page.waitForURL('**/clients')
+    // Runs accumulate clients, so the seeded one is found by search instead of being expected on page 1.
+    await page.goto(BASE + '/clients?search=Коваль')
     await page.waitForSelector('table tbody tr:has-text("Коваль")')
     await shot('03-clients-list')
 
