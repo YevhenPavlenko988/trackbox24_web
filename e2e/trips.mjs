@@ -168,7 +168,8 @@ export async function run() {
     await shot('07-trip-cancelled')
 
     // list filter
-    await page.goto(BASE + '/trips?status=COMPLETED')
+    // Runs accumulate trips and this one's departure date is fixed, so it is not on the first page any more.
+    await page.goto(BASE + '/trips?status=COMPLETED&size=100')
     await page.waitForSelector(`table tbody tr:has-text("${trip1}")`)
     ok('status filter lists completed trip', !(await page.textContent('body')).includes(`Рейс #${trip2}`))
     await shot('08-trips-list')

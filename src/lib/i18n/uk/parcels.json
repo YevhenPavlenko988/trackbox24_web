@@ -138,7 +138,9 @@
     "npVolumeWeight": "Об'ємна вага НП, кг",
     "npState": "Статус НП",
     "npDates": "Доставка / зберігання",
-    "npPaidStorageShort": "платне з {{date}}"
+    "npPaidStorageShort": "платне з {{date}}",
+    "npPaymentStatus": "Оплата доставки НП",
+    "npDeliveryAmountDue": "Доставка НП до сплати"
   },
   "deleteConfirm": {
     "title": "Видалити посилку?",
@@ -185,7 +187,9 @@
     "paymentMethod": "Спосіб оплати НП",
     "copied": "Скопійовано",
     "gone": "Посилку об'єднано з іншою або видалено — список оновлено",
-    "previousTtnLabel": "Попередня ТТН"
+    "previousTtnLabel": "Попередня ТТН",
+    "paidOnline": "оплачено",
+    "settled": "Посилку вже забрали з Нової Пошти, платити нічого"
   },
   "tabs": {
     "np": "У Новій Пошті",

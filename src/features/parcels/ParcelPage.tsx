@@ -18,7 +18,7 @@ import { isApiError, showApiError } from '@/lib/api/problem'
 import { formatDate, formatDateTime, formatMoney, formatPhone, formatWeight } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { ParcelEditDialog } from './ParcelEditDialog'
-import { NpPaymentCard } from './NpPaymentCard'
+import { isNpDeliveryPaid, NpPaymentCard } from './NpPaymentCard'
 import { ChannelBadge } from '@/features/channels/channel'
 import { NpStateBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
@@ -314,6 +314,9 @@ export function ParcelPage() {
                   },
                   { label: t('parcels:np.payerType'), value: p.npPayerType ? t(`parcels:np.payer.${p.npPayerType}`, { defaultValue: p.npPayerType }) : undefined },
                   { label: t('parcels:np.paymentMethod'), value: p.npPaymentMethod ? t(`parcels:np.method.${p.npPaymentMethod}`, { defaultValue: p.npPaymentMethod }) : undefined },
+                  // Nova Poshta only reports these when the representative's phone matches the recipient in the waybill.
+                  { label: t('parcels:fields.npPaymentStatus'), value: isNpDeliveryPaid(p) ? t('parcels:np.paidOnline') : p.npPaymentStatus },
+                  { label: t('parcels:fields.npDeliveryAmountDue'), value: p.npDeliveryAmountDue != null ? formatMoney(p.npDeliveryAmountDue) : undefined },
                   { label: t('parcels:fields.npStatus'), value: p.npStatusText ? `${p.npStatusText}${p.npStatusCode ? ` (${p.npStatusCode})` : ''}` : undefined },
                   { label: t('parcels:fields.npStatusUpdatedAt'), value: formatDateTime(p.npStatusUpdatedAt) },
                   { label: t('parcels:fields.npRecipientWarehouse'), value: p.npRecipientWarehouse },
