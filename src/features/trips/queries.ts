@@ -1,7 +1,8 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { loadParcelIntoTrip } from '@/features/parcels/api'
 import { parcelKeys } from '@/features/parcels/queries'
 import type { PageParams } from '@/lib/api/page'
-import type { TripCompleteRequest, TripDepartRequest, TripRequest } from '@/lib/api/types'
+import type { ParcelResponse, TripCompleteRequest, TripDepartRequest, TripRequest } from '@/lib/api/types'
 import {
   cancelTrip,
   completeTrip,
@@ -100,4 +101,14 @@ export function useDeletedTrips(params: PageParams) {
 export function useCancelTrip(id: number) {
   const invalidate = useInvalidateTrips()
   return useMutation({ mutationFn: (warehouseId?: number) => cancelTrip(id, warehouseId), onSuccess: invalidate })
+}
+
+/** Lives here because loading changes both the parcel and the trip it joins. */
+export function useLoadParcelIntoTrip() {
+  const invalidate = useInvalidateTrips()
+  return useMutation({
+    mutationFn: ({ parcel, tripId, comment }: { parcel: ParcelResponse; tripId: number; comment?: string }) =>
+      loadParcelIntoTrip(parcel, tripId, comment),
+    onSuccess: invalidate,
+  })
 }

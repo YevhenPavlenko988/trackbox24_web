@@ -195,6 +195,43 @@ export async function run() {
     await page.waitForTimeout(800)
     const restored = await manager.get(`/api/trips/${trip2}`)
     ok('trip restored from trash', restored.id === trip2 && restored.status === 'CANCELLED')
+
+    // --- a manager puts a parcel in a car from the parcel page: the trip is what names the car ---
+    const d2 = `driver${u}b@test.ua`
+    await manager.post('/api/users', { email: d2, password: 'driver123', firstName: 'Водій', lastName: u + 'Б', roles: ['DRIVER'] })
+    const driver2 = (await manager.get(`/api/users?role=DRIVER&size=100`)).content.find((x) => x.email === d2)
+    const plate2 = 'KB' + u.slice(0, 4) + 'XX'
+    const car2 = await manager.post('/api/cars', { plateNumber: plate2, brand: 'Ford', model: 'Transit', active: true })
+    const trip3 = await manager.post('/api/trips', {
+      carId: car2.id,
+      driverId: driver2.id,
+      plannedDepartureAt: '2026-10-06T08:00:00Z',
+    })
+    const bareTrip = await manager.post('/api/trips', { plannedDepartureAt: '2026-10-07T08:00:00Z' })
+    const p4 = await manager.post('/api/parcels', { description: 'Вручну в машину ' + u, seatsAmount: 2 })
+    await manager.post(`/api/parcels/${p4.id}/status`, { status: 'RECEIVED_BY_REPRESENTATIVE' })
+
+    await page.goto(BASE + `/parcels/${p4.id}`)
+    await page.waitForSelector('[data-slot=page-header]')
+    await page.getByRole('button', { name: 'Змінити статус' }).click()
+    await dialog().waitFor()
+    await r.pickSelect('status', 'У машині')
+    await page.waitForTimeout(300)
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(400)
+    ok('trip required for "in the car"', (await dialog().locator('[data-slot=field-error]').count()) >= 1)
+    await page.click('#st-trip')
+    const bareItem = page.locator('[data-slot=select-item]', { hasText: `#${bareTrip.id}` }).first()
+    await bareItem.waitFor({ state: 'visible' })
+    ok('trip without car and driver cannot be picked', (await bareItem.getAttribute('data-disabled')) != null)
+    await page.locator('[data-slot=select-item]', { hasText: `#${trip3.id}` }).first().click()
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(2000)
+    const p4After = await manager.get(`/api/parcels/${p4.id}`)
+    ok('both seats loaded into the chosen trip', p4After.status === 'IN_CAR' && p4After.tripId === trip3.id, p4After.status)
+    const trip3After = await manager.get(`/api/trips/${trip3.id}`)
+    ok('trip started preparing and counts the parcel', trip3After.status === 'PREPARING' && trip3After.loadedCount === 1)
+    await shot('10-manual-load')
     return r.finish()
   } catch (e) {
     return r.finish(e)

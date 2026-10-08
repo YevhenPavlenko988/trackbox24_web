@@ -8,6 +8,17 @@ export async function run() {
   if (parcel.status !== 'RECEIVED_BY_REPRESENTATIVE') {
     await manager.post(`/api/parcels/${parcel.id}/status`, { status: 'RECEIVED_BY_REPRESENTATIVE', force: true, comment: 'e2e reset' })
   }
+  // A parcel reaches a car only through a trip, so the status dialog needs one with a car and a free driver.
+  const su = uniq()
+  const se = `driver${su}s@test.ua`
+  await manager.post('/api/users', { email: se, password: 'driver123', firstName: 'Водій', lastName: su + 'С', roles: ['DRIVER'] })
+  const statusDriver = (await manager.get('/api/users?role=DRIVER&size=100')).content.find((x) => x.email === se)
+  const statusCar = await manager.post('/api/cars', { plateNumber: 'KC' + su.slice(0, 4) + 'XX', brand: 'Ford', model: 'Transit', active: true })
+  const statusTrip = await manager.post('/api/trips', {
+    carId: statusCar.id,
+    driverId: statusDriver.id,
+    plannedDepartureAt: '2026-10-09T08:00:00Z',
+  })
   const r = await createRunner('parcels-clients')
   const { page, ok, shot, dialog } = r
   const apiCalls = []
@@ -135,9 +146,15 @@ export async function run() {
     const items = await page.locator('[data-slot=select-item]').allTextContents()
     ok('allowed transitions only', items.length === 3 && items.includes('У машині') && items.includes('На складі') && items.includes('Скасовано'), items.join(','))
     await page.locator('[data-slot=select-item]', { hasText: 'У машині' }).click()
+    await page.waitForTimeout(300)
     await page.click('[data-slot=dialog-content] button[type=submit]')
-    await page.waitForTimeout(800)
+    await page.waitForTimeout(400)
+    ok('"in the car" asks which trip', (await dialog().locator('[data-slot=field-error]').count()) >= 1)
+    await r.pickSelect('st-trip', `#${statusTrip.id}`)
+    await page.click('[data-slot=dialog-content] button[type=submit]')
+    await page.waitForTimeout(1500)
     ok('status changed to IN_CAR', (await page.locator('[data-slot=page-header]').textContent()).includes('У машині'))
+    ok('parcel joined the chosen trip', (await manager.get(`/api/parcels/${parcel.id}`)).tripId === statusTrip.id)
 
     await page.getByRole('button', { name: 'Змінити статус' }).click()
     await dialog().waitFor()

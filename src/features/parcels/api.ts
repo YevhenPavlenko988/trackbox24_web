@@ -86,6 +86,21 @@ export function changeParcelStatus(id: number, body: ParcelStatusChangeRequest):
   return unwrap(api.POST('/api/parcels/{id}/status', { params: { path: { id } }, body }))
 }
 
+/**
+ * Puts a parcel in a car. Loading is a scan on the backend — that is what ties the parcel to a trip, and so to its
+ * car — and a seat is scanned one at a time, so a multi-seat parcel is sent seat by seat, in order.
+ */
+export async function loadParcelIntoTrip(parcel: ParcelResponse, tripId: number, comment?: string): Promise<ParcelResponse> {
+  const codes = parcel.seats?.length ? parcel.seats.map((s) => s.barcode) : [parcel.barcode]
+  let last: ParcelResponse | undefined
+  for (const code of codes) {
+    if (!code) continue
+    last = await unwrap(api.POST('/api/scan/load', { body: { code, manualInput: true, tripId, comment } }))
+  }
+  if (!last) throw new Error('parcel has no barcode')
+  return last
+}
+
 export function setParcelPayment(id: number, body: ParcelPaymentRequest): Promise<ParcelResponse> {
   return unwrap(api.PUT('/api/parcels/{id}/payment', { params: { path: { id } }, body }))
 }

@@ -10,6 +10,8 @@ import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { TripSelect } from '@/features/trips/TripSelect'
+import { useLoadParcelIntoTrip } from '@/features/trips/queries'
 import { WarehouseSelect } from '@/features/warehouses/WarehouseSelect'
 import { useMutationError } from '@/lib/api/problem'
 import type { ParcelResponse, ParcelStatus } from '@/lib/api/types'
@@ -23,10 +25,13 @@ const schema = z
     force: z.boolean(),
     comment: z.string().trim(),
     warehouseId: z.number().optional(),
+    tripId: z.number().optional(),
   })
   .superRefine((v, ctx) => {
     if (v.force && !v.comment) ctx.addIssue({ code: 'custom', path: ['comment'], message: 'required' })
     if (v.status === 'AT_WAREHOUSE' && v.warehouseId == null) ctx.addIssue({ code: 'custom', path: ['warehouseId'], message: 'required' })
+    // Forcing IN_CAR is a correction outside the flow, and the backend has no trip for it; see the hint below.
+    if (v.status === 'IN_CAR' && !v.force && v.tripId == null) ctx.addIssue({ code: 'custom', path: ['tripId'], message: 'required' })
   })
 
 type FormValues = z.infer<typeof schema>
@@ -48,9 +53,13 @@ export function StatusChangeDialog({
 }
 
 function StatusForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => void }) {
-  const { t } = useTranslation(['parcels', 'common', 'warehouses'])
+  const { t } = useTranslation(['parcels', 'common', 'warehouses', 'trips'])
   const change = useChangeParcelStatus(parcel.id!)
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { status: '', force: false, comment: '', warehouseId: undefined } })
+  const load = useLoadParcelIntoTrip()
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { status: '', force: false, comment: '', warehouseId: undefined, tripId: undefined },
+  })
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
   const force = form.watch('force')
@@ -63,12 +72,17 @@ function StatusForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () =
 
   const submit = form.handleSubmit(async (v) => {
     try {
-      await change.mutateAsync({
-        status: v.status as ParcelStatus,
-        force: v.force,
-        comment: v.comment || undefined,
-        warehouseId: v.status === 'AT_WAREHOUSE' ? v.warehouseId : undefined,
-      })
+      // A parcel joins a car by being loaded into a trip; the plain status change knows nothing about trips.
+      if (v.status === 'IN_CAR' && v.tripId != null) {
+        await load.mutateAsync({ parcel, tripId: v.tripId, comment: v.comment || undefined })
+      } else {
+        await change.mutateAsync({
+          status: v.status as ParcelStatus,
+          force: v.force,
+          comment: v.comment || undefined,
+          warehouseId: v.status === 'AT_WAREHOUSE' ? v.warehouseId : undefined,
+        })
+      }
       toast.success(t('common:common.saved'))
       onClose()
     } catch (e) {
@@ -141,6 +155,21 @@ function StatusForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () =
                   <FieldLabel htmlFor="st-warehouse">{t('warehouses:fields.warehouse')}</FieldLabel>
                   <WarehouseSelect id="st-warehouse" value={field.value} onChange={field.onChange} invalid={!!errors.warehouseId} />
                   <FieldErrorText error={errors.warehouseId} />
+                </Field>
+              )}
+            />
+          )}
+
+          {status === 'IN_CAR' && (
+            <Controller
+              control={form.control}
+              name="tripId"
+              render={({ field }) => (
+                <Field data-invalid={!!errors.tripId}>
+                  <FieldLabel htmlFor="st-trip">{t('trips:fields.trip')}</FieldLabel>
+                  <TripSelect id="st-trip" value={field.value} onChange={field.onChange} invalid={!!errors.tripId} />
+                  <FieldDescription>{force && field.value == null ? t('parcels:statusDialog.tripForced') : t('parcels:statusDialog.tripHint')}</FieldDescription>
+                  <FieldErrorText error={errors.tripId} />
                 </Field>
               )}
             />
