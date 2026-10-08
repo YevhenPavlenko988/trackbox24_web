@@ -171,7 +171,8 @@ export async function run() {
     ok('role filter in URL', true)
 
     // cars with notes
-    await page.goto(BASE + '/cars')
+    // Runs accumulate cars, so the new row is only on the first page with a large page size.
+    await page.goto(BASE + '/cars?size=200')
     await page.waitForSelector('[data-slot=page-header]:has-text("Машини")')
     await page.getByRole('button', { name: 'Додати' }).click()
     await dialog().waitFor()

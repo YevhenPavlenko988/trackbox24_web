@@ -13,7 +13,7 @@ export async function run() {
   const se = `driver${su}s@test.ua`
   await manager.post('/api/users', { email: se, password: 'driver123', firstName: 'Водій', lastName: su + 'С', roles: ['DRIVER'] })
   const statusDriver = (await manager.get('/api/users?role=DRIVER&size=100')).content.find((x) => x.email === se)
-  const statusCar = await manager.post('/api/cars', { plateNumber: 'KC' + su.slice(0, 4) + 'XX', brand: 'Ford', model: 'Transit', active: true })
+  const statusCar = (await manager.get('/api/cars?active=true&size=1')).content[0]
   const statusTrip = await manager.post('/api/trips', {
     carId: statusCar.id,
     driverId: statusDriver.id,

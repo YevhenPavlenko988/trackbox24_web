@@ -16,6 +16,7 @@ import {
   listDeletedTrips,
   planTripParcels,
   restoreTrip,
+  startLoadingTrip,
   unplanTripParcel,
   updateTrip,
   type TripListParams,
@@ -72,6 +73,11 @@ export function usePlanTripParcels(id: number) {
 export function useUnplanTripParcel(id: number) {
   const invalidate = useInvalidateTrips()
   return useMutation({ mutationFn: (parcelId: number) => unplanTripParcel(id, parcelId), onSuccess: invalidate })
+}
+
+export function useStartLoadingTrip(id: number) {
+  const invalidate = useInvalidateTrips()
+  return useMutation({ mutationFn: () => startLoadingTrip(id), onSuccess: invalidate })
 }
 
 export function useDepartTrip(id: number) {

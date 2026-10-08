@@ -1,4 +1,4 @@
-import { ArrowLeft, FileSpreadsheet, Flag, Pencil, Play, Plus, Trash2, X } from 'lucide-react'
+import { ArrowLeft, FileSpreadsheet, Flag, PackageOpen, Pencil, Play, Plus, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router'
@@ -19,7 +19,16 @@ import { formatDateTime } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { ParcelPickerDialog } from './ParcelPickerDialog'
 import { downloadTripRegister } from './api'
-import { useDeleteTrip, usePlanTripParcels, useTrip, useTripHistory, useTripParcels, useUnplanTripParcel, useUpdateTrip } from './queries'
+import {
+  useDeleteTrip,
+  usePlanTripParcels,
+  useStartLoadingTrip,
+  useTrip,
+  useTripHistory,
+  useTripParcels,
+  useUnplanTripParcel,
+  useUpdateTrip,
+} from './queries'
 import { acceptsLoading, canDepart, isOutsidePlan, isTripDeletable, seatProgress, splitTripParcels } from './status'
 import { CancelTripDialog, CompleteDialog, DepartDialog } from './TripActionDialogs'
 import { TripDialog } from './TripDialog'
@@ -37,6 +46,7 @@ export function TripPage() {
   const update = useUpdateTrip(tripId)
   const plan = usePlanTripParcels(tripId)
   const unplan = useUnplanTripParcel(tripId)
+  const startLoading = useStartLoadingTrip(tripId)
   const remove = useDeleteTrip()
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
@@ -83,6 +93,18 @@ export function TripPage() {
             </Button>
             {canEdit && (
             <>
+              {/* Loading usually starts with the first scan; this is for when the car is packed away from the scanner. */}
+              {trip.status === 'PLANNED' && (
+                <Tooltip>
+                  <TooltipTrigger render={<span />}>
+                    <Button variant="outline" disabled={!canDepart(trip)} onClick={() => run(() => startLoading.mutateAsync())}>
+                      <PackageOpen />
+                      {t('trips:actions.startLoading')}
+                    </Button>
+                  </TooltipTrigger>
+                  {!canDepart(trip) && <TooltipContent>{t('trips:actions.startLoadingHint')}</TooltipContent>}
+                </Tooltip>
+              )}
               {acceptsLoading(trip.status) && (
                 <Tooltip>
                   <TooltipTrigger render={<span />}>

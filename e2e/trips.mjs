@@ -61,6 +61,7 @@ export async function run() {
     const trip1 = Number(page.url().split('/').pop())
     ok('trip created as PLANNED', (await page.textContent('[data-slot=page-header]')).includes('Запланований'))
     ok('depart disabled without car/driver', await page.getByRole('button', { name: 'Виїхав' }).isDisabled())
+    ok('start loading disabled without car/driver', await page.getByRole('button', { name: 'Почати завантаження' }).isDisabled())
     await shot('01-trip-planned')
 
     await page.getByRole('button', { name: 'Редагувати план' }).click()
@@ -70,6 +71,12 @@ export async function run() {
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForTimeout(600)
     ok('car and driver assigned', !(await page.getByRole('button', { name: 'Виїхав' }).isDisabled()))
+
+    // Loading can be started without a scan; the button is gone once the trip is being prepared.
+    await page.getByRole('button', { name: 'Почати завантаження' }).click()
+    await page.waitForSelector('[data-slot=page-badges]:has-text("Завантаження")')
+    ok('loading started without a scan', (await manager.get(`/api/trips/${trip1}`)).status === 'PREPARING')
+    ok('start loading button gone while preparing', (await page.getByRole('button', { name: 'Почати завантаження' }).count()) === 0)
 
     await page.getByRole('button', { name: 'Запланувати посилки' }).click()
     await dialog().waitFor()
@@ -201,8 +208,8 @@ export async function run() {
     const d2 = `driver${u}b@test.ua`
     await manager.post('/api/users', { email: d2, password: 'driver123', firstName: 'Водій', lastName: u + 'Б', roles: ['DRIVER'] })
     const driver2 = (await manager.get(`/api/users?role=DRIVER&size=100`)).content.find((x) => x.email === d2)
-    const plate2 = 'KB' + u.slice(0, 4) + 'XX'
-    const car2 = await manager.post('/api/cars', { plateNumber: plate2, brand: 'Ford', model: 'Transit', active: true })
+    // Reuse a car instead of adding one on every run; only the driver has to be free of other trips.
+    const car2 = (await manager.get('/api/cars?active=true&size=1')).content[0]
     const trip3 = await manager.post('/api/trips', {
       carId: car2.id,
       driverId: driver2.id,

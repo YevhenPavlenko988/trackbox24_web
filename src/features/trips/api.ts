@@ -56,6 +56,11 @@ export function unplanTripParcel(id: number, parcelId: number): Promise<unknown>
   return unwrap(api.DELETE('/api/trips/{id}/parcels/{parcelId}', { params: { path: { id, parcelId } } }))
 }
 
+/** PLANNED -> PREPARING without a scan; the first loading scan does the same on its own. */
+export function startLoadingTrip(id: number): Promise<TripResponse> {
+  return unwrap(api.POST('/api/trips/{id}/start-loading', { params: { path: { id } } }))
+}
+
 export function departTrip(id: number, body: TripDepartRequest): Promise<TripResponse> {
   return unwrap(api.POST('/api/trips/{id}/depart', { params: { path: { id } }, body }))
 }
