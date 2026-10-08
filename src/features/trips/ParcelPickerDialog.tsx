@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ParcelStatusBadge } from '@/features/parcels/ParcelStatusBadge'
+import { SHIPPABLE_STATUSES } from '@/features/parcels/status'
 import { useParcels } from '@/features/parcels/queries'
 import { useDebounce } from '@/hooks/use-debounce'
 import type { ParcelResponse } from '@/lib/api/types'
@@ -33,10 +34,9 @@ export function ParcelPickerDialog({
   const [selected, setSelected] = useState<number[]>([])
   const [search, setSearch] = useState('')
   const query = useDebounce(search)
-  const received = useParcels({ status: 'RECEIVED_BY_REPRESENTATIVE', query, size: 50 })
-  const atWarehouse = useParcels({ status: 'AT_WAREHOUSE', query, size: 50 })
-  const rows: ParcelResponse[] = [...(received.data?.content ?? []), ...(atWarehouse.data?.content ?? [])].filter((p) => !excludeIds.includes(p.id!))
-  const loading = received.isPending || atWarehouse.isPending
+  const query_ = useParcels({ status: SHIPPABLE_STATUSES, query, size: 50 })
+  const rows: ParcelResponse[] = (query_.data?.content ?? []).filter((p) => !excludeIds.includes(p.id!))
+  const loading = query_.isPending
 
   const close = (o: boolean) => {
     if (!o) {

@@ -616,6 +616,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/scan/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Пакет офлайн-сканів
+         * @description Скани, зроблені без зв'язку, одним запитом. У кожного скану своя дія (`RECEIVE`, `TO_WAREHOUSE`, `LOAD`, `DELIVER`)
+         *     і ті самі поля й права, що в окремих ендпоінтах. Скани виконуються в порядку `scannedAt`, кожен окремо:
+         *     помилка одного не скасовує інших. В історію пишеться час скану. Скан з `id`, який уже оброблено,
+         *     повторно не виконується (`duplicate = true`), тому пакет можна безпечно надіслати ще раз.
+         *     Відповідь завжди 200 з результатом кожного скану: `ok = true` — прибрати з черги, інакше `status` і `detail`.
+         */
+        post: operations["batch"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parcels": {
         parameters: {
             query?: never;
@@ -2431,6 +2455,95 @@ export interface components {
              * @example 2
              */
             warehouseId?: number;
+        };
+        BatchScanItem: {
+            /**
+             * @description Унікальний ID скану, який генерує фронт (UUID). Повторно надісланий скан з тим самим id не виконується вдруге
+             * @example 6f1c2a9e-3b7d-4c51-9a0e-1d2f3e4a5b6c
+             */
+            id?: string;
+            /**
+             * @description Дія: RECEIVE — отримано представником, TO_WAREHOUSE — на склад, LOAD — в машину, DELIVER — видано клієнту
+             * @example LOAD
+             * @enum {string}
+             */
+            action?: "RECEIVE" | "TO_WAREHOUSE" | "LOAD" | "DELIVER";
+            /**
+             * @description Відсканований або введений код: штрих-код НП при отриманні, наш штрих-код далі
+             * @example PT9804080505
+             */
+            code?: string;
+            /**
+             * Format: date-time
+             * @description Коли зроблено скан на пристрої; записується в історію. Не вказано або в майбутньому — час обробки
+             * @example 2026-10-07T09:15:00Z
+             */
+            scannedAt?: string;
+            /**
+             * @description Код введено вручну, а не відскановано
+             * @example false
+             */
+            manualInput?: boolean;
+            /**
+             * @description Коментар до зміни статусу
+             * @example Пошкоджена упаковка
+             */
+            comment?: string;
+            /**
+             * Format: int64
+             * @description Для LOAD, обов'язково: рейс, у який вантажать
+             * @example 6
+             */
+            tripId?: number;
+            /**
+             * @description Для DELIVER: водій отримав оплату нашої доставки
+             * @example true
+             */
+            paymentReceived?: boolean;
+            /**
+             * Format: int64
+             * @description Для TO_WAREHOUSE, обов'язково: склад
+             * @example 2
+             */
+            warehouseId?: number;
+        };
+        BatchScanRequest: {
+            /** @description Скани, зроблені офлайн; обробляються в порядку scannedAt */
+            scans: components["schemas"]["BatchScanItem"][];
+        };
+        BatchScanResponse: {
+            /** @description Результат кожного скану в порядку запиту */
+            results?: components["schemas"]["BatchScanResult"][];
+        };
+        BatchScanResult: {
+            /**
+             * @description ID скану з запиту
+             * @example 6f1c2a9e-3b7d-4c51-9a0e-1d2f3e4a5b6c
+             */
+            id?: string;
+            /**
+             * @description true — скан виконано (або вже був виконаний раніше), його можна прибрати з черги
+             * @example true
+             */
+            ok?: boolean;
+            /**
+             * @description true — скан з цим id уже оброблено раніше, повторно не виконувався
+             * @example false
+             */
+            duplicate?: boolean;
+            /** @description Посилка після скану (при ok) */
+            parcel?: components["schemas"]["ParcelResponse"];
+            /**
+             * Format: int32
+             * @description HTTP-код помилки (при ok = false): 400, 403, 404, 409, 502, 500
+             * @example 400
+             */
+            status?: number;
+            /**
+             * @description Текст помилки (при ok = false)
+             * @example Посилку вже завантажено в рейс 1
+             */
+            detail?: string;
         };
         ParcelCreateRequest: {
             /**
@@ -7353,11 +7466,126 @@ export interface operations {
             };
         };
     };
+    batch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                /**
+                 * @example {
+                 *       "scans": [
+                 *         {
+                 *           "id": "6f1c2a9e-3b7d-4c51-9a0e-1d2f3e4a5b6c",
+                 *           "action": "RECEIVE",
+                 *           "code": "20451549454007",
+                 *           "scannedAt": "2026-10-07T09:15:00Z"
+                 *         },
+                 *         {
+                 *           "id": "0b8e7d6c-5a4f-4e3d-8c2b-1a0f9e8d7c6b",
+                 *           "action": "LOAD",
+                 *           "code": "PT9804080505",
+                 *           "tripId": 1,
+                 *           "scannedAt": "2026-10-07T09:40:00Z"
+                 *         },
+                 *         {
+                 *           "id": "9a8b7c6d-5e4f-4a3b-9c2d-1e0f9a8b7c6d",
+                 *           "action": "DELIVER",
+                 *           "code": "PT9804080505-1",
+                 *           "paymentReceived": true,
+                 *           "scannedAt": "2026-10-07T15:05:00Z"
+                 *         }
+                 *       ]
+                 *     }
+                 */
+                "application/json": components["schemas"]["BatchScanRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BatchScanResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/scan/batch"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/scan/batch"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/scan/batch"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     search: {
         parameters: {
             query?: {
-                /** @description Внутрішній статус */
-                status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+                /**
+                 * @description Внутрішні статуси: посилки в будь-якому з них. Кілька — `status=A&status=B` або `status=A,B`; не вказано — усі статуси
+                 * @example IN_NOVA_POSHTA
+                 */
+                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
                 /**
                  * @description ID клієнта
                  * @example 7
@@ -9744,8 +9972,11 @@ export interface operations {
     parcels_1: {
         parameters: {
             query?: {
-                /** @description Фільтр за статусом посилки */
-                status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+                /**
+                 * @description Внутрішні статуси: посилки в будь-якому з них. Кілька — `status=A&status=B` або `status=A,B`; не вказано — усі статуси
+                 * @example DELIVERED_TO_CLIENT
+                 */
+                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */

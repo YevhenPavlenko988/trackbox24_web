@@ -41,7 +41,7 @@ export async function listClientParcels(id: number, params: ClientParcelsParams)
     api.GET('/api/clients/{id}/parcels', {
       params: {
         path: { id },
-        query: { status: params.status, page: params.page, size: params.size, sort: params.sort ? [params.sort] : undefined },
+        query: { status: params.status ? [params.status] : undefined, page: params.page, size: params.size, sort: params.sort ? [params.sort] : undefined },
       },
     }),
   )

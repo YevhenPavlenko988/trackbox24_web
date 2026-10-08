@@ -3,7 +3,6 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { HistorySource, ParcelHistoryResponse } from '@/lib/api/types'
-import { translateComment } from '@/lib/backendText'
 import { formatDateTime } from '@/lib/format'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 
@@ -58,7 +57,7 @@ export function ParcelHistory({ entries, isLoading }: { entries?: ParcelHistoryR
             <p className="mt-1 text-sm text-muted-foreground">
               {e.changedByName}
               {e.changedByName && e.comment && ' — '}
-              {translateComment(e.comment)}
+              {e.comment}
             </p>
           )}
         </li>

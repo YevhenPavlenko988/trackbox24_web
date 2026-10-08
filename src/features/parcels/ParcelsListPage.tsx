@@ -17,13 +17,13 @@ import { MoveToWarehouseDialog } from '@/features/warehouses/MoveToWarehouseDial
 import { WarehouseSelect } from '@/features/warehouses/WarehouseSelect'
 import { useDebounce } from '@/hooks/use-debounce'
 import { useListParams } from '@/hooks/use-list-params'
-import type { Page } from '@/lib/api/page'
+import { emptyPage } from '@/lib/api/page'
 import type { ParcelResponse, ParcelStatus, PaymentStatus } from '@/lib/api/types'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ParcelsTable } from './ParcelsTable'
 import { inNpStateGroup, isNpStateGroup, NP_STATE_GROUPS, type NpStateGroup } from './npStatus'
-import { useParcelGroup, useSyncNovaPoshta } from './queries'
-import { compareBySort, isParcelTab, PARCEL_TABS, TAB_FILTER_STATUSES, tabForStatus, type ParcelTab } from './tabs'
+import { useParcels, useSyncNovaPoshta } from './queries'
+import { isParcelTab, PARCEL_TABS, TAB_FILTER_STATUSES, TAB_STATUSES, tabForStatus, type ParcelTab } from './tabs'
 import { isParcelDeletable } from './status'
 import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { ChannelSelect, isChannel } from '@/features/channels/channel'
@@ -76,7 +76,9 @@ export function ParcelsListPage() {
   const npGroup: NpStateGroup | undefined = isNpStateGroup(npGroupParam) ? npGroupParam : undefined
   const hasFilters = !!(urlQuery || status || clientId || representativeId || warehouseId || paymentStatus || deliveryCity || needsEnrichment || sort || npGroup || channel)
 
-  const query = useParcelGroup(tab, {
+  const query = useParcels({
+    // One status narrows inside the tab; otherwise the whole tab is asked for at once.
+    status: status ? [status] : TAB_STATUSES[tab],
     query: urlQuery,
     clientId,
     representativeId,
@@ -85,29 +87,17 @@ export function ParcelsListPage() {
     deliveryCity,
     channel,
     needsEnrichment,
+    page,
+    size,
     sort,
   })
-
-  // The tab's statuses come from several requests, so narrowing, sorting and paging happen here.
-  const group = query.data
-  const rows = (group?.content ?? [])
-    .filter((p) => !status || p.status === status)
-    .filter((p) => !npGroup || inNpStateGroup(p, npGroup))
-    .sort((a, b) => compareBySort(a, b, sort))
-  const totalPages = Math.max(1, Math.ceil(rows.length / size))
-  const current = Math.min(page, totalPages - 1)
-  const data: Page<ParcelResponse> = {
-    content: rows.slice(current * size, current * size + size),
-    size,
-    number: current,
-    totalElements: rows.length,
-    totalPages,
-  }
+  const data = query.data ?? emptyPage<ParcelResponse>()
+  const rows = npGroup ? data.content.filter((p) => inNpStateGroup(p, npGroup)) : data.content
 
   const [rawSelected, setSelected] = useState<Set<string | number>>(new Set())
   const [moving, setMoving] = useState(false)
   // Only rows on the current page count; stale ids from other pages/filters are ignored.
-  const visibleIds = new Set(data.content.map((p) => p.id ?? 0))
+  const visibleIds = new Set(rows.map((p) => p.id ?? 0))
   const selected = new Set([...rawSelected].filter((id) => visibleIds.has(Number(id))))
 
   const reset = () => {
@@ -239,11 +229,8 @@ export function ParcelsListPage() {
         )}
       </div>
 
-      {group && !group.loadedAll && (
-        <p className="mb-2 text-xs text-amber-700">{t('parcels:tabPartial', { shown: rows.length, total: group.serverTotal })}</p>
-      )}
       <ParcelsTable
-        rows={data.content}
+        rows={rows}
         isLoading={query.isPending}
         selection={canEdit ? { selected, onChange: setSelected } : undefined}
         actions={canEdit ? (p) => (isParcelDeletable(p) ? <DeleteEntityButton entity="parcels" id={p.id!} iconOnly /> : null) : undefined}

@@ -16,7 +16,8 @@ import type {
 } from '@/lib/api/types'
 
 export type ParcelListParams = PageParams & {
-  status?: ParcelStatus
+  /** Parcels in any of these statuses; empty or absent means every status. */
+  status?: ParcelStatus[]
   clientId?: number
   representativeId?: number
   needsEnrichment?: boolean
@@ -32,7 +33,7 @@ export async function listParcels(params: ParcelListParams): Promise<Page<Parcel
     api.GET('/api/parcels', {
       params: {
         query: {
-          status: params.status,
+          status: params.status?.length ? params.status : undefined,
           clientId: params.clientId,
           representativeId: params.representativeId,
           needsEnrichment: params.needsEnrichment,

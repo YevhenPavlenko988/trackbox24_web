@@ -22,8 +22,9 @@ export function seatsProgress(p: ParcelResponse): string {
   return reached === total ? String(total) : `${reached} / ${total}`
 }
 
+/** Storage is only charged while the parcel still sits at the branch, so a collected one is never "due". */
 export function isPaidStorageDue(p: ParcelResponse): boolean {
-  return !!p.npPaidStorageFrom && new Date(p.npPaidStorageFrom).getTime() <= Date.now()
+  return p.status === 'IN_NOVA_POSHTA' && !!p.npPaidStorageFrom && new Date(p.npPaidStorageFrom).getTime() <= Date.now()
 }
 
 export function ParcelsTable({

@@ -2,26 +2,6 @@
   "app": {
     "name": "TrackBox24"
   },
-  "backendComments": {
-    "loadingStarted": "Почалося завантаження",
-    "departed": "Виїхав",
-    "departedOdometer": "Виїхав, одометр {{km}} км",
-    "completed": "Завершено",
-    "completedOdometer": "Завершено, одометр {{km}} км",
-    "outsidePlan": "Поза планом",
-    "loadedOutsidePlan": "Завантажено поза планом",
-    "loadedOutsidePlanComment": "Завантажено поза планом. {{comment}}",
-    "notLoadedBeforeDeparture": "Не завантажено до виїзду",
-    "replanned": "Переплановано в рейс #{{id}}",
-    "toWarehouse": "На склад «{{name}}»",
-    "tripCancelled": "Рейс скасовано",
-    "tripCancelledToWarehouse": "Рейс скасовано, на склад «{{name}}»",
-    "allSeats": "Усі місця ({{count}})",
-    "createdManually": "Створено вручну",
-    "createdManuallyReceived": "Створено вручну як уже отриману",
-    "manualStatusChange": "Ручна зміна статусу на «{{status}}»",
-    "npRedirected": "Переадресовано Новою Поштою: ЕН {{from}} → {{to}}, посилку #{{id}} об'єднано"
-  },
   "nav": {
     "parcels": "Посилки",
     "clients": "Клієнти",

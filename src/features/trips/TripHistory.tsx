@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { TripEvent, TripHistoryResponse } from '@/lib/api/types'
-import { translateComment } from '@/lib/backendText'
 import { formatDateTime } from '@/lib/format'
 import { TripStatusBadge } from './TripStatusBadge'
 
@@ -58,7 +57,7 @@ export function TripHistory({ entries, isLoading }: { entries?: TripHistoryRespo
             <p className="mt-1 text-sm text-muted-foreground">
               {e.changedByName}
               {e.changedByName && e.comment && ' — '}
-              {translateComment(e.comment)}
+              {e.comment}
             </p>
           )}
         </li>
