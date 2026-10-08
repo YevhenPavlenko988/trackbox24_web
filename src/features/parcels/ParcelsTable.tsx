@@ -1,8 +1,9 @@
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, Route } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { DataTable, type Column, type Selection } from '@/components/common/DataTable'
+import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAccess } from '@/features/auth/access'
 import type { ParcelResponse } from '@/lib/api/types'
@@ -32,6 +33,7 @@ export function ParcelsTable({
   isLoading,
   hideClient = false,
   hideNp = false,
+  hidePlan = false,
   emptyText,
   actions,
   extra,
@@ -42,13 +44,15 @@ export function ParcelsTable({
   hideClient?: boolean
   /** Nova Poshta state, dates and payment: nothing to add once the parcel is in a trip. */
   hideNp?: boolean
+  /** The trip plan badge: redundant on a trip's own page, where the section already says it. */
+  hidePlan?: boolean
   emptyText?: ReactNode
   actions?: (p: ParcelResponse) => ReactNode
   /** Rendered next to the status badge (e.g. "outside the plan"). */
   extra?: (p: ParcelResponse) => ReactNode
   selection?: Selection
 }) {
-  const { t } = useTranslation(['parcels', 'common'])
+  const { t } = useTranslation(['parcels', 'common', 'trips'])
   const navigate = useNavigate()
   const { canSeeMoney } = useAccess()
 
@@ -70,6 +74,13 @@ export function ParcelsTable({
         <div className="flex flex-wrap items-center gap-1.5">
           <ParcelStatusBadge status={p.status} />
           {p.status === 'AT_WAREHOUSE' && p.warehouseName && <span className="text-xs text-muted-foreground">{p.warehouseName}</span>}
+          {/* Planned for a trip but not loaded yet: otherwise it looks free to plan elsewhere. */}
+          {!hidePlan && p.plannedTripId != null && p.tripId == null && (
+            <Badge variant="outline" className="gap-1 font-normal">
+              <Route className="size-3" />
+              {t('trips:picker.inPlan', { id: p.plannedTripId })}
+            </Badge>
+          )}
           {extra?.(p)}
           {p.needsEnrichment && (
             <Tooltip>

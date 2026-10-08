@@ -87,6 +87,15 @@ export async function run() {
     ok('two parcels planned', (await page.textContent('body')).includes('План (2)'))
     await shot('02-trip-plan')
 
+    // The general list has to say the parcel is already in a plan, or it looks free to plan elsewhere.
+    await page.goto(BASE + `/parcels?tab=company&query=${p1.barcode}`)
+    await page.waitForSelector(`table tbody tr:has-text("${p1.barcode}")`)
+    ok('planned parcel marked in the general list', (await page.locator(`table tbody tr:has-text("${p1.barcode}")`).textContent()).includes(`У плані рейсу #${trip1}`))
+    await shot('02b-planned-marked')
+    await page.goto(BASE + `/trips/${trip1}`)
+    await page.waitForSelector(`table tbody tr:has-text("${p2.barcode}")`)
+    ok('trip page does not repeat the plan badge', !(await page.textContent('body')).includes(`У плані рейсу #${trip1}`))
+
     await page.locator(`table tbody tr:has-text("${p2.barcode}")`).getByRole('button', { name: 'Прибрати з плану' }).click()
     await page.waitForSelector('text=План (1)')
     ok('parcel unplanned', true)
