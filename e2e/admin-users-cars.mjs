@@ -112,7 +112,8 @@ export async function run() {
     const navM = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
     ok('manager nav has 8 items incl. trash', navM.length === 8 && navM.includes('Кошик'), navM.join(','))
 
-    await page.goto(BASE + '/users?size=100')
+    // Filtered by role: earlier runs leave over a hundred users, and the seeded ones fall onto page 2.
+    await page.goto(BASE + '/users?role=REPRESENTATIVE&size=100')
     await page.waitForSelector('table tbody tr:has-text("rep@test.ua")')
     await shot('05-users-list')
     await page.getByRole('button', { name: 'Додати' }).click()
@@ -129,6 +130,9 @@ export async function run() {
     ok('representative phone required', phoneErr.some((e) => e.includes("Обов'язкове")), phoneErr.join(','))
     await page.fill('#u-phone', '38050' + u + '1')
     await page.click('[data-slot=dialog-content] button[type=submit]')
+    await dialog().waitFor({ state: 'hidden' })
+    // Earlier runs leave enough users to push a new one onto page 2; the role filter keeps the list short.
+    await page.goto(BASE + '/users?role=REPRESENTATIVE&size=100')
     const repRow = page.locator(`table tbody tr:has-text("rep${u}@test.ua")`)
     await repRow.waitFor()
     ok('representative created', true)

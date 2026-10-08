@@ -7,10 +7,27 @@ import { HomeRedirect, RedirectIfAuthenticated, RequireAdmin, RequireAuth, Requi
 
 type PageModule = Record<string, unknown>
 
-/** Code-splits a page: `page(() => import('...'), 'ExportName')`. */
-const page = (load: () => Promise<PageModule>, name: string) => async () => ({
-  Component: (await load())[name] as ComponentType,
-})
+const RELOADED = 'tb24.chunkReload'
+
+/**
+ * Code-splits a page: `page(() => import('...'), 'ExportName')`.
+ * A deploy replaces the hashed chunks, so a tab left open asks for a file that is gone. Reload once to pick up
+ * the new build; the flag stops a reload loop when the import fails for any other reason.
+ */
+const page = (load: () => Promise<PageModule>, name: string) => async () => {
+  try {
+    const module = await load()
+    sessionStorage.removeItem(RELOADED)
+    return { Component: module[name] as ComponentType }
+  } catch (e) {
+    if (!sessionStorage.getItem(RELOADED)) {
+      sessionStorage.setItem(RELOADED, '1')
+      window.location.reload()
+      await new Promise(() => {}) // the reload is on its way; never resolve
+    }
+    throw e
+  }
+}
 
 export const router = createBrowserRouter([
   {
