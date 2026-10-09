@@ -11,8 +11,8 @@ export async function run() {
   // A parcel reaches a car only through a trip, so the status dialog needs one with a car and a free driver.
   const su = uniq()
   const se = `driver${su}s@test.ua`
-  await manager.post('/api/users', { email: se, password: 'driver123', firstName: 'Водій', lastName: su + 'С', roles: ['DRIVER'] })
-  const statusDriver = (await manager.get('/api/users?role=DRIVER&size=100')).content.find((x) => x.email === se)
+  // Take the id from the create response: runs accumulate drivers and a new one no longer fits on a listing page.
+  const statusDriver = await manager.post('/api/users', { email: se, password: 'driver123', firstName: 'Водій', lastName: su + 'С', roles: ['DRIVER'] })
   const statusCar = (await manager.get('/api/cars?active=true&size=1')).content[0]
   const statusTrip = await manager.post('/api/trips', {
     carId: statusCar.id,

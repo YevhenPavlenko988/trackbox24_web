@@ -215,8 +215,8 @@ export async function run() {
 
     // --- a manager puts a parcel in a car from the parcel page: the trip is what names the car ---
     const d2 = `driver${u}b@test.ua`
-    await manager.post('/api/users', { email: d2, password: 'driver123', firstName: 'Водій', lastName: u + 'Б', roles: ['DRIVER'] })
-    const driver2 = (await manager.get(`/api/users?role=DRIVER&size=100`)).content.find((x) => x.email === d2)
+    // Take the id from the create response: runs accumulate drivers and a new one no longer fits on a listing page.
+    const driver2 = await manager.post('/api/users', { email: d2, password: 'driver123', firstName: 'Водій', lastName: u + 'Б', roles: ['DRIVER'] })
     // Reuse a car instead of adding one on every run; only the driver has to be free of other trips.
     const car2 = (await manager.get('/api/cars?active=true&size=1')).content[0]
     const trip3 = await manager.post('/api/trips', {

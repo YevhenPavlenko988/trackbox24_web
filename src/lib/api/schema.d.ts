@@ -2741,6 +2741,11 @@ export interface components {
              * @example 0
              */
             failures?: number;
+            /**
+             * @description Текст останньої помилки (якщо були)
+             * @example HTTP connect timed out
+             */
+            lastError?: string;
         };
         ChangePasswordRequest: {
             /**

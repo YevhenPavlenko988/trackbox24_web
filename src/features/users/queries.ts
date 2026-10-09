@@ -16,9 +16,12 @@ export function useUsers(params: UserListParams) {
   })
 }
 
-/** Users with a role, for pickers; a platform admin in company mode must pass the company explicitly. */
+/**
+ * Users with a role, for pickers; a platform admin in company mode must pass the company explicitly.
+ * The picker has no search, so everyone with the role has to be in it: a page of 100 silently dropped the rest.
+ */
 export function useUsersByRole(role: Role) {
-  const params: UserListParams = { role, companyId: getViewCompanyId() ?? undefined, size: 100 }
+  const params: UserListParams = { role, companyId: getViewCompanyId() ?? undefined, size: 500 }
   return useQuery({
     queryKey: userKeys.list(params),
     queryFn: () => listUsers(params),
