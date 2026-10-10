@@ -1,4 +1,4 @@
-import { AlertCircle, Route } from 'lucide-react'
+import { AlertCircle, Route, Truck } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
@@ -44,7 +44,7 @@ export function ParcelsTable({
   hideClient?: boolean
   /** Nova Poshta state, dates and payment: nothing to add once the parcel is in a trip. */
   hideNp?: boolean
-  /** The trip plan badge: redundant on a trip's own page, where the section already says it. */
+  /** The trip badges: redundant on a trip's own page, where the section already says it. */
   hidePlan?: boolean
   emptyText?: ReactNode
   actions?: (p: ParcelResponse) => ReactNode
@@ -79,6 +79,13 @@ export function ParcelsTable({
             <Badge variant="outline" className="gap-1 font-normal">
               <Route className="size-3" />
               {t('trips:picker.inPlan', { id: p.plannedTripId })}
+            </Badge>
+          )}
+          {/* Actually loaded: «У машині» alone does not say whose car it is in. */}
+          {!hidePlan && p.tripId != null && (
+            <Badge variant="secondary" className="gap-1 font-normal">
+              <Truck className="size-3" />
+              {t('trips:one', { id: p.tripId })}
             </Badge>
           )}
           {extra?.(p)}

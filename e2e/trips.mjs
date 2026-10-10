@@ -126,7 +126,16 @@ export async function run() {
     ok('trip is PREPARING with loaded section', body1.includes('У машині / видано (2)') && body1.includes('План (1)'))
     ok('outside-plan badge shown', body1.includes('поза планом'))
     ok('seat progress shown', body1.includes('Завантажено місць: 2 з 2'))
+    ok('trip page does not repeat the trip badge', !body1.includes(`Рейс #${trip1}` + ' '))
     await shot('03-trip-preparing')
+
+    // «У машині» in the general list has to say which car, or a parcel looks loaded into nothing.
+    await page.goto(BASE + `/parcels?tab=company&query=${p1.barcode}`)
+    await page.waitForSelector(`table tbody tr:has-text("${p1.barcode}")`)
+    ok('loaded parcel names its trip in the general list', (await page.locator(`table tbody tr:has-text("${p1.barcode}")`).textContent()).includes(`Рейс #${trip1}`))
+    await shot('03b-loaded-trip-marked')
+    await page.goto(BASE + `/trips/${trip1}`)
+    await page.waitForSelector('[data-slot=page-header]:has-text("Завантаження")')
 
     await page.getByRole('button', { name: 'Редагувати план' }).click()
     await dialog().waitFor()
