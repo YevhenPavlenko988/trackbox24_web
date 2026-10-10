@@ -80,7 +80,11 @@ export async function createRunner(name) {
     },
     async pickSelect(triggerId, text) {
       await page.click('#' + triggerId)
-      await page.locator('[data-slot=select-item]', { hasText: text }).first().click()
+      await page.locator('[data-slot=select-item]:visible', { hasText: text }).first().click()
+    },
+    /** Texts of the open select's options; closed popups stay in the DOM and must not be read. */
+    async selectOptions() {
+      return page.locator('[data-slot=select-item]:visible').allTextContents()
     },
     async finish(crash) {
       if (crash) {
