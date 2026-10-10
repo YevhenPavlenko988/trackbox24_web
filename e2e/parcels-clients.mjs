@@ -114,6 +114,25 @@ export async function run() {
     await page.waitForTimeout(800)
     ok('client edit saved', (await page.textContent('body')).includes('Харків'))
 
+    // What the client owes us: the card sums our delivery prices and separates a parcel handed over unpaid.
+    const mu = uniq()
+    const moneyClient = await manager.post('/api/clients', { type: 'PRIVATE_PERSON', firstName: 'Борг', lastName: 'Клієнт' + mu, phone: '38097' + mu + '2', city: 'Київ' })
+    const deliver = async (price, paid) => {
+      const mp = await manager.post('/api/parcels', { clientId: moneyClient.id, description: 'Борг ' + mu, deliveryPrice: price })
+      await manager.post(`/api/parcels/${mp.id}/status`, { status: 'IN_CAR', force: true, comment: 'e2e' })
+      await manager.post(`/api/parcels/${mp.id}/status`, { status: 'DELIVERED_TO_CLIENT' })
+      if (paid) await manager.put(`/api/parcels/${mp.id}/payment`, { status: 'PAID', method: 'CASH' })
+    }
+    await deliver(100, true)
+    await deliver(250, false)
+    await manager.post('/api/parcels', { clientId: moneyClient.id, description: 'Попереду ' + mu, deliveryPrice: 70 })
+    await page.goto(BASE + `/clients/${moneyClient.id}`)
+    await page.waitForSelector('text=Гроші за доставку')
+    const moneyCard = await page.locator('[data-slot=card]:has-text("Гроші за доставку")').textContent()
+    ok('client money totals shown', /420\s*грн/.test(moneyCard) && /100\s*грн/.test(moneyCard), moneyCard?.replace(/\s+/g, ' ').slice(0, 160))
+    ok('debt and upcoming split', /250\s*грн/.test(moneyCard) && /70\s*грн/.test(moneyCard))
+    await shot('04b-client-money')
+
     await page.goto(BASE + `/clients/${parcel.clientId}?tab=parcels`)
     await page.waitForSelector('table tbody tr:has-text("PT")')
     ok('client parcels tab lists parcels', true)

@@ -19,6 +19,7 @@ export async function apiAs({ email, password }) {
   return {
     get: (path) => fetch(API + path, { headers }).then((r) => r.json()),
     post: (path, body) => fetch(API + path, { method: 'POST', headers, body: JSON.stringify(body) }).then((r) => r.json()),
+    put: (path, body) => fetch(API + path, { method: 'PUT', headers, body: JSON.stringify(body) }).then((r) => r.json()),
   }
 }
 

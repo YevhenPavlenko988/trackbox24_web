@@ -23,6 +23,7 @@ import { formatPhone } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { clientDisplayName } from './api'
 import { ClientForm } from './ClientForm'
+import { ClientMoneyCard } from './ClientMoneyCard'
 import { useClient, useClientParcels, useUpdateClient } from './queries'
 import { clientToFormValues } from './schema'
 
@@ -31,7 +32,7 @@ export function ClientPage() {
   const clientId = Number(id)
   const { t } = useTranslation(['clients', 'common'])
   const query = useClient(clientId)
-  const { canEdit } = useAccess()
+  const { canEdit, canSeeMoney } = useAccess()
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
   const { get, set } = useListParams()
@@ -64,7 +65,7 @@ export function ClientPage() {
           <TabsTrigger value="info">{t('clients:tabs.info')}</TabsTrigger>
           <TabsTrigger value="parcels">{t('clients:tabs.parcels')}</TabsTrigger>
         </TabsList>
-        <TabsContent value="info" className="mt-4">
+        <TabsContent value="info" className="mt-4 flex flex-col gap-4">
           <Card>
             <CardContent>
               <DetailsList
@@ -83,6 +84,7 @@ export function ClientPage() {
               />
             </CardContent>
           </Card>
+          {canSeeMoney && <ClientMoneyCard money={client.money} />}
         </TabsContent>
         <TabsContent value="parcels" className="mt-4">
           {tab === 'parcels' && <ClientParcels clientId={clientId} />}

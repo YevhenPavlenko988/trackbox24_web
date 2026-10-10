@@ -21,6 +21,7 @@ export type NpState = NonNullable<ParcelResponse['npState']>
 export type DeletedItem<T> = { item?: T; deletedAt?: string; deletedBy?: string }
 
 export type ClientResponse = Schemas['ClientResponse']
+export type ClientMoney = Schemas['ClientMoney']
 export type ClientRequest = Schemas['ClientRequest']
 
 export type CompanyRequest = Schemas['CompanyRequest']

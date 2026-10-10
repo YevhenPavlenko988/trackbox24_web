@@ -2263,6 +2263,34 @@ export interface components {
              */
             channelDetails?: string;
         };
+        ClientMoney: {
+            /**
+             * @description Валюта
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR";
+            /**
+             * @description Наша ціна доставки всіх посилок клієнта (крім скасованих)
+             * @example 105
+             */
+            total?: number;
+            /**
+             * @description Оплачено
+             * @example 70
+             */
+            paid?: number;
+            /**
+             * @description Борг: посилку видано, доставку не оплачено
+             * @example 35
+             */
+            debt?: number;
+            /**
+             * @description Ще не видано й не оплачено (заплатить при видачі)
+             * @example 0
+             */
+            upcoming?: number;
+        };
         ClientResponse: {
             /**
              * Format: int64
@@ -2332,6 +2360,8 @@ export interface components {
              * @example @kyivkraut_shop
              */
             channelDetails?: string;
+            /** @description Гроші за посилки клієнта по валютах: усього, оплачено, борг, ще до оплати. Лише в картці клієнта; представнику не видно */
+            money?: components["schemas"]["ClientMoney"][];
         };
         CarRequest: {
             /**
