@@ -54,5 +54,8 @@ export type ParcelSource = NonNullable<ParcelResponse['source']>
 export type HistorySource = NonNullable<ParcelHistoryResponse['source']>
 export type Currency = NonNullable<ParcelResponse['deliveryPriceCurrency']>
 export type PaymentStatus = NonNullable<ParcelResponse['paymentStatus']>
+export type PaymentMethod = NonNullable<ParcelResponse['paymentMethod']>
+export type TripPayments = NonNullable<TripResponse['payments']>
+export type TripPaymentLine = NonNullable<TripPayments['received']>[number]
 
 export type Channel = NonNullable<ClientRequest['channel']>

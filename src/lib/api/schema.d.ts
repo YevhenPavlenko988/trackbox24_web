@@ -1451,6 +1451,37 @@ export interface components {
              */
             notes?: string;
         };
+        Line: {
+            /**
+             * @description Валюта
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR";
+            /**
+             * @description Спосіб оплати: CASH, UA_CARD, FOREIGN_CARD; немає — не вказано (або для notReceived)
+             * @example CASH
+             * @enum {string}
+             */
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            /**
+             * @description Сума
+             * @example 70
+             */
+            amount?: number;
+            /**
+             * Format: int32
+             * @description Кількість посилок
+             * @example 2
+             */
+            parcels?: number;
+        };
+        TripPayments: {
+            /** @description Отримані оплати: по валюті й способу оплати (method немає — спосіб не вказано) */
+            received?: components["schemas"]["Line"][];
+            /** @description Видано без оплати: по валюті */
+            notReceived?: components["schemas"]["Line"][];
+        };
         TripResponse: {
             /**
              * Format: int64
@@ -1566,6 +1597,8 @@ export interface components {
              * @example 7
              */
             deliveredCount?: number;
+            /** @description Наші оплати по рейсу за валютами й способами оплати (у картці рейсу й при завершенні; представнику не видно) */
+            payments?: components["schemas"]["TripPayments"];
         };
         ParcelUpdateRequest: {
             /**
@@ -1816,6 +1849,12 @@ export interface components {
              */
             paidBy?: string;
             /**
+             * @description Спосіб оплати: CASH — готівка, UA_CARD — українська картка, FOREIGN_CARD — закордонна картка
+             * @example CASH
+             * @enum {string}
+             */
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            /**
              * @description ПІБ відправника
              * @example Петренко Олег
              */
@@ -2065,6 +2104,12 @@ export interface components {
              * @example 2026-10-03T15:20:00Z
              */
             paidAt?: string;
+            /**
+             * @description Спосіб оплати (для PAID): CASH, UA_CARD, FOREIGN_CARD
+             * @example UA_CARD
+             * @enum {string}
+             */
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
         };
         CompanyRequest: {
             /**
@@ -2513,6 +2558,12 @@ export interface components {
              */
             paymentReceived?: boolean;
             /**
+             * @description Для видачі: спосіб оплати — CASH (готівка), UA_CARD (українська картка), FOREIGN_CARD (закордонна картка). Вказаний спосіб теж означає, що оплату отримано
+             * @example CASH
+             * @enum {string}
+             */
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            /**
              * Format: int64
              * @description Тільки для переміщення на склад, обов'язково: склад, куди переміщають
              * @example 2
@@ -2563,6 +2614,12 @@ export interface components {
              * @example true
              */
             paymentReceived?: boolean;
+            /**
+             * @description Для видачі: спосіб оплати — CASH (готівка), UA_CARD (українська картка), FOREIGN_CARD (закордонна картка). Вказаний спосіб теж означає, що оплату отримано
+             * @example CASH
+             * @enum {string}
+             */
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
             /**
              * Format: int64
              * @description Для TO_WAREHOUSE, обов'язково: склад

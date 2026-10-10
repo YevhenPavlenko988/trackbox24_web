@@ -14,7 +14,7 @@ export async function run() {
   const warehouse = await manager.post('/api/warehouses', { name: 'Склад ' + u, address: 'вул. Складська, 1' })
   const p1 = await manager.post('/api/parcels', { description: 'Для рейсу A ' + u, senderName: 'Відправник A' })
   const p2 = await manager.post('/api/parcels', { description: 'Для рейсу B ' + u, senderName: 'Відправник B' })
-  const p3 = await manager.post('/api/parcels', { description: 'Для рейсу C ' + u, senderName: 'Відправник C' })
+  const p3 = await manager.post('/api/parcels', { description: 'Для рейсу C ' + u, senderName: 'Відправник C', deliveryPrice: 450 })
   const driver = await apiAs({ email: driverEmail, password: 'driver123' })
 
   const r = await createRunner('trips')
@@ -145,8 +145,9 @@ export async function run() {
     await shot('04-trip-in-progress')
 
     // deliver p3, keep p1 in the car → complete must 409
-    const deliver = await driver.post('/api/scan/deliver', { code: p3.barcode })
+    const deliver = await driver.post('/api/scan/deliver', { code: p3.barcode, paymentMethod: 'CASH' })
     ok('driver deliver scan accepted', deliver.status === 'DELIVERED_TO_CLIENT')
+    ok('delivery payment method recorded', deliver.paymentStatus === 'PAID' && deliver.paymentMethod === 'CASH')
     await page.getByRole('button', { name: 'Завершити' }).click()
     await dialog().waitFor()
     await page.fill('#cp-odo', '100')
@@ -156,7 +157,10 @@ export async function run() {
     await page.fill('#cp-odo', '120350')
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await dialog().getByText('У машині ще є посилки').waitFor()
-    ok('409 shows undelivered parcels', (await dialog().textContent()).includes(p1.barcode))
+    const conflictText = await dialog().textContent()
+    ok('409 shows undelivered parcels', conflictText.includes(p1.barcode))
+    // The driver settles up at the end of the trip, so the takings are in front of them while completing.
+    ok('409 shows the trip takings', conflictText.includes('Готівка') && conflictText.includes('450'))
     await shot('05-complete-409')
     await r.pickSelect('cp-warehouse', 'Склад ' + u)
     await dialog().getByRole('button', { name: 'Перемістити на склад і завершити' }).click()
@@ -164,6 +168,7 @@ export async function run() {
     const done = await page.textContent('body')
     ok('trip completed after moving to warehouse', done.includes('120350'))
     ok('no actions after completion', (await page.getByRole('button', { name: 'Завершити' }).count()) === 0)
+    ok('trip card shows the money', done.includes('Гроші по рейсу') && done.includes('Готівка'))
     await shot('06-trip-completed')
     const p1Now = await manager.get(`/api/parcels/${p1.id}`)
     ok('undelivered parcel is at warehouse', p1Now.status === 'AT_WAREHOUSE' && p1Now.warehouseId === warehouse.id)

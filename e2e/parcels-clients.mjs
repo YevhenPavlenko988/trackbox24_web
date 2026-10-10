@@ -262,9 +262,12 @@ export async function run() {
     ok('delivery price saved', (await page.textContent('body')).includes('Не оплачено'))
     await page.getByRole('button', { name: 'Позначити оплаченою' }).click()
     await dialog().waitFor()
+    // How the money came in is part of marking it paid: the trip sums the takings by method.
+    await dialog().getByText('Українська картка').click()
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForSelector('[data-slot=badge]:has-text("Оплачено")')
     ok('parcel marked paid', true)
+    ok('payment method saved', (await page.textContent('body')).includes('Українська картка'))
     await shot('11-parcel-paid')
     await page.goto(BASE + '/parcels?tab=company&paymentStatus=PAID')
     await page.waitForSelector(`table tbody tr:has-text("${wp.barcode}")`)

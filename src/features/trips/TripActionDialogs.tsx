@@ -17,8 +17,9 @@ import { parseNumber } from '@/features/parcels/status'
 import { useMoveParcelsToWarehouse } from '@/features/warehouses/queries'
 import { WarehouseSelect } from '@/features/warehouses/WarehouseSelect'
 import { isApiError, showApiError, useMutationError } from '@/lib/api/problem'
-import type { ParcelResponse, TripResponse } from '@/lib/api/types'
+import type { ParcelResponse, TripPayments, TripResponse } from '@/lib/api/types'
 import { useCancelTrip, useCompleteTrip, useDepartTrip } from './queries'
+import { TripPaymentsSummary } from './TripPaymentsSummary'
 
 const odometer = z.string().trim().refine((s) => s === '' || /^\d+$/.test(s), 'number')
 
@@ -81,6 +82,8 @@ export function CompleteDialog({ trip, open, onOpenChange }: { trip: TripRespons
   const move = useMoveParcelsToWarehouse()
   const [undelivered, setUndelivered] = useState<ParcelResponse[]>([])
   const [warehouseId, setWarehouseId] = useState<number | undefined>()
+  // The 409 carries a fresher count than the trip loaded into this page.
+  const [payments, setPayments] = useState<TripPayments | undefined>(trip.payments)
   const start = trip.startOdometerKm
   const schema = z.object({
     endOdometerKm: odometer.refine((s) => s === '' || start == null || Number(s) >= start, 'endOdometerLess'),
@@ -100,6 +103,7 @@ export function CompleteDialog({ trip, open, onOpenChange }: { trip: TripRespons
     } catch (e) {
       if (isApiError(e) && e.status === 409 && Array.isArray(e.extensions.undeliveredParcels)) {
         setUndelivered(e.extensions.undeliveredParcels as ParcelResponse[])
+        if (e.extensions.payments) setPayments(e.extensions.payments as TripPayments)
         return
       }
       onError(e)
@@ -119,7 +123,10 @@ export function CompleteDialog({ trip, open, onOpenChange }: { trip: TripRespons
   })
 
   const close = (o: boolean) => {
-    if (!o) setUndelivered([])
+    if (!o) {
+      setUndelivered([])
+      setPayments(trip.payments)
+    }
     onOpenChange(o)
   }
 
@@ -132,6 +139,11 @@ export function CompleteDialog({ trip, open, onOpenChange }: { trip: TripRespons
         {open && (
           <form onSubmit={undelivered.length ? moveAndRetry : submit} noValidate>
             <FieldGroup>
+              {!!(payments?.received?.length || payments?.notReceived?.length) && (
+                <div className="rounded-md border p-3">
+                  <TripPaymentsSummary payments={payments} />
+                </div>
+              )}
               <Field data-invalid={!!errors.endOdometerKm}>
                 <FieldLabel htmlFor="cp-odo">{t('trips:fields.endOdometerKm')}</FieldLabel>
                 <Input id="cp-odo" inputMode="numeric" aria-invalid={!!errors.endOdometerKm} {...form.register('endOdometerKm')} />

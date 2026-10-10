@@ -288,6 +288,7 @@ export function ParcelPage() {
                   },
                   { label: t('parcels:payment.paidAt'), value: formatDateTime(p.paidAt) },
                   { label: t('parcels:payment.paidBy'), value: p.paidBy },
+                  { label: t('parcels:payment.method'), value: p.paymentMethod ? t(`common:paymentMethod.${p.paymentMethod}`) : undefined },
                   { label: t('parcels:fields.npDeliveryCost'), value: p.npDeliveryCost ? formatMoney(p.npDeliveryCost) : undefined },
                   { label: t('parcels:fields.npCodAmount'), value: p.npCodAmount ? formatMoney(p.npCodAmount) : undefined },
                 ]}

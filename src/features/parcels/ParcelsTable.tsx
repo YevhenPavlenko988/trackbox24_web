@@ -183,6 +183,7 @@ export function ParcelsTable({
                 {p.deliveryPrice != null && (
                   <span className={p.paymentStatus === 'PAID' ? 'text-xs text-emerald-700' : 'text-xs text-amber-700'}>
                     {t(`parcels:payment.${p.paymentStatus ?? 'UNPAID'}`)}
+                    {p.paymentMethod && ` · ${t(`common:paymentMethod.${p.paymentMethod}`)}`}
                   </span>
                 )}
               </div>

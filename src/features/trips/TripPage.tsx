@@ -33,6 +33,7 @@ import { acceptsLoading, canDepart, isOutsidePlan, isTripDeletable, seatProgress
 import { CancelTripDialog, CompleteDialog, DepartDialog } from './TripActionDialogs'
 import { TripDialog } from './TripDialog'
 import { TripHistory } from './TripHistory'
+import { TripPaymentsSummary } from './TripPaymentsSummary'
 import { TripStatusBadge } from './TripStatusBadge'
 
 export function TripPage() {
@@ -185,6 +186,20 @@ export function TripPage() {
             />
           </CardContent>
         </Card>
+
+        {trip.payments && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('trips:payments.title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TripPaymentsSummary payments={trip.payments} />
+              {!trip.payments.received?.length && !trip.payments.notReceived?.length && (
+                <p className="text-sm text-muted-foreground">{t('trips:payments.empty')}</p>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {acceptsLoading(trip.status) && (
           <Card>
