@@ -1,16 +1,26 @@
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Separator } from '@/components/ui/separator'
 import type { ClientMoney } from '@/lib/api/types'
 import { formatMoney } from '@/lib/format'
 
+type Figure = 'paid' | 'debt' | 'upcoming'
+
 /**
- * What the client's parcels add up to, by currency: the backend splits our delivery price into paid,
- * owed (handed over without paying) and still to come. Cancelled parcels and parcels without a price are left out.
- * A representative never gets this field.
+ * Two different questions, so two blocks: what the client has brought in since the beginning, and what is
+ * outstanding right now. Mixing them in one row reads as a single total, which it is not.
+ *
+ * A representative never gets this field. Cancelled parcels and parcels without our price are not counted.
  */
 export function ClientMoneyCard({ money }: { money?: ClientMoney[] }) {
   const { t } = useTranslation('clients')
   if (!money?.length) return null
+
+  // Only the currencies that actually have something; a row of zeroes in every currency says nothing.
+  const amounts = (key: Figure) => money.filter((m) => (m[key] ?? 0) > 0).map((m) => formatMoney(m[key], m.currency))
+  const earned = amounts('paid')
+  const debt = amounts('debt')
+  const upcoming = amounts('upcoming')
 
   return (
     <Card>
@@ -18,24 +28,26 @@ export function ClientMoneyCard({ money }: { money?: ClientMoney[] }) {
         <CardTitle>{t('money.title')}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {money.map((m) => (
-          <div key={m.currency} className="flex flex-wrap gap-x-8 gap-y-3">
-            <Figure label={t('money.total')} value={formatMoney(m.total, m.currency)} />
-            <Figure label={t('money.paid')} value={formatMoney(m.paid, m.currency)} />
-            <Figure label={t('money.debt')} value={formatMoney(m.debt, m.currency)} alarming={(m.debt ?? 0) > 0} />
-            <Figure label={t('money.upcoming')} value={formatMoney(m.upcoming, m.currency)} />
-          </div>
-        ))}
+        <Figure label={t('money.earned')} hint={t('money.earnedHint')} amounts={earned} />
+        <Separator />
+        <div className="flex flex-wrap gap-x-12 gap-y-4">
+          <Figure label={t('money.debt')} hint={t('money.debtHint')} amounts={debt} alarming={debt.length > 0} />
+          <Figure label={t('money.upcoming')} hint={t('money.upcomingHint')} amounts={upcoming} />
+        </div>
       </CardContent>
     </Card>
   )
 }
 
-function Figure({ label, value, alarming }: { label: string; value: string; alarming?: boolean }) {
+function Figure({ label, hint, amounts, alarming }: { label: string; hint: string; amounts: string[]; alarming?: boolean }) {
+  const { t } = useTranslation('clients')
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className={alarming ? 'text-lg font-semibold text-amber-700' : 'text-lg font-medium'}>{value}</span>
+      <span className={alarming ? 'text-xl font-semibold text-amber-700' : 'text-xl font-medium'}>
+        {amounts.length ? amounts.join(' · ') : t('money.none')}
+      </span>
+      <span className="text-xs text-muted-foreground">{hint}</span>
     </div>
   )
 }

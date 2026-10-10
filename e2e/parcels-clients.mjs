@@ -129,8 +129,11 @@ export async function run() {
     await page.goto(BASE + `/clients/${moneyClient.id}`)
     await page.waitForSelector('text=Гроші за доставку')
     const moneyCard = await page.locator('[data-slot=card]:has-text("Гроші за доставку")').textContent()
-    ok('client money totals shown', /420\s*грн/.test(moneyCard) && /100\s*грн/.test(moneyCard), moneyCard?.replace(/\s+/g, ' ').slice(0, 160))
-    ok('debt and upcoming split', /250\s*грн/.test(moneyCard) && /70\s*грн/.test(moneyCard))
+    const flat = moneyCard?.replace(/\s+/g, ' ') ?? ''
+    // Earned so far and owed right now are different questions, so the card keeps them apart.
+    ok('earned so far shown', /Зароблено за весь час\s*100 грн/.test(flat), flat.slice(0, 200))
+    ok('debt shown apart from earnings', /Борг\s*250 грн/.test(flat))
+    ok('upcoming shown apart from debt', /До оплати при видачі\s*70 грн/.test(flat))
     await shot('04b-client-money')
 
     await page.goto(BASE + `/clients/${parcel.clientId}?tab=parcels`)
@@ -266,11 +269,14 @@ export async function run() {
     await page.getByRole('button', { name: 'Змінити статус' }).click()
     await dialog().waitFor()
     await page.click('[data-slot=dialog-content] #status')
-    await page.locator('[data-slot=select-item]', { hasText: 'На складі' }).click()
+    await page.locator('[data-slot=select-item]:visible', { hasText: 'На складі' }).click()
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForTimeout(300)
     ok('AT_WAREHOUSE requires a warehouse', (await dialog().locator('[data-slot=field-error]').count()) >= 1)
     await dialog().getByRole('button', { name: 'Скасувати' }).click()
+    // Warehouses cannot be deleted, so retire this run's one: otherwise every run makes the picker longer.
+    const created = (await manager.get('/api/warehouses?active=true&size=200')).content?.find((w) => w.name === 'Склад ' + u)
+    if (created) await manager.put(`/api/warehouses/${created.id}`, { name: created.name, address: created.address, active: false })
 
     // --- payment: price via edit, mark paid, unpaid, list filter ---
     await page.getByRole('button', { name: 'Редагувати' }).click()
