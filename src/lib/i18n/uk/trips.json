@@ -17,6 +17,9 @@
   "fields": {
     "car": "Машина",
     "driver": "Водій",
+    "coDriver": "Другий водій",
+    "noCoDriver": "Без другого водія",
+    "coDriverHint": "Вантажить і видає посилки нарівні з основним. Можна змінити до виїзду.",
     "plannedDepartureAt": "Плановий виїзд",
     "plannedArrivalAt": "Планове прибуття",
     "departedAt": "Виїхав",

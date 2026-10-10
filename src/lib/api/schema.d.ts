@@ -1418,6 +1418,12 @@ export interface components {
              */
             driverId?: number;
             /**
+             * Format: int64
+             * @description ID другого водія (необов'язково): вантажить і видає посилки нарівні з основним. Можна змінити до виїзду; не передано — без другого водія
+             * @example 7
+             */
+            coDriverId?: number;
+            /**
              * Format: date-time
              * @description Запланований виїзд; менеджеру обов'язково, водієві — зараз за замовчуванням
              * @example 2026-10-03T06:00:00Z
@@ -1480,6 +1486,17 @@ export interface components {
              * @example Андрій Шевчук
              */
             driverName?: string;
+            /**
+             * Format: int64
+             * @description ID другого водія
+             * @example 7
+             */
+            coDriverId?: number;
+            /**
+             * @description Ім'я другого водія
+             * @example Олег Мельник
+             */
+            coDriverName?: string;
             /**
              * Format: date-time
              * @description Запланований виїзд

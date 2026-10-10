@@ -15,6 +15,7 @@ export function UserSelect({
   className,
   noneLabel,
   disabled,
+  excludeId,
 }: {
   role: Role
   value?: number
@@ -24,11 +25,14 @@ export function UserSelect({
   className?: string
   noneLabel?: string
   disabled?: boolean
+  /** Left out of the list: the same person cannot be picked twice (a trip's second driver). */
+  excludeId?: number
 }) {
   const { t } = useTranslation('users')
   const users = useUsersByRole(role)
-  const items = users.data?.content ?? []
-  const selected = items.find((u) => u.id === value)
+  const all = users.data?.content ?? []
+  const items = excludeId == null ? all : all.filter((u) => u.id !== excludeId)
+  const selected = all.find((u) => u.id === value)
   const empty = noneLabel ?? t('selectPlaceholder')
 
   return (

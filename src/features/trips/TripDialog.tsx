@@ -19,6 +19,7 @@ const schema = z
   .object({
     carId: z.number().optional(),
     driverId: z.number().optional(),
+    coDriverId: z.number().optional(),
     plannedDepartureAt: z.string().min(1, 'required'),
     plannedArrivalAt: z.string(),
     origin: z.string().trim(),
@@ -28,6 +29,9 @@ const schema = z
   .superRefine((v, ctx) => {
     if (v.plannedArrivalAt && v.plannedArrivalAt < v.plannedDepartureAt) {
       ctx.addIssue({ code: 'custom', path: ['plannedArrivalAt'], message: 'arrivalBeforeDeparture' })
+    }
+    if (v.coDriverId != null && v.coDriverId === v.driverId) {
+      ctx.addIssue({ code: 'custom', path: ['coDriverId'], message: 'sameAsDriver' })
     }
   })
 
@@ -66,6 +70,8 @@ function TripForm({ trip, onSubmit, onClose }: { trip?: TripResponse; onSubmit: 
     defaultValues: {
       carId: trip?.carId,
       driverId: trip?.driverId,
+      // Sent on every save: a missing coDriverId means "no second driver" to the backend.
+      coDriverId: trip?.coDriverId,
       plannedDepartureAt: toDateTimeLocal(trip?.plannedDepartureAt),
       plannedArrivalAt: toDateTimeLocal(trip?.plannedArrivalAt),
       origin: trip?.origin ?? '',
@@ -81,6 +87,7 @@ function TripForm({ trip, onSubmit, onClose }: { trip?: TripResponse; onSubmit: 
       await onSubmit({
         carId: carDriverLocked ? trip?.carId : v.carId,
         driverId: carDriverLocked ? trip?.driverId : v.driverId,
+        coDriverId: v.coDriverId,
         plannedDepartureAt: fromDateTimeLocal(v.plannedDepartureAt),
         plannedArrivalAt: fromDateTimeLocal(v.plannedArrivalAt),
         origin: v.origin || undefined,
@@ -115,13 +122,42 @@ function TripForm({ trip, onSubmit, onClose }: { trip?: TripResponse; onSubmit: 
             render={({ field }) => (
               <Field data-invalid={!!errors.driverId}>
                 <FieldLabel htmlFor="tr-driver">{t('trips:fields.driver')}</FieldLabel>
-                <UserSelect role="DRIVER" id="tr-driver" className="w-full" value={field.value} onChange={field.onChange} disabled={carDriverLocked} noneLabel={t('common:common.selectPlaceholder')} />
+                <UserSelect
+                  role="DRIVER"
+                  id="tr-driver"
+                  className="w-full"
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={carDriverLocked}
+                  excludeId={form.watch('coDriverId')}
+                  noneLabel={t('common:common.selectPlaceholder')}
+                />
                 <FieldErrorText error={errors.driverId} />
               </Field>
             )}
           />
         </div>
         {carDriverLocked && <FieldDescription>{t('trips:actions.carDriverLocked')}</FieldDescription>}
+        <Controller
+          control={form.control}
+          name="coDriverId"
+          render={({ field }) => (
+            <Field data-invalid={!!errors.coDriverId}>
+              <FieldLabel htmlFor="tr-co-driver">{t('trips:fields.coDriver')}</FieldLabel>
+              <UserSelect
+                role="DRIVER"
+                id="tr-co-driver"
+                className="w-full sm:w-[calc(50%-0.5rem)]"
+                value={field.value}
+                onChange={field.onChange}
+                excludeId={form.watch('driverId')}
+                noneLabel={t('trips:fields.noCoDriver')}
+              />
+              <FieldDescription>{t('trips:fields.coDriverHint')}</FieldDescription>
+              <FieldErrorText error={errors.coDriverId} />
+            </Field>
+          )}
+        />
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.plannedDepartureAt}>
             <FieldLabel htmlFor="tr-departure">{t('trips:fields.plannedDepartureAt')}</FieldLabel>

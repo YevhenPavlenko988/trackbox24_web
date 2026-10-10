@@ -36,7 +36,11 @@ export function TripsListPage() {
     { key: 'departure', header: t('trips:fields.plannedDepartureAt'), cell: (s) => formatDateTime(s.plannedDepartureAt) },
     { key: 'route', header: t('trips:fields.route'), cell: (s) => routeText(s) },
     { key: 'car', header: t('trips:fields.car'), cell: (s) => s.carPlateNumber ?? '—' },
-    { key: 'driver', header: t('trips:fields.driver'), cell: (s) => s.driverName ?? '—' },
+    {
+      key: 'driver',
+      header: t('trips:fields.driver'),
+      cell: (s) => (s.coDriverName ? `${s.driverName} + ${s.coDriverName}` : (s.driverName ?? '—')),
+    },
     {
       key: 'counters',
       header: t('trips:fields.counters'),

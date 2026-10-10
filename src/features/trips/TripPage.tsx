@@ -171,6 +171,7 @@ export function TripPage() {
               items={[
                 { label: t('trips:fields.car'), value: trip.carPlateNumber },
                 { label: t('trips:fields.driver'), value: trip.driverName },
+                { label: t('trips:fields.coDriver'), value: trip.coDriverName },
                 { label: t('trips:fields.plannedDepartureAt'), value: formatDateTime(trip.plannedDepartureAt) },
                 { label: t('trips:fields.plannedArrivalAt'), value: formatDateTime(trip.plannedArrivalAt) },
                 { label: t('trips:fields.departedAt'), value: formatDateTime(trip.departedAt) },

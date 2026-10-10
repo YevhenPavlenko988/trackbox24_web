@@ -7,6 +7,8 @@ export async function run() {
   const manager = await apiAs(MANAGER)
   const driverEmail = `driver${u}@test.ua`
   await manager.post('/api/users', { email: driverEmail, password: 'driver123', firstName: 'Водій', lastName: u, roles: ['DRIVER'], phone: '38063' + u + '9' })
+  const coDriverLast = 'Напарник' + u
+  await manager.post('/api/users', { email: `codriver${u}@test.ua`, password: 'driver123', firstName: 'Другий', lastName: coDriverLast, roles: ['DRIVER'], phone: '38063' + u + '8' })
   const plate = 'KA' + u.slice(0, 4) + 'XX'
   await manager.post('/api/cars', { plateNumber: plate, brand: 'Ford', model: 'Transit', active: true })
   const warehouse = await manager.post('/api/warehouses', { name: 'Склад ' + u, address: 'вул. Складська, 1' })
@@ -68,9 +70,18 @@ export async function run() {
     await dialog().waitFor()
     await r.pickSelect('tr-car', plate)
     await r.pickSelect('tr-driver', u)
+    // The second driver is optional and must not offer the main driver, or the backend rejects the save.
+    await page.click('#tr-co-driver')
+    await page.waitForSelector('[data-slot=select-item]:visible')
+    const coOptions = await r.selectOptions()
+    ok('main driver left out of the second driver list', !coOptions.some((o) => o.includes(`${u} Водій`)) && coOptions.some((o) => o.includes(coDriverLast)))
+    await page.locator('[data-slot=select-item]:visible', { hasText: coDriverLast }).first().click()
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForTimeout(600)
     ok('car and driver assigned', !(await page.getByRole('button', { name: 'Виїхав' }).isDisabled()))
+    ok('second driver shown on the trip', (await page.textContent('body')).includes(coDriverLast))
+    ok('second driver saved on the trip', (await manager.get(`/api/trips/${trip1}`)).coDriverName.includes(coDriverLast))
+    await shot('01b-co-driver')
 
     // Loading can be started without a scan; the button is gone once the trip is being prepared.
     await page.getByRole('button', { name: 'Почати завантаження' }).click()
