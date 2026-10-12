@@ -150,7 +150,17 @@ export function ParcelPage() {
         open={deleting}
         onOpenChange={setDeleting}
         title={t('parcels:deleteConfirm.title')}
-        description={t('parcels:deleteConfirm.description')}
+        description={
+          // The backend deletes our outgoing waybill in Nova Poshta along with the parcel; say so before the click.
+          p.npShipment?.waybillNumber ? (
+            <>
+              {t('parcels:deleteConfirm.description')}{' '}
+              <span className="font-medium text-foreground">{t('parcels:deleteConfirm.withWaybill', { number: p.npShipment.waybillNumber })}</span>
+            </>
+          ) : (
+            t('parcels:deleteConfirm.description')
+          )
+        }
         confirmLabel={t('parcels:actions.delete')}
         destructive
         pending={remove.isPending}

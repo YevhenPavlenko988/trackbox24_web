@@ -789,14 +789,16 @@ export interface paths {
         put?: never;
         /**
          * Створити ЕН відправки
-         * @description Тільки MANAGER. Створює ЕН у кабінеті НП компанії (ключ і відправник — у налаштуваннях компанії).
+         * @description Водій при прийомі (щоб наклеїти одну етикетку з нашим штрих-кодом і ЕН) або менеджер. Створює ЕН у кабінеті НП
+         *     компанії (ключ і відправник — у налаштуваннях компанії). Дата відправки в ЕН — планове прибуття рейсу посилки + 1 день,
+         *     без рейсу — наступний день.
          *     Потрібні: ПІБ і телефон отримувача, місто і відділення / поштомат або вулиця й будинок, опис, вага, оголошена вартість.
          *     Коли НП прийме посилку, статус стане SENT_VIA_NOVA_POSHTA, коли отримувач забере — DELIVERED_TO_CLIENT.
          */
         post: operations["createNpWaybill"];
         /**
          * Видалити ЕН відправки
-         * @description Тільки MANAGER; лише поки посилку не передано в НП.
+         * @description Водій або менеджер; лише поки посилку не передано в НП. Потім можна виправити дані й створити ЕН знову.
          */
         delete: operations["deleteNpWaybill"];
         options?: never;
@@ -1866,6 +1868,12 @@ export interface components {
              * @example 2026-10-12T09:30:00Z
              */
             waybillCreatedAt?: string;
+            /**
+             * Format: date
+             * @description Дата відправки в ЕН: планове прибуття рейсу посилки + 1 день (без рейсу — наступний день)
+             * @example 2026-10-21
+             */
+            shipDate?: string;
             /**
              * @description Вартість доставки за розрахунком НП, грн
              * @example 95
@@ -3134,6 +3142,12 @@ export interface components {
              * @example false
              */
             alreadyReceived?: boolean;
+            /**
+             * @description Оплату нашої доставки отримано при прийомі: CASH, UA_CARD, FOREIGN_CARD. Потрібна ціна доставки; посилка стає оплаченою (хто й коли — той, хто прийняв). Не передано — не оплачено
+             * @example CASH
+             * @enum {string}
+             */
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
         };
         ParcelStatusChangeRequest: {
             /**

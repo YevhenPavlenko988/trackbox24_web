@@ -39,6 +39,7 @@
     "waybillShort": "ЕН НП",
     "waybillCost": "Вартість за розрахунком НП",
     "waybillCreatedAt": "ЕН створено",
+    "shipDate": "Дата відправки в ЕН",
     "estimatedDeliveryDate": "Орієнтовна доставка",
     "npStatus": "Статус НП",
     "npStatusUpdatedAt": "Статус оновлено",

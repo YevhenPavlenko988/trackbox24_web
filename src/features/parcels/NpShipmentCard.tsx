@@ -30,8 +30,9 @@ function destination(s: NpShipmentResponse): string | undefined {
 }
 
 /**
- * Return parcels: what Nova Poshta does with the parcel after us. The driver fills the recipient in on acceptance,
- * a manager creates the waybill; once it exists the data is frozen until the waybill is deleted.
+ * Return parcels: what Nova Poshta does with the parcel after us. The driver fills the recipient in on acceptance
+ * and usually creates the waybill right there (one label with our barcode and the waybill); a manager checks,
+ * deletes and recreates it here. Once the waybill exists the data is frozen until it is deleted.
  */
 export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
   const { t } = useTranslation(['novaPoshta', 'common'])
@@ -165,6 +166,7 @@ export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
                   { label: t('novaPoshta:shipment.waybillNumber'), value: <span className="font-mono">{s.waybillNumber}</span> },
                   { label: t('novaPoshta:shipment.waybillCost'), value: s.waybillCost != null ? formatMoney(s.waybillCost) : undefined },
                   { label: t('novaPoshta:shipment.waybillCreatedAt'), value: formatDateTime(s.waybillCreatedAt) },
+                  { label: t('novaPoshta:shipment.shipDate'), value: formatDate(s.shipDate) },
                   { label: t('novaPoshta:shipment.estimatedDeliveryDate'), value: formatDate(s.estimatedDeliveryDate) },
                   { label: t('novaPoshta:shipment.npStatus'), value: s.npStatusText ? `${s.npStatusText}${s.npStatusCode ? ` (${s.npStatusCode})` : ''}` : undefined },
                   { label: t('novaPoshta:shipment.npStatusUpdatedAt'), value: formatDateTime(s.npStatusUpdatedAt) },

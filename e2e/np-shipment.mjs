@@ -46,6 +46,24 @@ export async function run() {
     ok('a complete parcel is not nagged about its fields', !body.includes('Нова Пошта не створить ЕН без цього'))
     await shot('01-shipment-card')
 
+    // The 70×40 tape label is drawn from the parcel: the recipient and the branch now, our waybill once it exists.
+    await page.addInitScript(() => {
+      window.print = () => {}
+    })
+    await page.goto(BASE + `/parcels/${parcel.id}/labels?size=70x40`)
+    await page.waitForSelector('.label-70x40 svg rect')
+    const tape = page.locator('.label-70x40')
+    ok('one tape label for the single seat', (await tape.count()) === 1)
+    const tapeText = await tape.first().textContent()
+    ok('tape label names the recipient and the branch', tapeText.includes('Коваль І.') && tapeText.includes('Київ') && tapeText.includes('Відд. №1'), tapeText)
+    ok('tape label carries our barcode only while there is no waybill', tapeText.includes(parcel.barcode) && !tapeText.includes('НП') && (await tape.first().locator('svg').count()) === 1, tapeText)
+    ok('tape label shows the weight', /2[.,]5\s?кг/.test(tapeText), tapeText)
+    const tapeBox = await tape.first().boundingBox()
+    ok('tape label is 70×40 mm on screen', tapeBox && Math.abs(tapeBox.width / tapeBox.height - 70 / 40) < 0.05, JSON.stringify(tapeBox))
+    await shot('01b-label-70x40')
+    await page.goto(BASE + `/parcels/${parcel.id}`)
+    await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
+
     // A parcel without the shipment filled in must still say that it can be sent by Nova Poshta.
     // No description, weight or value: exactly what Nova Poshta refuses a waybill for.
     const plain = await manager.post('/api/parcels', { senderName: 'Звичайний ' + u })

@@ -13,6 +13,7 @@ import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
 import { useAccess } from '@/features/auth/access'
@@ -22,6 +23,7 @@ import { useMutationError } from '@/lib/api/problem'
 import { CHANNELS, ChannelFields } from '@/features/channels/channel'
 import type { Channel } from '@/lib/api/types'
 import { DimensionFields } from './DimensionFields'
+import { PAYMENT_METHODS } from './paymentMethod'
 import { PriceFields } from './PriceFields'
 import { useCreateParcel } from './queries'
 import { orUndefined, parseNumber } from './status'
@@ -52,6 +54,8 @@ const schema = z
     notes: z.string().trim(),
     deliveryPrice: numberField,
     deliveryPriceCurrency: z.enum(['UAH', 'EUR']),
+    // The sender may pay our delivery when handing the parcel over; empty means not paid yet.
+    paymentMethod: z.union([z.enum(PAYMENT_METHODS), z.literal('')]),
     channel: z.union([z.enum(CHANNELS as [Channel, ...Channel[]]), z.literal('')]),
     channelDetails: z.string().trim().max(255),
   })
@@ -62,6 +66,9 @@ const schema = z
   })
 
 type FormValues = z.infer<typeof schema>
+
+/** Select items cannot be empty strings, so "not paid" travels under a sentinel. */
+const NOT_PAID = '__none__'
 
 export function ParcelCreatePage() {
   const { t } = useTranslation(['parcels', 'common'])
@@ -90,6 +97,7 @@ export function ParcelCreatePage() {
       notes: '',
       deliveryPrice: '',
       deliveryPriceCurrency: 'UAH',
+      paymentMethod: '',
     },
   })
   const { errors, isSubmitting } = form.formState
@@ -121,6 +129,8 @@ export function ParcelCreatePage() {
         channelDetails: v.channel ? orUndefined(v.channelDetails) : undefined,
         deliveryPrice: isManager ? parseNumber(v.deliveryPrice) : undefined,
         deliveryPriceCurrency: isManager && v.deliveryPrice ? v.deliveryPriceCurrency : undefined,
+        // Without a price the backend refuses a payment, so a method typed before the price was cleared stays home.
+        paymentMethod: isManager && parseNumber(v.deliveryPrice) != null && v.paymentMethod ? v.paymentMethod : undefined,
       })
       toast.success(t('common:common.saved'))
       navigate(`/parcels/${created.id}`, { replace: true })
@@ -248,6 +258,31 @@ export function ParcelCreatePage() {
               <DimensionFields form={form} />
 
               {isManager && <PriceFields form={form} />}
+              {isManager && (
+                <Controller
+                  control={form.control}
+                  name="paymentMethod"
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel htmlFor="paymentMethod">{t('parcels:payment.paidNow')}</FieldLabel>
+                      <Select value={field.value || NOT_PAID} onValueChange={(v) => field.onChange(v === NOT_PAID ? '' : String(v))} disabled={!form.watch('deliveryPrice')}>
+                        <SelectTrigger id="paymentMethod" className="w-full sm:w-1/2">
+                          <SelectValue>{field.value ? t(`common:paymentMethod.${field.value}`) : t('parcels:payment.notPaidNow')}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NOT_PAID}>{t('parcels:payment.notPaidNow')}</SelectItem>
+                          {PAYMENT_METHODS.map((m) => (
+                            <SelectItem key={m} value={m}>
+                              {t(`common:paymentMethod.${m}`)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FieldDescription>{t('parcels:payment.paidNowHint')}</FieldDescription>
+                    </Field>
+                  )}
+                />
+              )}
 
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field data-invalid={!!errors.senderName}>
