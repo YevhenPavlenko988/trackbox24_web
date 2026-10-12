@@ -7,17 +7,22 @@ export function isParcelTab(v: string | undefined): v is ParcelTab {
   return !!v && (PARCEL_TABS as readonly string[]).includes(v)
 }
 
-/** Statuses the backend is asked for; it filters by any of them in one paged request. */
+/**
+ * Statuses the backend is asked for; it filters by any of them in one paged request.
+ *
+ * A return parcel handed to Nova Poshta (`SENT_VIA_NOVA_POSHTA`) is still ours to watch — its waybill is tracked
+ * until the recipient collects it — so it stays in the company tab instead of falling out of every tab.
+ */
 export const TAB_STATUSES: Record<ParcelTab, ParcelStatus[]> = {
   np: ['IN_NOVA_POSHTA'],
-  company: ['PICKED_UP_FROM_NOVA_POSHTA', 'RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE', 'IN_CAR'],
+  company: ['PICKED_UP_FROM_NOVA_POSHTA', 'RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE', 'IN_CAR', 'SENT_VIA_NOVA_POSHTA'],
   archive: ['DELIVERED_TO_CLIENT', 'CANCELLED'],
 }
 
 /** Statuses a parcel of this tab can have, for the status filter inside the tab. */
 export const TAB_FILTER_STATUSES: Record<ParcelTab, ParcelStatus[]> = {
   np: ['IN_NOVA_POSHTA'],
-  company: ['PICKED_UP_FROM_NOVA_POSHTA', 'RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE', 'IN_CAR'],
+  company: ['PICKED_UP_FROM_NOVA_POSHTA', 'RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE', 'IN_CAR', 'SENT_VIA_NOVA_POSHTA'],
   archive: ['DELIVERED_TO_CLIENT', 'CANCELLED'],
 }
 

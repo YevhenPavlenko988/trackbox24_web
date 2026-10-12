@@ -116,6 +116,12 @@ export async function run() {
     ok('no editing once the parcel left us', !body.includes('Змінити відправку'))
     await shot('05-sent')
 
+    // A parcel Nova Poshta has taken is still ours to watch, so it must not fall out of the parcels list.
+    await page.goto(BASE + '/parcels?tab=company&query=' + encodeURIComponent(sent.barcode))
+    await page.waitForSelector(`table tbody tr:has-text("${sent.barcode}")`)
+    const row = await page.locator(`table tbody tr:has-text("${sent.barcode}")`).textContent()
+    ok('sent parcel stays in the company tab', /Відправлено\s*Новою\s*Поштою/.test(row), row)
+
     // --- company sender settings ---
     await page.goto(BASE + '/company')
     await page.waitForSelector('[data-slot=page-header]:has-text("Моя компанія")')

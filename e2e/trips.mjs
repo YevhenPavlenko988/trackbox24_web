@@ -10,8 +10,14 @@ export async function run() {
   const coDriverLast = 'Напарник' + u
   await manager.post('/api/users', { email: `codriver${u}@test.ua`, password: 'driver123', firstName: 'Другий', lastName: coDriverLast, roles: ['DRIVER'], phone: '38063' + u + '8' })
   const plate = 'KA' + u.slice(0, 4) + 'XX'
-  await manager.post('/api/cars', { plateNumber: plate, brand: 'Ford', model: 'Transit', active: true })
+  const car = await manager.post('/api/cars', { plateNumber: plate, brand: 'Ford', model: 'Transit', active: true })
   const warehouse = await manager.post('/api/warehouses', { name: 'Склад ' + u, address: 'вул. Складська, 1' })
+  // The car and warehouse pickers load one page of rows, so what every run adds is retired again — otherwise
+  // the newest car eventually falls off the end of the list and cannot be picked.
+  const retireFixtures = async () => {
+    await manager.put(`/api/cars/${car.id}`, { plateNumber: plate, brand: 'Ford', model: 'Transit', active: false }).catch(() => {})
+    await manager.put(`/api/warehouses/${warehouse.id}`, { name: warehouse.name, address: warehouse.address, active: false }).catch(() => {})
+  }
   const p1 = await manager.post('/api/parcels', { description: 'Для рейсу A ' + u, senderName: 'Відправник A' })
   const p2 = await manager.post('/api/parcels', { description: 'Для рейсу B ' + u, senderName: 'Відправник B' })
   const p3 = await manager.post('/api/parcels', { description: 'Для рейсу C ' + u, senderName: 'Відправник C', deliveryPrice: 450 })
@@ -274,8 +280,10 @@ export async function run() {
     const trip3After = await manager.get(`/api/trips/${trip3.id}`)
     ok('trip started preparing and counts the parcel', trip3After.status === 'PREPARING' && trip3After.loadedCount === 1)
     await shot('10-manual-load')
+    await retireFixtures()
     return r.finish()
   } catch (e) {
+    await retireFixtures()
     return r.finish(e)
   }
 }

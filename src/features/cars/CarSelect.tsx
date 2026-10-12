@@ -21,7 +21,9 @@ export function CarSelect({
   disabled?: boolean
 }) {
   const { t } = useTranslation()
-  const cars = useCars({ size: 100 })
+  // `/api/cars` has no `active` filter, so deactivated cars come back too and are dropped here — the page has to
+  // be large enough that they cannot push the active ones out of it (same budget as the user picker).
+  const cars = useCars({ size: 500 })
   const items = (cars.data?.content ?? []).filter((c) => c.active !== false || c.id === value)
   const selected = items.find((c) => c.id === value)
   const empty = t('common.selectPlaceholder')
