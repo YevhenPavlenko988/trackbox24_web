@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { NpNumber } from '@/components/common/NpNumber'
 import { DetailsList } from '@/components/common/DetailsList'
 import { LinkButton } from '@/components/common/LinkButton'
 import { PageHeader } from '@/components/layout/PageHeader'
@@ -96,7 +97,11 @@ export function ParcelPage() {
         {t('parcels:title')}
       </LinkButton>
       <PageHeader
-        title={<span className="font-mono break-all">{p.barcode ?? (p.npTtn ? `${t('parcels:fields.npTtnShort')} ${p.npTtn}` : `#${p.id}`)}</span>}
+        title={
+          <span className="font-mono break-all">
+            {p.barcode ?? (p.npTtn ? <>{t('parcels:fields.npTtnShort')} <NpNumber value={p.npTtn} /></> : `#${p.id}`)}
+          </span>
+        }
         badges={
           <>
             <ParcelStatusBadge status={p.status} />
@@ -371,7 +376,7 @@ function CopyableCode({ value, hint }: { value: string; hint?: string }) {
   return (
     <span className="inline-flex flex-col">
       <span className="inline-flex items-center gap-1">
-        <span className="font-mono">{value}</span>
+        <NpNumber value={value} />
         <Button variant="ghost" size="icon-sm" aria-label={t('np.copied')} onClick={copy}>
           <Copy />
         </Button>

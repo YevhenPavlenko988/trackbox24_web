@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { DataTable, type Column, type Selection } from '@/components/common/DataTable'
+import { NpNumber } from '@/components/common/NpNumber'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAccess } from '@/features/auth/access'
@@ -63,11 +64,15 @@ export function ParcelsTable({
       cell: (p) => (
         <div className="flex flex-col">
           <span className="font-mono font-medium">{p.barcode ?? '—'}</span>
-          {p.npTtn && <span className="text-xs text-muted-foreground">{t('parcels:fields.npTtnShort')} {p.npTtn}</span>}
+          {p.npTtn && (
+            <span className="text-xs text-muted-foreground">
+              {t('parcels:fields.npTtnShort')} <NpNumber value={p.npTtn} />
+            </span>
+          )}
           {/* Our own outgoing waybill (return parcels); a search by this number finds the parcel. */}
           {p.npShipment?.waybillNumber && (
             <span className="text-xs text-muted-foreground">
-              {t('novaPoshta:shipment.waybillShort')} {p.npShipment.waybillNumber}
+              {t('novaPoshta:shipment.waybillShort')} <NpNumber value={p.npShipment.waybillNumber} />
             </span>
           )}
         </div>

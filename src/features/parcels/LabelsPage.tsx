@@ -4,12 +4,13 @@ import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams, useSearchParams } from 'react-router'
 import { LinkButton } from '@/components/common/LinkButton'
+import { NpNumber } from '@/components/common/NpNumber'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { ParcelResponse } from '@/lib/api/types'
 import { formatPhone, formatWeight } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
-import { destinationLine, groupWaybill, labelsFor, type LabelData } from './labelText'
+import { destinationLine, labelsFor, type LabelData } from './labelText'
 import { useParcel } from './queries'
 
 /** `a4` — the 100 mm labels for an office printer; `70x40` — the tape of a NIIMBOT B3S the driver carries. */
@@ -48,7 +49,7 @@ function OfficeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
         <div>{formatPhone(p.clientPhone)}</div>
         {p.npTtn && (
           <div className="text-muted-foreground">
-            {t('fields.npTtnShort')} {p.npTtn}
+            {t('fields.npTtnShort')} <NpNumber value={p.npTtn} grouped />
           </div>
         )}
       </div>
@@ -56,7 +57,7 @@ function OfficeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
         <>
           <Barcode value={waybill} />
           <div className="text-center text-sm font-semibold">
-            {t('labels.npWaybill')} {groupWaybill(waybill)}
+            {t('labels.npWaybill')} <NpNumber value={waybill} grouped />
           </div>
           {destinationLine(p) && <div className="text-sm">{destinationLine(p)}</div>}
         </>
@@ -81,7 +82,7 @@ function TapeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
           <Barcode value={waybill} height="11mm" className="min-w-0 flex-1" />
           <div className="shrink-0 text-right leading-tight font-semibold" style={{ fontSize: '2.9mm' }}>
             <div>{t('labels.npWaybillShort')}</div>
-            <div className="whitespace-nowrap">{groupWaybill(waybill)}</div>
+            <NpNumber value={waybill} grouped />
           </div>
         </div>
       )}

@@ -44,10 +44,14 @@ export async function run() {
     ok('manager lands on /parcels', page.url().endsWith('/parcels'))
     await page.waitForSelector('[data-slot=tabs-list]')
     ok('parcels list opens on the Nova Poshta tab', (await page.getByRole('tab', { name: 'У Новій Пошті' }).getAttribute('data-active')) !== null)
-    // Parcels with our barcode live in the "у компанії" tab; the first tab only holds what is still at Nova Poshta.
-    await page.getByRole('tab', { name: 'У компанії' }).click()
+    // The "Усі" tab is every parcel of the company and asks the backend for no status at all;
+    // the first tab only holds what is still at Nova Poshta.
+    const allRequest = page.waitForRequest((r) => r.url().includes('/api/parcels?') && !r.url().includes('status='))
+    await page.getByRole('tab', { name: 'Усі' }).click()
+    await allRequest
+    ok('"all" tab asks for parcels without listing statuses', true)
     await page.waitForSelector('table tbody tr:has-text("PT")')
-    ok('company tab lists parcels already collected', true)
+    ok('all tab lists parcels already collected', true)
     await shot('02-parcels-list')
 
     await page.reload()
@@ -245,6 +249,11 @@ export async function run() {
     const ttnTxt = await page.textContent('body')
     const createdByTtn = /\/parcels\/\d+$/.test(page.url()) && ttnTxt.includes('У Новій Пошті')
     ok('TTN parcel created or NP error shown', createdByTtn || /Нової Пошти/.test(ttnTxt), page.url())
+    if (createdByTtn) {
+      // The last four digits are how the branch calls a parcel out, so they stand apart wherever the TTN shows.
+      const tails = await page.locator('[data-slot=np-tail]').allTextContents()
+      ok('last four digits of the TTN stand out on the parcel page', tails.length >= 1 && tails.every((x) => x === '4007'), tails.join(','))
+    }
 
     // --- warehouses: create, bulk move, status dialog requires a warehouse ---
     const u = uniq()

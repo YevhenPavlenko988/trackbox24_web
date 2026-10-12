@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { NpNumber } from '@/components/common/NpNumber'
 import { DetailsList } from '@/components/common/DetailsList'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -163,7 +164,7 @@ export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
             // Everything about the waybill only exists once it has been created; empty rows would only puzzle.
             ...(hasWaybill
               ? [
-                  { label: t('novaPoshta:shipment.waybillNumber'), value: <span className="font-mono">{s.waybillNumber}</span> },
+                  { label: t('novaPoshta:shipment.waybillNumber'), value: <NpNumber value={s.waybillNumber!} /> },
                   { label: t('novaPoshta:shipment.waybillCost'), value: s.waybillCost != null ? formatMoney(s.waybillCost) : undefined },
                   { label: t('novaPoshta:shipment.waybillCreatedAt'), value: formatDateTime(s.waybillCreatedAt) },
                   { label: t('novaPoshta:shipment.shipDate'), value: formatDate(s.shipDate) },
