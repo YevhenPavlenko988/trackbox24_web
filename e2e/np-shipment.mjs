@@ -45,6 +45,17 @@ export async function run() {
     ok('no waybill yet, so no number', !body.includes('Наша ЕН'))
     await shot('01-shipment-card')
 
+    // A parcel without the shipment filled in must still say that it can be sent by Nova Poshta.
+    const plain = await manager.post('/api/parcels', { description: 'Без відправки ' + u, senderName: 'Звичайний ' + u })
+    await page.goto(BASE + `/parcels/${plain.id}`)
+    await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
+    const empty = await page.textContent('body')
+    ok('empty parcel offers to send it by Nova Poshta', empty.includes('Відправка Новою Поштою') && empty.includes('Відправити Новою Поштою'))
+    ok('and says the company settings are missing', empty.includes('ключ Нової Пошти й відправник'))
+    await shot('01b-empty-card')
+    await page.goto(BASE + `/parcels/${parcel.id}`)
+    await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
+
     // Without the company key and sender the backend lists what is missing; the toast shows it as it came.
     await page.getByRole('button', { name: 'Створити ЕН' }).click()
     await page.waitForSelector('[data-sonner-toast]')

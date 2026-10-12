@@ -6,13 +6,16 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DetailsList } from '@/components/common/DetailsList'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { Link } from 'react-router'
 import { useAccess } from '@/features/auth/access'
+import { useCurrentCompany } from '@/features/companies/queries'
 import { showApiError } from '@/lib/api/problem'
 import type { NpShipmentResponse, ParcelResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
 import { NpShipmentDialog } from './NpShipmentDialog'
 import { useCreateNpWaybill, useDeleteNpWaybill } from './queries'
-import { NP_SHIPPABLE_STATUSES } from './status'
+import { isFinalStatus, NP_SHIPPABLE_STATUSES } from './status'
 
 const recipientName = (s: NpShipmentResponse) => [s.recipientLastName, s.recipientFirstName, s.recipientMiddleName].filter(Boolean).join(' ')
 
@@ -34,7 +37,20 @@ export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
   const { canEdit } = useAccess()
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const company = useCurrentCompany()
+  // Without the company key and the sender branch Nova Poshta refuses the waybill, and the error names settings
+  // that live on another page — so the way there is offered before the button is pressed.
+  const companyReady = !!company.data?.novaPoshtaKeyConfigured && !!company.data?.npSenderWarehouseRef
   const createWaybill = useCreateNpWaybill(p.id!)
+  const companySetup =
+    canEdit && !companyReady && company.isSuccess ? (
+      <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        {t('novaPoshta:shipment.companyNotReady')}{' '}
+        <Link to="/company" className="underline underline-offset-4">
+          {t('novaPoshta:shipment.companySettings')}
+        </Link>
+      </p>
+    ) : null
   const removeWaybill = useDeleteNpWaybill(p.id!)
   const s = p.npShipment
   const withUs = p.status != null && NP_SHIPPABLE_STATUSES.includes(p.status)
@@ -42,19 +58,32 @@ export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
   // Nova Poshta only lets a waybill go while it has not taken the parcel yet.
   const removable = hasWaybill && (s?.npState == null || s.npState === 'CREATED')
 
+  // Nothing filled in yet. The card still shows itself — with its title — so that sending a parcel onward by
+  // Nova Poshta is something you can find on the parcel, not something you have to know about.
   if (!s) {
-    if (!canEdit || !withUs) return null
+    if (!canEdit || isFinalStatus(p.status)) return null
     return (
-      <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-3">
-          <span className="text-sm text-muted-foreground">{t('novaPoshta:shipment.empty')}</span>
-          <Button variant="outline" onClick={() => setEditing(true)}>
-            <Truck />
-            {t('novaPoshta:shipment.fill')}
-          </Button>
-          <NpShipmentDialog parcel={p} open={editing} onOpenChange={setEditing} />
-        </CardContent>
-      </Card>
+      <>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('novaPoshta:shipment.title')}</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-sm text-muted-foreground">{withUs ? t('novaPoshta:shipment.empty') : t('novaPoshta:shipment.onlyWithUs')}</span>
+            <Tooltip>
+              <TooltipTrigger render={<span />}>
+                <Button variant="outline" disabled={!withUs} onClick={() => setEditing(true)}>
+                  <Truck />
+                  {t('novaPoshta:shipment.fill')}
+                </Button>
+              </TooltipTrigger>
+              {!withUs && <TooltipContent>{t('novaPoshta:shipment.onlyWithUs')}</TooltipContent>}
+            </Tooltip>
+            {companySetup}
+          </CardContent>
+        </Card>
+        <NpShipmentDialog parcel={p} open={editing} onOpenChange={setEditing} />
+      </>
     )
   }
 
@@ -119,6 +148,7 @@ export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
           ]}
         />
         {hasWaybill && canEdit && <p className="mt-3 text-xs text-muted-foreground">{t('novaPoshta:shipment.locked')}</p>}
+        {!hasWaybill && companySetup}
       </CardContent>
 
       <NpShipmentDialog parcel={p} open={editing} onOpenChange={setEditing} />
