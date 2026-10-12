@@ -5,7 +5,7 @@
   "needsEnrichment": "Потребує уточнення даних",
   "filters": {
     "allStatuses": "Усі статуси",
-    "searchPlaceholder": "Штрих-код, ТТН, відправник або телефон",
+    "searchPlaceholder": "Штрих-код, ТТН, наша ЕН, відправник або телефон",
     "needsEnrichment": "Потребують уточнення",
     "paidStorage": "Платне зберігання",
     "representative": "Представник",
