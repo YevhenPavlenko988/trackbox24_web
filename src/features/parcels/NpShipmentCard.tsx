@@ -13,6 +13,7 @@ import { useCurrentCompany } from '@/features/companies/queries'
 import { showApiError } from '@/lib/api/problem'
 import type { NpShipmentResponse, ParcelResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
+import { ParcelEditDialog } from './ParcelEditDialog'
 import { NpShipmentDialog } from './NpShipmentDialog'
 import { useCreateNpWaybill, useDeleteNpWaybill } from './queries'
 import { isFinalStatus, NP_SHIPPABLE_STATUSES } from './status'
@@ -36,12 +37,34 @@ export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
   const { t } = useTranslation(['novaPoshta', 'common'])
   const { canEdit } = useAccess()
   const [editing, setEditing] = useState(false)
+  const [editingParcel, setEditingParcel] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const company = useCurrentCompany()
   // Without the company key and the sender branch Nova Poshta refuses the waybill, and the error names settings
   // that live on another page — so the way there is offered before the button is pressed.
   const companyReady = !!company.data?.novaPoshtaKeyConfigured && !!company.data?.npSenderWarehouseRef
   const createWaybill = useCreateNpWaybill(p.id!)
+  /**
+   * Nova Poshta builds the waybill from the parcel itself, and refuses it without these three. The backend says
+   * the same when the waybill is created; saying it here saves the manager a rejected button.
+   */
+  const missingOnParcel = [
+    !p.description?.trim() ? t('novaPoshta:shipment.needDescription') : undefined,
+    !(p.weightKg && p.weightKg > 0) ? t('novaPoshta:shipment.needWeight') : undefined,
+    !(p.declaredValue && p.declaredValue > 0) ? t('novaPoshta:shipment.needDeclaredValue') : undefined,
+  ].filter(Boolean) as string[]
+
+  const parcelSetup =
+    canEdit && missingOnParcel.length > 0 ? (
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+        <span>{t('novaPoshta:shipment.parcelNotReady', { fields: missingOnParcel.join(', ') })}</span>
+        <Button size="sm" variant="outline" onClick={() => setEditingParcel(true)}>
+          <Pencil />
+          {t('novaPoshta:shipment.fillParcel')}
+        </Button>
+      </div>
+    ) : null
+
   const companySetup =
     canEdit && !companyReady && company.isSuccess ? (
       <p className="mt-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
@@ -80,9 +103,11 @@ export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
               {!withUs && <TooltipContent>{t('novaPoshta:shipment.onlyWithUs')}</TooltipContent>}
             </Tooltip>
             {companySetup}
+            {parcelSetup}
           </CardContent>
         </Card>
         <NpShipmentDialog parcel={p} open={editing} onOpenChange={setEditing} />
+        <ParcelEditDialog parcel={p} open={editingParcel} onOpenChange={setEditingParcel} />
       </>
     )
   }
@@ -149,9 +174,11 @@ export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
         />
         {hasWaybill && canEdit && <p className="mt-3 text-xs text-muted-foreground">{t('novaPoshta:shipment.locked')}</p>}
         {!hasWaybill && companySetup}
+        {!hasWaybill && parcelSetup}
       </CardContent>
 
       <NpShipmentDialog parcel={p} open={editing} onOpenChange={setEditing} />
+      <ParcelEditDialog parcel={p} open={editingParcel} onOpenChange={setEditingParcel} />
       <ConfirmDialog
         open={deleting}
         onOpenChange={setDeleting}

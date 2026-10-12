@@ -43,15 +43,18 @@ export async function run() {
     ok('shipment card shows who pays Nova Poshta', body.includes('Отримувач'))
     ok('shipment card shows the cash on delivery', /1\s?200/.test(body))
     ok('no waybill yet, so no number', !body.includes('Наша ЕН'))
+    ok('a complete parcel is not nagged about its fields', !body.includes('Нова Пошта не створить ЕН без цього'))
     await shot('01-shipment-card')
 
     // A parcel without the shipment filled in must still say that it can be sent by Nova Poshta.
-    const plain = await manager.post('/api/parcels', { description: 'Без відправки ' + u, senderName: 'Звичайний ' + u })
+    // No description, weight or value: exactly what Nova Poshta refuses a waybill for.
+    const plain = await manager.post('/api/parcels', { senderName: 'Звичайний ' + u })
     await page.goto(BASE + `/parcels/${plain.id}`)
     await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
     const empty = await page.textContent('body')
     ok('empty parcel offers to send it by Nova Poshta', empty.includes('Відправка Новою Поштою') && empty.includes('Відправити Новою Поштою'))
     ok('and says the company settings are missing', empty.includes('ключ Нової Пошти й відправник'))
+    ok('and names what the waybill needs from the parcel', /опис вмісту.*вага.*оголошена вартість/.test(empty), empty.match(/Нова Пошта не створить[^<]{0,90}/)?.[0])
     await shot('01b-empty-card')
     await page.goto(BASE + `/parcels/${parcel.id}`)
     await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
