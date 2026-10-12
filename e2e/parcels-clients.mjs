@@ -166,7 +166,11 @@ export async function run() {
     await page.click('[data-slot=dialog-content] #status')
     await page.waitForSelector('[data-slot=select-item]')
     const items = await page.locator('[data-slot=select-item]').allTextContents()
-    ok('allowed transitions only', items.length === 3 && items.includes('У машині') && items.includes('На складі') && items.includes('Скасовано'), items.join(','))
+    ok(
+      'allowed transitions only',
+      items.length === 4 && items.includes('У машині') && items.includes('На складі') && items.includes('Відправлено Новою Поштою') && items.includes('Скасовано'),
+      items.join(','),
+    )
     await page.locator('[data-slot=select-item]', { hasText: 'У машині' }).click()
     await page.waitForTimeout(300)
     await page.click('[data-slot=dialog-content] button[type=submit]')

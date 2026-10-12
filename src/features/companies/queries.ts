@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { PageParams } from '@/lib/api/page'
-import type { CompanyRequest, CompanyResponse, NovaPoshtaKeyRequest } from '@/lib/api/types'
+import type { CompanyRequest, CompanyResponse, NovaPoshtaKeyRequest, NpSenderRequest } from '@/lib/api/types'
 import { parcelKeys } from '@/features/parcels/queries'
 import {
   createCompany,
@@ -9,6 +9,7 @@ import {
   listCompanies,
   setCompanyActive,
   setCompanyNpKey,
+  setCompanyNpSender,
   syncNovaPoshta,
   updateCompany,
 } from './api'
@@ -64,6 +65,10 @@ export function useSetCompanyActive(id: number) {
 
 export function useSetCompanyNpKey(id: number) {
   return useCompanyMutation((body: NovaPoshtaKeyRequest) => setCompanyNpKey(id, body))
+}
+
+export function useSetCompanyNpSender(id: number) {
+  return useCompanyMutation((body: NpSenderRequest) => setCompanyNpSender(id, body))
 }
 
 export function useSyncNovaPoshta() {

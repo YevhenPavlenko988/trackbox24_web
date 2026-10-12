@@ -9,6 +9,7 @@ const STYLES: Record<ParcelStatus, string> = {
   RECEIVED_BY_REPRESENTATIVE: 'bg-sky-100 text-sky-900 dark:bg-sky-900/40 dark:text-sky-200',
   AT_WAREHOUSE: 'bg-teal-100 text-teal-900 dark:bg-teal-900/40 dark:text-teal-200',
   IN_CAR: 'bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-200',
+  SENT_VIA_NOVA_POSHTA: 'bg-rose-100 text-rose-900 dark:bg-rose-900/40 dark:text-rose-200',
   DELIVERED_TO_CLIENT: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200',
   CANCELLED: 'bg-muted text-muted-foreground line-through',
 }

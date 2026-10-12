@@ -1,4 +1,4 @@
-import { KeyRound, Pencil } from 'lucide-react'
+import { KeyRound, Pencil, Truck } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { DetailsList } from '@/components/common/DetailsList'
@@ -10,6 +10,7 @@ import type { CompanyResponse } from '@/lib/api/types'
 import { formatDateTime, formatPhone } from '@/lib/format'
 import { CompanyDialog } from './CompanyDialog'
 import { NpKeyDialog } from './NpKeyDialog'
+import { NpSenderDialog } from './NpSenderDialog'
 import { useSetCompanyNpKey, useUpdateCompany } from './queries'
 
 export function CompanyStatusBadge({ active }: { active?: boolean }) {
@@ -34,7 +35,7 @@ export function NpKeyBadge({ configured }: { configured?: boolean }) {
 
 /** Details card with edit + NP backup key dialogs; used by admin's company page and manager's own-company page. */
 export function CompanyDetails({ company }: { company: CompanyResponse }) {
-  const { t } = useTranslation(['companies', 'common'])
+  const { t } = useTranslation(['companies', 'common', 'novaPoshta'])
   const { canEdit, isAdmin, companyMode } = useAccess()
   // Admins may edit company requisites from the companies section, but not while browsing a company read-only.
   const editable = canEdit || (isAdmin && !companyMode)
@@ -42,6 +43,13 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
   const setKey = useSetCompanyNpKey(company.id!)
   const [editing, setEditing] = useState(false)
   const [keyOpen, setKeyOpen] = useState(false)
+  const [senderOpen, setSenderOpen] = useState(false)
+  // The Nova Poshta directories behind the city and branch pickers are closed to admins, so only a manager sets this.
+  const senderEditable = canEdit
+
+  const senderValue = company.npSenderWarehouseRef
+    ? [company.npSenderCityName, company.npSenderWarehouseName].filter(Boolean).join(' · ') + (company.npSenderPhone ? ` · ${formatPhone(company.npSenderPhone)}` : '')
+    : undefined
 
   return (
     <>
@@ -55,6 +63,7 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
               { label: t('companies:fields.email'), value: company.email },
               { label: t('companies:fields.address'), value: company.address },
               { label: t('companies:fields.npKey'), value: <NpKeyBadge configured={company.novaPoshtaKeyConfigured} /> },
+              { label: t('novaPoshta:sender.field'), value: senderValue },
               { label: t('companies:fields.notes'), value: company.notes },
               { label: t('common:common.createdAt'), value: formatDateTime(company.createdAt) },
             ]}
@@ -69,12 +78,19 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
                 <KeyRound />
                 {t('companies:actions.npKey')}
               </Button>
+              {senderEditable && (
+                <Button variant="outline" onClick={() => setSenderOpen(true)}>
+                  <Truck />
+                  {t('novaPoshta:sender.action')}
+                </Button>
+              )}
             </div>
           )}
         </CardContent>
       </Card>
 
       <CompanyDialog open={editing} onOpenChange={setEditing} company={company} onSubmit={(body) => update.mutateAsync(body)} />
+      <NpSenderDialog company={company} open={senderOpen} onOpenChange={setSenderOpen} />
       <NpKeyDialog
         open={keyOpen}
         onOpenChange={setKeyOpen}

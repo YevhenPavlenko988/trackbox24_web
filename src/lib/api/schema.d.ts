@@ -166,6 +166,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parcels/{id}/np-shipment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Дані відправки Новою Поштою
+         * @description Зворотні посилки: водій заповнює отримувача на місці при прийомі, менеджер може виправити. Замінює всі поля.
+         *     Місто, відділення / поштомат, вулиця — Ref з /api/nova-poshta/cities, /warehouses, /streets.
+         *     Можна заповнювати поступово; повноту перевіряє створення ЕН. Після створення ЕН змінити не можна (спершу видалити ЕН).
+         */
+        put: operations["updateNpShipment"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}": {
         parameters: {
             query?: never;
@@ -203,6 +225,26 @@ export interface paths {
          * @description Використовується, коли в представника немає власного ключа. `syncEnabled` тут не має значення.
          */
         put: operations["setNovaPoshtaKey"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{id}/nova-poshta-sender": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Відправник Нової Пошти компанії
+         * @description Звідки відправляємо зворотні посилки: місто й відділення (Ref з /api/nova-poshta/cities, /warehouses) і телефон контактної особи з кабінету НП. Ключ — резервний API-ключ компанії.
+         */
+        put: operations["setNovaPoshtaSender"];
         post?: never;
         delete?: never;
         options?: never;
@@ -424,7 +466,7 @@ export interface paths {
         /**
          * Почати завантаження
          * @description Водій рейсу або менеджер. PLANNED → PREPARING без скану (перший скан завантаження робить це автоматично).
-         *     Потрібні машина й водій; у водія не має бути іншого рейсу на завантаженні чи в дорозі.
+         *     Потрібні машина й водій. Можна, поки водій ще в дорозі з іншим рейсом (наприклад, вантажить зворотний рейс).
          */
         post: operations["startLoading"];
         delete?: never;
@@ -492,6 +534,7 @@ export interface paths {
          * Виїхав
          * @description Водій рейсу або менеджер. PLANNED/PREPARING → IN_PROGRESS; після цього вантажити в рейс не можна.
          *     Заплановані, але не завантажені посилки лишаються на складі й знімаються з плану рейсу.
+         *     Водій не може бути в дорозі з двома рейсами: спершу завершіть попередній.
          */
         post: operations["depart"];
         delete?: never;
@@ -680,6 +723,8 @@ export interface paths {
          *     або RECEIVED_BY_REPRESENTATIVE при `alreadyReceived = true`.
          *     Без ТТН посилка одразу вважається отриманою представником і отримує наш штрих-код.
          *     Без `clientId` позначається як така, що потребує збагачення.
+         *     Водій приймає посилку від людини без ТТН (наприклад, на зворотний рейс): клієнт обов'язковий —
+         *     наявний (`GET /api/clients?search=`) або щойно створений (`POST /api/clients`); посилка одразу прийнята, з нашим штрих-кодом.
          */
         post: operations["create_3"];
         delete?: never;
@@ -728,6 +773,32 @@ export interface paths {
          */
         post: operations["restore_3"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parcels/{id}/np-shipment/waybill": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Створити ЕН відправки
+         * @description Тільки MANAGER. Створює ЕН у кабінеті НП компанії (ключ і відправник — у налаштуваннях компанії).
+         *     Потрібні: ПІБ і телефон отримувача, місто і відділення / поштомат або вулиця й будинок, опис, вага, оголошена вартість.
+         *     Коли НП прийме посилку, статус стане SENT_VIA_NOVA_POSHTA, коли отримувач забере — DELIVERED_TO_CLIENT.
+         */
+        post: operations["createNpWaybill"];
+        /**
+         * Видалити ЕН відправки
+         * @description Тільки MANAGER; лише поки посилку не передано в НП.
+         */
+        delete: operations["deleteNpWaybill"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1096,6 +1167,66 @@ export interface paths {
          * @description Видалені записи компанії: сам запис, хто й коли видалив; нові видалення зверху. Відновлення — POST /{id}/restore.
          */
         get: operations["deleted_3"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nova-poshta/warehouses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Відділення й поштомати міста
+         * @description До 50 результатів; query — номер або частина адреси.
+         */
+        get: operations["warehouses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nova-poshta/streets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Пошук вулиці міста
+         * @description Для доставки кур'єром, до 50 результатів.
+         */
+        get: operations["streets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/nova-poshta/cities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Пошук міста
+         * @description За частиною назви, до 50 результатів. Ref — для cityRef.
+         */
+        get: operations["cities"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1702,6 +1833,69 @@ export interface components {
              */
             needsEnrichment?: boolean;
         };
+        NpShipmentResponse: {
+            recipientLastName?: string;
+            recipientFirstName?: string;
+            recipientMiddleName?: string;
+            recipientPhone?: string;
+            /** @enum {string} */
+            deliveryType?: "WAREHOUSE" | "POSTOMAT" | "ADDRESS";
+            cityRef?: string;
+            cityName?: string;
+            warehouseRef?: string;
+            warehouseName?: string;
+            streetRef?: string;
+            streetName?: string;
+            building?: string;
+            flat?: string;
+            /** @enum {string} */
+            cargoType?: "PARCEL" | "DOCUMENTS" | "CARGO";
+            /** @enum {string} */
+            payerType?: "SENDER" | "RECIPIENT";
+            /** @enum {string} */
+            paymentMethod?: "CASH" | "NON_CASH";
+            codAmount?: number;
+            /**
+             * @description Номер нашої ЕН відправки; немає — ЕН ще не створено
+             * @example 20451599999999
+             */
+            waybillNumber?: string;
+            /**
+             * Format: date-time
+             * @description Коли створено ЕН
+             * @example 2026-10-12T09:30:00Z
+             */
+            waybillCreatedAt?: string;
+            /**
+             * @description Вартість доставки за розрахунком НП, грн
+             * @example 95
+             */
+            waybillCost?: number;
+            /**
+             * Format: date
+             * @description Орієнтовна дата доставки за НП
+             * @example 2026-10-14
+             */
+            estimatedDeliveryDate?: string;
+            /**
+             * @description Код статусу НП нашої ЕН
+             * @example 5
+             */
+            npStatusCode?: string;
+            /**
+             * @description Статус НП нашої ЕН
+             * @example Відправлення прямує до міста Київ
+             */
+            npStatusText?: string;
+            /**
+             * @description Статус НП згрупований (як у вхідних): CREATED, IN_TRANSIT, ARRIVED, RECEIVED…
+             * @example IN_TRANSIT
+             * @enum {string}
+             */
+            npState?: "CREATED" | "IN_TRANSIT" | "ARRIVED" | "RECEIVED" | "REDIRECTED" | "RETURNING" | "DELIVERY_FAILED" | "NOT_FOUND" | "OTHER";
+            /** Format: date-time */
+            npStatusUpdatedAt?: string;
+        };
         ParcelResponse: {
             /**
              * Format: int64
@@ -1725,7 +1919,7 @@ export interface components {
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус
@@ -2020,6 +2214,8 @@ export interface components {
             npVolumeWeight?: number;
             /** @description Місця з власними штрих-кодами (з'являються при отриманні представником). Статус посилки змінюється, коли всі місця досягли нового статусу */
             seats?: components["schemas"]["ParcelSeatResponse"][];
+            /** @description Відправка Новою Поштою (зворотні посилки): отримувач, куди, наша ЕН і її статус; немає — не заповнено */
+            npShipment?: components["schemas"]["NpShipmentResponse"];
             /**
              * Format: int64
              * @description Склад, де лежить посилка (статус AT_WAREHOUSE, усі місця на одному складі)
@@ -2067,7 +2263,7 @@ export interface components {
              * @example IN_CAR
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус місця
@@ -2110,6 +2306,97 @@ export interface components {
              * @enum {string}
              */
             method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+        };
+        NpShipmentRequest: {
+            /**
+             * @description Прізвище отримувача
+             * @example Коваль
+             */
+            recipientLastName?: string;
+            /**
+             * @description Ім'я отримувача
+             * @example Іван
+             */
+            recipientFirstName?: string;
+            /**
+             * @description По батькові (необов'язково)
+             * @example Петрович
+             */
+            recipientMiddleName?: string;
+            /**
+             * @description Телефон отримувача, український: 380XXXXXXXXX
+             * @example 380671234567
+             */
+            recipientPhone?: string;
+            /**
+             * @description Куди: WAREHOUSE — відділення, POSTOMAT — поштомат, ADDRESS — кур'єр на адресу
+             * @example WAREHOUSE
+             * @enum {string}
+             */
+            deliveryType?: "WAREHOUSE" | "POSTOMAT" | "ADDRESS";
+            /**
+             * @description Ref міста з /api/nova-poshta/cities
+             * @example 8d5a980d-391c-11dd-90d9-001a92567626
+             */
+            cityRef?: string;
+            /**
+             * @description Назва міста (для показу)
+             * @example Київ
+             */
+            cityName?: string;
+            /**
+             * @description Ref відділення / поштомата з /api/nova-poshta/warehouses (WAREHOUSE, POSTOMAT)
+             * @example 1ec09d88-e1c2-11e3-8c4a-0050568002cf
+             */
+            warehouseRef?: string;
+            /**
+             * @description Назва відділення / поштомата (для показу)
+             * @example Відділення №1: вул. Пирогівський шлях, 135
+             */
+            warehouseName?: string;
+            /**
+             * @description Ref вулиці з /api/nova-poshta/streets (ADDRESS)
+             * @example d4450bdb-0a58-11de-b6f5-001d92f78697
+             */
+            streetRef?: string;
+            /**
+             * @description Назва вулиці (для показу)
+             * @example вул. Хрещатик
+             */
+            streetName?: string;
+            /**
+             * @description Будинок (ADDRESS)
+             * @example 12А
+             */
+            building?: string;
+            /**
+             * @description Квартира (ADDRESS, необов'язково)
+             * @example 5
+             */
+            flat?: string;
+            /**
+             * @description Тип вантажу: PARCEL (за замовчуванням), DOCUMENTS, CARGO
+             * @example PARCEL
+             * @enum {string}
+             */
+            cargoType?: "PARCEL" | "DOCUMENTS" | "CARGO";
+            /**
+             * @description Хто платить НП: RECIPIENT (за замовчуванням) або SENDER
+             * @example RECIPIENT
+             * @enum {string}
+             */
+            payerType?: "SENDER" | "RECIPIENT";
+            /**
+             * @description Оплата НП: CASH (за замовчуванням) або NON_CASH
+             * @example CASH
+             * @enum {string}
+             */
+            paymentMethod?: "CASH" | "NON_CASH";
+            /**
+             * @description Накладений платіж, грн: НП збере з отримувача (необов'язково)
+             * @example 1200
+             */
+            codAmount?: number;
         };
         CompanyRequest: {
             /**
@@ -2187,6 +2474,25 @@ export interface components {
              */
             novaPoshtaKeyConfigured?: boolean;
             /**
+             * @description Відправник НП: місто
+             * @example Львів
+             */
+            npSenderCityName?: string;
+            /** @description Відправник НП: Ref міста */
+            npSenderCityRef?: string;
+            /**
+             * @description Відправник НП: відділення відправки
+             * @example Відділення №1: вул. Городоцька, 359
+             */
+            npSenderWarehouseName?: string;
+            /** @description Відправник НП: Ref відділення */
+            npSenderWarehouseRef?: string;
+            /**
+             * @description Відправник НП: телефон
+             * @example 380671234567
+             */
+            npSenderPhone?: string;
+            /**
              * Format: date-time
              * @description Дата створення
              * @example 2026-10-01T08:30:00Z
@@ -2197,6 +2503,33 @@ export interface components {
              * @example Оплата за договором до 10 числа
              */
             notes?: string;
+        };
+        NpSenderRequest: {
+            /**
+             * @description Ref міста відправки
+             * @example db5c88f5-391c-11dd-90d9-001a92567626
+             */
+            cityRef: string;
+            /**
+             * @description Назва міста
+             * @example Львів
+             */
+            cityName?: string;
+            /**
+             * @description Ref відділення, з якого відправляємо
+             * @example 7b422fc5-e1b8-11e3-8c4a-0050568002cf
+             */
+            warehouseRef: string;
+            /**
+             * @description Назва відділення
+             * @example Відділення №1: вул. Городоцька, 359
+             */
+            warehouseName?: string;
+            /**
+             * @description Телефон відправника (контактна особа в кабінеті НП)
+             * @example 380671234567
+             */
+            phone: string;
         };
         ClientRequest: {
             /**
@@ -2808,7 +3141,7 @@ export interface components {
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * @description Коментар; обов'язковий при force=true
              * @example Забрали з відділення, сканер не працював
@@ -3051,7 +3384,7 @@ export interface components {
              * @example IN_CAR
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус
@@ -3081,13 +3414,13 @@ export interface components {
              * @example IN_NOVA_POSHTA
              * @enum {string}
              */
-            previousStatus?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            previousStatus?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * @description Внутрішній статус після зміни
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: int64
              * @description Склад після зміни (для AT_WAREHOUSE)
@@ -3156,6 +3489,22 @@ export interface components {
         PagedModelDeletedItemResponseParcelResponse: {
             content?: components["schemas"]["DeletedItemResponseParcelResponse"][];
             page?: components["schemas"]["PageMetadata"];
+        };
+        Warehouse: {
+            ref?: string;
+            name?: string;
+            number?: string;
+            postomat?: boolean;
+        };
+        Street: {
+            ref?: string;
+            name?: string;
+            type?: string;
+        };
+        City: {
+            ref?: string;
+            name?: string;
+            area?: string;
         };
         PagedModelCompanyResponse: {
             content?: components["schemas"]["CompanyResponse"][];
@@ -4758,6 +5107,112 @@ export interface operations {
             };
         };
     };
+    updateNpShipment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NpShipmentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/parcels/{id}/np-shipment"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/parcels/{id}/np-shipment"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/parcels/{id}/np-shipment"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/parcels/{id}/np-shipment"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     get_4: {
         parameters: {
             query?: never;
@@ -5074,6 +5529,130 @@ export interface operations {
                      *       "status": 502,
                      *       "detail": "TrackingDocument.getStatusDocuments failed: [API key expired]",
                      *       "instance": "/api/companies/{id}/nova-poshta"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setNovaPoshtaSender: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NpSenderRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/{id}/nova-poshta-sender"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/{id}/nova-poshta-sender"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/companies/{id}/nova-poshta-sender"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/companies/{id}/nova-poshta-sender"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Помилка API Нової Пошти */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Nova Poshta API error",
+                     *       "status": 502,
+                     *       "detail": "TrackingDocument.getStatusDocuments failed: [API key expired]",
+                     *       "instance": "/api/companies/{id}/nova-poshta-sender"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -7842,7 +8421,7 @@ export interface operations {
                  * @description Внутрішні статуси: посилки в будь-якому з них. Кілька — `status=A&status=B` або `status=A,B`; не вказано — усі статуси
                  * @example IN_NOVA_POSHTA
                  */
-                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
+                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
                 /**
                  * @description ID клієнта
                  * @example 7
@@ -8271,6 +8850,201 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/parcels/{id}/restore"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createNpWaybill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/parcels/{id}/np-shipment/waybill"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/parcels/{id}/np-shipment/waybill"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/parcels/{id}/np-shipment/waybill"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/parcels/{id}/np-shipment/waybill"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteNpWaybill: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/parcels/{id}/np-shipment/waybill"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/parcels/{id}/np-shipment/waybill"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/parcels/{id}/np-shipment/waybill"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/parcels/{id}/np-shipment/waybill"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -10147,6 +10921,321 @@ export interface operations {
             };
         };
     };
+    warehouses: {
+        parameters: {
+            query: {
+                /** @description Ref міста */
+                cityRef: string;
+                /**
+                 * @description Номер або частина адреси
+                 * @example 1
+                 */
+                query?: string;
+                /** @description WAREHOUSE — відділення, POSTOMAT — поштомати; не вказано — усі */
+                type?: "WAREHOUSE" | "POSTOMAT";
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Warehouse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/nova-poshta/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/nova-poshta/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/nova-poshta/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Помилка API Нової Пошти */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Nova Poshta API error",
+                     *       "status": 502,
+                     *       "detail": "TrackingDocument.getStatusDocuments failed: [API key expired]",
+                     *       "instance": "/api/nova-poshta/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    streets: {
+        parameters: {
+            query: {
+                /** @description Ref міста */
+                cityRef: string;
+                /**
+                 * @description Частина назви
+                 * @example Хрещатик
+                 */
+                query: string;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["Street"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/nova-poshta/streets"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/nova-poshta/streets"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/nova-poshta/streets"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Помилка API Нової Пошти */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Nova Poshta API error",
+                     *       "status": 502,
+                     *       "detail": "TrackingDocument.getStatusDocuments failed: [API key expired]",
+                     *       "instance": "/api/nova-poshta/streets"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cities: {
+        parameters: {
+            query: {
+                /**
+                 * @description Частина назви
+                 * @example Київ
+                 */
+                query: string;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["City"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/nova-poshta/cities"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/nova-poshta/cities"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/nova-poshta/cities"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Помилка API Нової Пошти */
+            502: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Nova Poshta API error",
+                     *       "status": 502,
+                     *       "detail": "TrackingDocument.getStatusDocuments failed: [API key expired]",
+                     *       "instance": "/api/nova-poshta/cities"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     current: {
         parameters: {
             query?: never;
@@ -10233,7 +11322,7 @@ export interface operations {
                  * @description Внутрішні статуси: посилки в будь-якому з них. Кілька — `status=A&status=B` або `status=A,B`; не вказано — усі статуси
                  * @example DELIVERED_TO_CLIENT
                  */
-                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
+                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */

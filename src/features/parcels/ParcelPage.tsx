@@ -19,6 +19,7 @@ import { formatDate, formatDateTime, formatMoney, formatPhone, formatWeight } fr
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { ParcelEditDialog } from './ParcelEditDialog'
 import { isNpDeliveryPaid, NpPaymentCard } from './NpPaymentCard'
+import { NpShipmentCard } from './NpShipmentCard'
 import { ChannelBadge } from '@/features/channels/channel'
 import { NpStateBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
@@ -298,6 +299,8 @@ export function ParcelPage() {
         )}
 
         {p.npTtn && <NpPaymentCard parcel={p} />}
+
+        <NpShipmentCard parcel={p} />
 
         {p.npTtn && (
           <Card>

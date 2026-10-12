@@ -16,6 +16,12 @@ export type ParcelUpdateRequest = Schemas['ParcelUpdateRequest']
 export type ParcelStatusChangeRequest = Schemas['ParcelStatusChangeRequest']
 export type ParcelPaymentRequest = Schemas['ParcelPaymentRequest']
 export type NpState = NonNullable<ParcelResponse['npState']>
+export type NpShipmentRequest = Schemas['NpShipmentRequest']
+export type NpShipmentResponse = Schemas['NpShipmentResponse']
+export type NpDeliveryType = NonNullable<NpShipmentRequest['deliveryType']>
+export type NpCargoType = NonNullable<NpShipmentRequest['cargoType']>
+export type NpPayerType = NonNullable<NpShipmentRequest['payerType']>
+export type NpPaymentMethod = NonNullable<NpShipmentRequest['paymentMethod']>
 
 /** Trash entry: the record as it was plus who deleted it and when (same shape for every entity). */
 export type DeletedItem<T> = { item?: T; deletedAt?: string; deletedBy?: string }
@@ -29,6 +35,7 @@ export type CompanyResponse = Schemas['CompanyResponse']
 export type UserCreateRequest = Schemas['UserCreateRequest']
 export type UserUpdateRequest = Schemas['UserUpdateRequest']
 export type NovaPoshtaKeyRequest = Schemas['NovaPoshtaKeyRequest']
+export type NpSenderRequest = Schemas['NpSenderRequest']
 export type CarRequest = Schemas['CarRequest']
 export type CarResponse = Schemas['CarResponse']
 export type SyncResult = Schemas['SyncResult']

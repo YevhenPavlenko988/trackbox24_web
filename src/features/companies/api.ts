@@ -1,7 +1,7 @@
 import { api } from '@/lib/api/client'
 import { normalizePage, type Page, type PageParams } from '@/lib/api/page'
 import { unwrap } from '@/lib/api/problem'
-import type { CompanyRequest, CompanyResponse, NovaPoshtaKeyRequest, SyncResult } from '@/lib/api/types'
+import type { CompanyRequest, CompanyResponse, NovaPoshtaKeyRequest, NpSenderRequest, SyncResult } from '@/lib/api/types'
 
 export async function listCompanies(params: PageParams): Promise<Page<CompanyResponse>> {
   const data = await unwrap(
@@ -34,6 +34,11 @@ export function setCompanyActive(id: number, value: boolean): Promise<CompanyRes
 
 export function setCompanyNpKey(id: number, body: NovaPoshtaKeyRequest): Promise<CompanyResponse> {
   return unwrap(api.PUT('/api/companies/{id}/nova-poshta', { params: { path: { id } }, body }))
+}
+
+/** Where our outgoing Nova Poshta waybills are sent from (city, branch, contact phone of the NP account). */
+export function setCompanyNpSender(id: number, body: NpSenderRequest): Promise<CompanyResponse> {
+  return unwrap(api.PUT('/api/companies/{id}/nova-poshta-sender', { params: { path: { id } }, body }))
 }
 
 export function syncNovaPoshta(): Promise<SyncResult> {

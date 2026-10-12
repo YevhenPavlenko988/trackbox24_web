@@ -4,9 +4,11 @@ import type { ParcelResponse, ParcelStatus } from '@/lib/api/types'
 export const TRANSITIONS: Record<ParcelStatus, ParcelStatus[]> = {
   IN_NOVA_POSHTA: ['PICKED_UP_FROM_NOVA_POSHTA', 'RECEIVED_BY_REPRESENTATIVE', 'CANCELLED'],
   PICKED_UP_FROM_NOVA_POSHTA: ['RECEIVED_BY_REPRESENTATIVE', 'CANCELLED'],
-  RECEIVED_BY_REPRESENTATIVE: ['AT_WAREHOUSE', 'IN_CAR', 'CANCELLED'],
-  AT_WAREHOUSE: ['AT_WAREHOUSE', 'IN_CAR', 'DELIVERED_TO_CLIENT', 'CANCELLED'],
-  IN_CAR: ['DELIVERED_TO_CLIENT', 'AT_WAREHOUSE', 'RECEIVED_BY_REPRESENTATIVE'],
+  RECEIVED_BY_REPRESENTATIVE: ['AT_WAREHOUSE', 'IN_CAR', 'SENT_VIA_NOVA_POSHTA', 'CANCELLED'],
+  AT_WAREHOUSE: ['AT_WAREHOUSE', 'IN_CAR', 'SENT_VIA_NOVA_POSHTA', 'DELIVERED_TO_CLIENT', 'CANCELLED'],
+  IN_CAR: ['DELIVERED_TO_CLIENT', 'AT_WAREHOUSE', 'RECEIVED_BY_REPRESENTATIVE', 'SENT_VIA_NOVA_POSHTA'],
+  // came back from Nova Poshta, or the recipient picked it up there
+  SENT_VIA_NOVA_POSHTA: ['DELIVERED_TO_CLIENT', 'AT_WAREHOUSE', 'CANCELLED'],
   DELIVERED_TO_CLIENT: [],
   CANCELLED: [],
 }
@@ -17,12 +19,16 @@ export const PARCEL_STATUSES: ParcelStatus[] = [
   'RECEIVED_BY_REPRESENTATIVE',
   'AT_WAREHOUSE',
   'IN_CAR',
+  'SENT_VIA_NOVA_POSHTA',
   'DELIVERED_TO_CLIENT',
   'CANCELLED',
 ]
 
 /** Statuses from which a parcel can be planned into a trip or moved to a warehouse. */
 export const SHIPPABLE_STATUSES: ParcelStatus[] = ['RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE']
+
+/** With us, so the outgoing Nova Poshta shipment can still be filled in and a waybill created (mirrors NpShipmentService). */
+export const NP_SHIPPABLE_STATUSES: ParcelStatus[] = ['RECEIVED_BY_REPRESENTATIVE', 'AT_WAREHOUSE', 'IN_CAR']
 
 export function isFinalStatus(status?: ParcelStatus): boolean {
   return status === 'DELIVERED_TO_CLIENT' || status === 'CANCELLED'

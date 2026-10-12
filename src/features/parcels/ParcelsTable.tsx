@@ -52,7 +52,7 @@ export function ParcelsTable({
   extra?: (p: ParcelResponse) => ReactNode
   selection?: Selection
 }) {
-  const { t } = useTranslation(['parcels', 'common', 'trips'])
+  const { t } = useTranslation(['parcels', 'common', 'trips', 'novaPoshta'])
   const navigate = useNavigate()
   const { canSeeMoney } = useAccess()
 
@@ -64,6 +64,12 @@ export function ParcelsTable({
         <div className="flex flex-col">
           <span className="font-mono font-medium">{p.barcode ?? '—'}</span>
           {p.npTtn && <span className="text-xs text-muted-foreground">{t('parcels:fields.npTtnShort')} {p.npTtn}</span>}
+          {/* Our own outgoing waybill (return parcels); a search by this number finds the parcel. */}
+          {p.npShipment?.waybillNumber && (
+            <span className="text-xs text-muted-foreground">
+              {t('novaPoshta:shipment.waybillShort')} {p.npShipment.waybillNumber}
+            </span>
+          )}
         </div>
       ),
     },
@@ -104,22 +110,23 @@ export function ParcelsTable({
       key: 'npState',
       header: t('parcels:fields.npState'),
       cell: (p) => {
-        const state = npStateOf(p)
-        const text = npStatusTextOf(p)
-        return state ? (
+        // The incoming waybill if there is one, otherwise our own outgoing one (return parcels).
+        const source = npStateOf(p) ? p : p.npShipment && npStateOf(p.npShipment) ? p.npShipment : undefined
+        if (!source) {
+          return p.npTtn ? <span className="text-xs text-muted-foreground">{t('parcels:np.noTracking')}</span> : <span className="text-muted-foreground">—</span>
+        }
+        const state = npStateOf(source)
+        const text = npStatusTextOf(source)
+        return (
           <div className="flex flex-col items-start gap-0.5">
-            <NpStateBadge parcel={p} />
+            <NpStateBadge parcel={source} />
             {text && state !== 'OTHER' && (
               <span className="line-clamp-2 max-w-56 text-xs text-muted-foreground" title={text}>
                 {text}
               </span>
             )}
-            {p.npStatusUpdatedAt && <span className="text-xs text-muted-foreground">{formatDateTime(p.npStatusUpdatedAt)}</span>}
+            {source.npStatusUpdatedAt && <span className="text-xs text-muted-foreground">{formatDateTime(source.npStatusUpdatedAt)}</span>}
           </div>
-        ) : p.npTtn ? (
-          <span className="text-xs text-muted-foreground">{t('parcels:np.noTracking')}</span>
-        ) : (
-          <span className="text-muted-foreground">—</span>
         )
       },
     },

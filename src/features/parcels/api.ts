@@ -5,6 +5,7 @@ import type { components } from '@/lib/api/schema'
 import type {
   Channel,
   DeletedItem,
+  NpShipmentRequest,
   ParcelCreateRequest,
   ParcelHistoryResponse,
   ParcelPaymentRequest,
@@ -103,6 +104,19 @@ export async function loadParcelIntoTrip(parcel: ParcelResponse, tripId: number,
 
 export function setParcelPayment(id: number, body: ParcelPaymentRequest): Promise<ParcelResponse> {
   return unwrap(api.PUT('/api/parcels/{id}/payment', { params: { path: { id } }, body }))
+}
+
+/** Outgoing Nova Poshta shipment (return parcels); the request replaces every field, so the whole form is sent. */
+export function updateNpShipment(id: number, body: NpShipmentRequest): Promise<ParcelResponse> {
+  return unwrap(api.PUT('/api/parcels/{id}/np-shipment', { params: { path: { id } }, body }))
+}
+
+export function createNpWaybill(id: number): Promise<ParcelResponse> {
+  return unwrap(api.POST('/api/parcels/{id}/np-shipment/waybill', { params: { path: { id } } }))
+}
+
+export function deleteNpWaybill(id: number): Promise<ParcelResponse> {
+  return unwrap(api.DELETE('/api/parcels/{id}/np-shipment/waybill', { params: { path: { id } } }))
 }
 
 export function refreshParcelFromNp(id: number): Promise<ParcelResponse> {
