@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { NpBranchPicker, NpCityPicker, NpStreetPicker } from '@/features/nova-poshta/NpRefPicker'
 import { useMutationError } from '@/lib/api/problem'
 import type { NpCargoType, NpDeliveryType, NpPayerType, NpPaymentMethod, ParcelResponse } from '@/lib/api/types'
-import { useUpdateNpShipment } from './queries'
+import { useUpdateNpShipment, useUpdateParcel } from './queries'
 import { orUndefined, parseNumber } from './status'
 
 export const NP_DELIVERY_TYPES: NpDeliveryType[] = ['WAREHOUSE', 'POSTOMAT', 'ADDRESS']
@@ -23,6 +23,11 @@ const PAYER_TYPES: NpPayerType[] = ['RECIPIENT', 'SENDER']
 const NP_PAYMENT_METHODS: NpPaymentMethod[] = ['CASH', 'NON_CASH']
 
 const schema = z.object({
+  // Nova Poshta builds the waybill from the parcel itself and refuses it without these three, so they are filled
+  // in right here instead of sending the manager to the parcel form.
+  description: z.string().trim(),
+  weightKg: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) > 0, 'number'),
+  declaredValue: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) > 0, 'number'),
   recipientLastName: z.string().trim(),
   recipientFirstName: z.string().trim(),
   recipientMiddleName: z.string().trim(),
@@ -48,6 +53,9 @@ type FormValues = z.infer<typeof schema>
 function defaults(parcel: ParcelResponse): FormValues {
   const s = parcel.npShipment
   return {
+    description: parcel.description ?? '',
+    weightKg: parcel.weightKg != null ? String(parcel.weightKg) : '',
+    declaredValue: parcel.declaredValue != null ? String(parcel.declaredValue) : '',
     recipientLastName: s?.recipientLastName ?? '',
     recipientFirstName: s?.recipientFirstName ?? '',
     recipientMiddleName: s?.recipientMiddleName ?? '',
@@ -75,6 +83,7 @@ function defaults(parcel: ParcelResponse): FormValues {
 export function NpShipmentDialog({ parcel, open, onOpenChange }: { parcel: ParcelResponse; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useTranslation(['novaPoshta', 'common'])
   const save = useUpdateNpShipment(parcel.id!)
+  const saveParcel = useUpdateParcel(parcel.id!)
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: defaults(parcel) })
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
@@ -84,6 +93,17 @@ export function NpShipmentDialog({ parcel, open, onOpenChange }: { parcel: Parce
 
   const submit = form.handleSubmit(async (v) => {
     try {
+      // `PUT /api/parcels/{id}` is partial, so only what was actually typed goes with it.
+      const parcelPatch = {
+        description: orUndefined(v.description),
+        weightKg: parseNumber(v.weightKg),
+        declaredValue: parseNumber(v.declaredValue),
+      }
+      const changed =
+        parcelPatch.description !== (parcel.description || undefined) ||
+        parcelPatch.weightKg !== (parcel.weightKg ?? undefined) ||
+        parcelPatch.declaredValue !== (parcel.declaredValue ?? undefined)
+      if (changed) await saveParcel.mutateAsync(parcelPatch)
       await save.mutateAsync({
         recipientLastName: orUndefined(v.recipientLastName),
         recipientFirstName: orUndefined(v.recipientFirstName),
@@ -120,6 +140,24 @@ export function NpShipmentDialog({ parcel, open, onOpenChange }: { parcel: Parce
         {open && (
           <form onSubmit={submit} noValidate className="max-h-[70vh] overflow-y-auto px-1">
             <FieldGroup>
+              <Field data-invalid={!!errors.description}>
+                <FieldLabel htmlFor="np-description">{t('novaPoshta:shipment.description')}</FieldLabel>
+                <Input id="np-description" {...form.register('description')} />
+                <FieldDescription>{t('novaPoshta:shipment.parcelFieldsHint')}</FieldDescription>
+                <FieldErrorText error={errors.description} />
+              </Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field data-invalid={!!errors.weightKg}>
+                  <FieldLabel htmlFor="np-weight">{t('novaPoshta:shipment.weightKg')}</FieldLabel>
+                  <Input id="np-weight" inputMode="decimal" aria-invalid={!!errors.weightKg} {...form.register('weightKg')} />
+                  <FieldErrorText error={errors.weightKg} />
+                </Field>
+                <Field data-invalid={!!errors.declaredValue}>
+                  <FieldLabel htmlFor="np-declared">{t('novaPoshta:shipment.declaredValue')}</FieldLabel>
+                  <Input id="np-declared" inputMode="decimal" aria-invalid={!!errors.declaredValue} {...form.register('declaredValue')} />
+                  <FieldErrorText error={errors.declaredValue} />
+                </Field>
+              </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <Field data-invalid={!!errors.recipientLastName}>
                   <FieldLabel htmlFor="np-last">{t('novaPoshta:shipment.lastName')}</FieldLabel>
