@@ -27,6 +27,7 @@ export const TAB_FILTER_STATUSES: Record<ParcelTab, ParcelStatus[]> = {
     'IN_NOVA_POSHTA',
     'PICKED_UP_FROM_NOVA_POSHTA',
     'RECEIVED_BY_REPRESENTATIVE',
+    'ACCEPTED_BY_DRIVER',
     'AT_WAREHOUSE',
     'IN_CAR',
     'SENT_VIA_NOVA_POSHTA',

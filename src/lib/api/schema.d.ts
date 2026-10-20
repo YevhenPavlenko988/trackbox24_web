@@ -724,7 +724,8 @@ export interface paths {
          *     Без ТТН посилка одразу вважається отриманою представником і отримує наш штрих-код.
          *     Без `clientId` позначається як така, що потребує збагачення.
          *     Водій приймає посилку від людини без ТТН (наприклад, на зворотний рейс): клієнт обов'язковий —
-         *     наявний (`GET /api/clients?search=`) або щойно створений (`POST /api/clients`); посилка одразу прийнята, з нашим штрих-кодом.
+         *     наявний (`GET /api/clients?search=`) або щойно створений (`POST /api/clients`); посилка одразу в статусі ACCEPTED_BY_DRIVER
+         *     («Прийнято водієм»), з нашим штрих-кодом; далі як з отриманою представником.
          */
         post: operations["create_3"];
         delete?: never;
@@ -1927,7 +1928,7 @@ export interface components {
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус
@@ -2271,7 +2272,7 @@ export interface components {
              * @example IN_CAR
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус місця
@@ -3155,7 +3156,7 @@ export interface components {
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * @description Коментар; обов'язковий при force=true
              * @example Забрали з відділення, сканер не працював
@@ -3398,7 +3399,7 @@ export interface components {
              * @example IN_CAR
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: date-time
              * @description Коли змінено статус
@@ -3428,13 +3429,13 @@ export interface components {
              * @example IN_NOVA_POSHTA
              * @enum {string}
              */
-            previousStatus?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            previousStatus?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * @description Внутрішній статус після зміни
              * @example RECEIVED_BY_REPRESENTATIVE
              * @enum {string}
              */
-            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
              * Format: int64
              * @description Склад після зміни (для AT_WAREHOUSE)
@@ -8435,7 +8436,7 @@ export interface operations {
                  * @description Внутрішні статуси: посилки в будь-якому з них. Кілька — `status=A&status=B` або `status=A,B`; не вказано — усі статуси
                  * @example IN_NOVA_POSHTA
                  */
-                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
+                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
                 /**
                  * @description ID клієнта
                  * @example 7
@@ -10129,7 +10130,25 @@ export interface operations {
                      *       "type": "about:blank",
                      *       "title": "Unauthorized",
                      *       "status": 401,
-                     *       "detail": "Invalid email or password",
+                     *       "detail": "Неправильний email або пароль",
+                     *       "instance": "/api/auth/login"
+                     *     }
+                     */
+                    "application/problem+json": unknown;
+                };
+            };
+            /** @description Забагато невдалих спроб входу в акаунт або з цієї адреси; через скільки секунд можна спробувати знову — у заголовку `Retry-After` */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Too Many Requests",
+                     *       "status": 429,
+                     *       "detail": "Забагато невдалих спроб входу. Спробуйте через 15 хв",
                      *       "instance": "/api/auth/login"
                      *     }
                      */
@@ -11336,7 +11355,7 @@ export interface operations {
                  * @description Внутрішні статуси: посилки в будь-якому з них. Кілька — `status=A&status=B` або `status=A,B`; не вказано — усі статуси
                  * @example DELIVERED_TO_CLIENT
                  */
-                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
+                status?: ("IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED")[];
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */
