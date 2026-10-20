@@ -177,12 +177,18 @@ export function ParcelsTable({
       key: 'npDates',
       header: t('parcels:fields.npDates'),
       cell: (p) =>
-        p.npScheduledDeliveryAt || p.npPaidStorageFrom ? (
+        p.npScheduledDeliveryAt || p.npPaidStorageFrom || p.npShipment?.estimatedDeliveryDate ? (
           <div className="flex flex-col">
             {p.npScheduledDeliveryAt && <span>{formatDate(p.npScheduledDeliveryAt)}</span>}
             {p.npPaidStorageFrom && (
               <span className={isPaidStorageDue(p) ? 'text-xs font-medium text-destructive' : 'text-xs text-muted-foreground'}>
                 {t('parcels:fields.npPaidStorageShort', { date: formatDate(p.npPaidStorageFrom) })}
+              </span>
+            )}
+            {/* Our own outgoing waybill (return parcels): when Nova Poshta expects to deliver it. */}
+            {p.npShipment?.estimatedDeliveryDate && (
+              <span className={p.npScheduledDeliveryAt ? 'text-xs text-muted-foreground' : undefined}>
+                {t('parcels:np.outgoingEta', { date: formatDate(p.npShipment.estimatedDeliveryDate) })}
               </span>
             )}
           </div>

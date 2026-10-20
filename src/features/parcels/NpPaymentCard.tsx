@@ -60,7 +60,15 @@ function Row({ label, value, note }: { label: string; value: string; note?: stri
 /** Compact version for the parcels table: NP delivery cost, who pays it, and what is still due at the branch. */
 export function NpPaymentSummary({ parcel: p }: { parcel: ParcelResponse }) {
   const { t } = useTranslation('parcels')
-  if (!p.npTtn) return <span className="text-muted-foreground">—</span>
+  // Our own outgoing waybill (return parcels): what Nova Poshta will charge us for it.
+  const outgoing =
+    p.npShipment?.waybillNumber && p.npShipment.waybillCost != null ? (
+      <div className="flex flex-col">
+        <span>{formatMoney(p.npShipment.waybillCost)}</span>
+        <span className="text-xs text-muted-foreground">{t('np.outgoingCost')}</span>
+      </div>
+    ) : null
+  if (!p.npTtn) return outgoing ?? <span className="text-muted-foreground">—</span>
   const payer = p.npPayerType
   const who = isNpDeliveryPaid(p)
     ? t('np.paidOnline')
@@ -87,6 +95,7 @@ export function NpPaymentSummary({ parcel: p }: { parcel: ParcelResponse }) {
           {t('np.dueShort')}: {formatMoney(due)}
         </span>
       )}
+      {outgoing && <div className="mt-1">{outgoing}</div>}
     </div>
   )
 }
