@@ -1,4 +1,4 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getViewCompanyId } from '@/features/auth/companyView'
 import type { NovaPoshtaKeyRequest, Role, UserCreateRequest, UserResponse, UserUpdateRequest } from '@/lib/api/types'
 import { createUser, listUsers, resetUserPassword, setUserNovaPoshta, updateUser, type UserListParams } from './api'
@@ -28,6 +28,25 @@ export function useUsersByRole(role: Role) {
     staleTime: 5 * 60 * 1000,
   })
 }
+
+/**
+ * Users with any of the roles, each once, sorted by name: the backend filters by one role per request, so one
+ * request per role is merged here (a person with both roles comes back twice).
+ */
+export function useUsersByRoles(roles: Role[]): UserResponse[] {
+  const companyId = getViewCompanyId() ?? undefined
+  const results = useQueries({
+    queries: roles.map((role) => {
+      const params: UserListParams = { role, companyId, size: 500 }
+      return { queryKey: userKeys.list(params), queryFn: () => listUsers(params), staleTime: 5 * 60 * 1000 }
+    }),
+  })
+  const byId = new Map<number, UserResponse>()
+  for (const r of results) for (const u of r.data?.content ?? []) byId.set(u.id, u)
+  return [...byId.values()].sort((a, b) => userSortKey(a).localeCompare(userSortKey(b), 'uk'))
+}
+
+const userSortKey = (u: UserResponse) => [u.lastName, u.firstName].filter(Boolean).join(' ') || u.email || ''
 
 function useUserMutation<TVars, TResult = UserResponse>(mutationFn: (vars: TVars) => Promise<TResult>) {
   const queryClient = useQueryClient()

@@ -162,7 +162,7 @@ export function ParcelsListPage() {
             </SelectContent>
           </Select>
         )}
-        <UserSelect role="REPRESENTATIVE" value={representativeId} onChange={(v) => set({ representativeId: v })} noneLabel={t('parcels:filters.allRepresentatives')} />
+        <UserSelect role={['REPRESENTATIVE', 'DRIVER']} value={representativeId} onChange={(v) => set({ representativeId: v })} noneLabel={t('parcels:filters.allRepresentatives')} />
         <div className="w-56">
           <WarehouseSelect value={warehouseId} onChange={(v) => set({ warehouseId: v })} noneLabel={t('parcels:filters.allWarehouses')} />
         </div>

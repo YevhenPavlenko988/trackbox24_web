@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { Role } from '@/lib/api/types'
 import { userDisplayName } from './api'
-import { useUsersByRole } from './queries'
+import { useUsersByRoles } from './queries'
 
 const NONE = '__none__'
 
@@ -17,7 +17,8 @@ export function UserSelect({
   disabled,
   excludeId,
 }: {
-  role: Role
+  /** One role, or several: everyone with any of them (e.g. representatives and drivers, who both accept parcels). */
+  role: Role | Role[]
   value?: number
   onChange: (id: number | undefined) => void
   id?: string
@@ -29,8 +30,7 @@ export function UserSelect({
   excludeId?: number
 }) {
   const { t } = useTranslation('users')
-  const users = useUsersByRole(role)
-  const all = users.data?.content ?? []
+  const all = useUsersByRoles(Array.isArray(role) ? role : [role])
   const items = excludeId == null ? all : all.filter((u) => u.id !== excludeId)
   const selected = all.find((u) => u.id === value)
   const empty = noneLabel ?? t('selectPlaceholder')
