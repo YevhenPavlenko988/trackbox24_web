@@ -26,18 +26,20 @@ const numberField = z
   .string()
   .trim()
   .refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number')
+/** Nova Poshta takes sizes from 0.1 to 9999 cm; an empty one is simply not sent. */
+const sizeField = numberField.refine((s) => s === '' || ((parseNumber(s) ?? 0) >= 0.1 && (parseNumber(s) ?? 0) <= 9999), 'sizeRange')
 
 const schema = z.object({
   representativeId: z.number().optional(),
   clientId: z.number().optional(),
   needsEnrichment: z.boolean(),
-  description: z.string().trim(),
+  description: z.string().trim().max(500, 'max500'),
   weightKg: numberField,
   seatsAmount: z.string().trim().refine((s) => /^\d+$/.test(s) && Number(s) >= 1, 'min1'),
   declaredValue: numberField,
-  lengthCm: numberField,
-  widthCm: numberField,
-  heightCm: numberField,
+  lengthCm: sizeField,
+  widthCm: sizeField,
+  heightCm: sizeField,
   deliveryCity: z.string().trim().max(255),
   senderName: z.string().trim(),
   senderPhone: z.string().trim(),

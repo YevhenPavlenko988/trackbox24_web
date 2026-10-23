@@ -22,31 +22,34 @@ const CARGO_TYPES: NpCargoType[] = ['PARCEL', 'DOCUMENTS', 'CARGO']
 const PAYER_TYPES: NpPayerType[] = ['RECIPIENT', 'SENDER']
 const NP_PAYMENT_METHODS: NpPaymentMethod[] = ['CASH', 'NON_CASH']
 
-const schema = z.object({
-  // Nova Poshta builds the waybill from the parcel itself and refuses it without these three, so they are filled
-  // in right here instead of sending the manager to the parcel form.
-  description: z.string().trim(),
-  weightKg: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number'),
-  declaredValue: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) > 0, 'number'),
-  recipientLastName: z.string().trim(),
-  recipientFirstName: z.string().trim(),
-  recipientMiddleName: z.string().trim(),
-  // The driver saves what they already know, so an empty phone is allowed; Nova Poshta only takes Ukrainian numbers.
-  recipientPhone: z.string().trim().refine((s) => s === '' || /^380\d{9}$/.test(s), 'npPhone'),
-  deliveryType: z.enum(NP_DELIVERY_TYPES),
-  cityRef: z.string(),
-  cityName: z.string(),
-  branchRef: z.string(),
-  branchName: z.string(),
-  streetRef: z.string(),
-  streetName: z.string(),
-  building: z.string().trim(),
-  flat: z.string().trim(),
-  cargoType: z.enum(CARGO_TYPES),
-  payerType: z.enum(PAYER_TYPES),
-  paymentMethod: z.enum(NP_PAYMENT_METHODS),
-  codAmount: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number'),
-})
+const schema = z
+  .object({
+    // Nova Poshta builds the waybill from the parcel itself and refuses it without these three, so they are filled
+    // in right here instead of sending the manager to the parcel form.
+    description: z.string().trim().max(500, 'max500'),
+    weightKg: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number'),
+    declaredValue: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number'),
+    recipientLastName: z.string().trim(),
+    recipientFirstName: z.string().trim(),
+    recipientMiddleName: z.string().trim(),
+    // The driver saves what they already know, so an empty phone is allowed; Nova Poshta only takes Ukrainian numbers.
+    recipientPhone: z.string().trim().refine((s) => s === '' || /^380\d{9}$/.test(s), 'npPhone'),
+    deliveryType: z.enum(NP_DELIVERY_TYPES),
+    cityRef: z.string(),
+    cityName: z.string(),
+    branchRef: z.string(),
+    branchName: z.string(),
+    streetRef: z.string(),
+    streetName: z.string(),
+    building: z.string().trim(),
+    flat: z.string().trim(),
+    cargoType: z.enum(CARGO_TYPES),
+    payerType: z.enum(PAYER_TYPES),
+    paymentMethod: z.enum(NP_PAYMENT_METHODS),
+    codAmount: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number'),
+  })
+  // Documents travel as 0.1 / 0.5 / 1 kg: anything heavier is a parcel, and Nova Poshta says so when the waybill is made.
+  .refine((v) => v.cargoType !== 'DOCUMENTS' || (parseNumber(v.weightKg) ?? 0) <= 1, { path: ['weightKg'], message: 'docWeightMax' })
 
 type FormValues = z.infer<typeof schema>
 
@@ -90,6 +93,7 @@ export function NpShipmentDialog({ parcel, open, onOpenChange }: { parcel: Parce
   const deliveryType = form.watch('deliveryType')
   const cityRef = form.watch('cityRef')
   const toAddress = deliveryType === 'ADDRESS'
+  const documents = form.watch('cargoType') === 'DOCUMENTS'
 
   const submit = form.handleSubmit(async (v) => {
     try {
@@ -140,6 +144,17 @@ export function NpShipmentDialog({ parcel, open, onOpenChange }: { parcel: Parce
         {open && (
           <form onSubmit={submit} noValidate className="max-h-[70vh] overflow-y-auto px-1">
             <FieldGroup>
+              {/* First: it decides what the waybill needs of the parcel itself — documents go without a weight. */}
+              <EnumField
+                form={form}
+                name="cargoType"
+                options={CARGO_TYPES}
+                label={t('novaPoshta:shipment.cargoType')}
+                prefix="cargoType"
+                id="np-cargo"
+                hint={t(documents ? 'novaPoshta:shipment.cargoDocumentsHint' : 'novaPoshta:shipment.cargoParcelHint')}
+                onChange={() => void form.trigger('weightKg')}
+              />
               <Field data-invalid={!!errors.description}>
                 <FieldLabel htmlFor="np-description">{t('novaPoshta:shipment.description')}</FieldLabel>
                 <Input id="np-description" {...form.register('description')} />
@@ -264,8 +279,7 @@ export function NpShipmentDialog({ parcel, open, onOpenChange }: { parcel: Parce
                 </Field>
               )}
 
-              <div className="grid gap-4 sm:grid-cols-3">
-                <EnumField form={form} name="cargoType" options={CARGO_TYPES} label={t('novaPoshta:shipment.cargoType')} prefix="cargoType" id="np-cargo" />
+              <div className="grid gap-4 sm:grid-cols-2">
                 <EnumField form={form} name="payerType" options={PAYER_TYPES} label={t('novaPoshta:shipment.payerType')} prefix="payerType" id="np-payer" />
                 <EnumField form={form} name="paymentMethod" options={NP_PAYMENT_METHODS} label={t('novaPoshta:shipment.paymentMethod')} prefix="paymentMethod" id="np-pay-method" />
               </div>
@@ -301,6 +315,8 @@ function EnumField<K extends 'cargoType' | 'payerType' | 'paymentMethod'>({
   label,
   prefix,
   id,
+  hint,
+  onChange,
 }: {
   form: ReturnType<typeof useForm<FormValues>>
   name: K
@@ -308,6 +324,8 @@ function EnumField<K extends 'cargoType' | 'payerType' | 'paymentMethod'>({
   label: string
   prefix: string
   id: string
+  hint?: string
+  onChange?: (value: FormValues[K]) => void
 }) {
   const { t } = useTranslation('novaPoshta')
   return (
@@ -317,7 +335,14 @@ function EnumField<K extends 'cargoType' | 'payerType' | 'paymentMethod'>({
       render={({ field }) => (
         <Field>
           <FieldLabel htmlFor={id}>{label}</FieldLabel>
-          <Select value={field.value} onValueChange={(v) => v && field.onChange(v)}>
+          <Select
+            value={field.value}
+            onValueChange={(v) => {
+              if (!v) return
+              field.onChange(v)
+              onChange?.(v as FormValues[K])
+            }}
+          >
             <SelectTrigger id={id} className="w-full">
               <SelectValue>{t(`${prefix}.${field.value}`)}</SelectValue>
             </SelectTrigger>
@@ -329,6 +354,7 @@ function EnumField<K extends 'cargoType' | 'payerType' | 'paymentMethod'>({
               ))}
             </SelectContent>
           </Select>
+          {hint && <FieldDescription>{hint}</FieldDescription>}
         </Field>
       )}
     />
