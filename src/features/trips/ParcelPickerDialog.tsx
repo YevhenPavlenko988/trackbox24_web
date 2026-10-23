@@ -1,3 +1,4 @@
+import { MapPin } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
@@ -79,6 +80,13 @@ export function ParcelPickerDialog({
                     {p.seatsAmount && p.seatsAmount > 1 && ` · ${p.seatsAmount} м.`}
                   </span>
                 </span>
+                {/* Where it goes is what a route is planned around: the delivery city, or the client's city when none is set. */}
+                {(p.deliveryCity || p.clientCity) && (
+                  <span className="flex shrink-0 items-center gap-1 text-sm">
+                    <MapPin className="size-3.5 text-muted-foreground" />
+                    {p.deliveryCity || p.clientCity}
+                  </span>
+                )}
                 {p.plannedTripId != null && p.plannedTripId !== tripId && <Badge variant="outline">{t('trips:picker.inPlan', { id: p.plannedTripId })}</Badge>}
               </Label>
             ))
