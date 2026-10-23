@@ -10,6 +10,7 @@ import {
   setCompanyActive,
   setCompanyNpKey,
   setCompanyNpSender,
+  setCompanyPhotos,
   syncNovaPoshta,
   updateCompany,
 } from './api'
@@ -61,6 +62,10 @@ export function useUpdateCompany(id: number) {
 
 export function useSetCompanyActive(id: number) {
   return useCompanyMutation((value: boolean) => setCompanyActive(id, value))
+}
+
+export function useSetCompanyPhotos(id: number) {
+  return useCompanyMutation((value: boolean) => setCompanyPhotos(id, value))
 }
 
 export function useSetCompanyNpKey(id: number) {

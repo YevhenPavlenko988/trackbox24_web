@@ -9,6 +9,7 @@ import type {
   ParcelCreateRequest,
   ParcelHistoryResponse,
   ParcelPaymentRequest,
+  ParcelPhotoResponse,
   ParcelResponse,
   ParcelStatus,
   ParcelStatusChangeRequest,
@@ -128,4 +129,28 @@ export type NpSyncResult = components['schemas']['SyncResult']
 /** Same job the backend cron does: import incoming waybills of the company's representatives and refresh NP statuses. */
 export function syncNovaPoshta(): Promise<NpSyncResult> {
   return unwrap(api.POST('/api/nova-poshta/sync'))
+}
+
+export function listParcelPhotos(id: number): Promise<ParcelPhotoResponse[]> {
+  return unwrap(api.GET('/api/parcels/{id}/photos', { params: { path: { id } } }))
+}
+
+/**
+ * Files go up as they are (HEIC from an iPhone included): the backend fixes the orientation, shrinks to 2048 px and
+ * stores WebP. One request for the whole pick — the backend keeps all of them or none.
+ */
+export function addParcelPhotos(id: number, files: File[]): Promise<ParcelPhotoResponse[]> {
+  const body = new FormData()
+  for (const f of files) body.append('file', f)
+  return unwrap(
+    api.POST('/api/parcels/{id}/photos', {
+      params: { path: { id } },
+      body: body as unknown as { file: string[] },
+      bodySerializer: (b) => b as unknown as FormData,
+    }),
+  )
+}
+
+export function deleteParcelPhoto(id: number, photoId: number): Promise<unknown> {
+  return unwrap(api.DELETE('/api/parcels/{id}/photos/{photoId}', { params: { path: { id, photoId } } }))
 }

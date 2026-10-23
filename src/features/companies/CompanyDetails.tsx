@@ -4,14 +4,17 @@ import { useTranslation } from 'react-i18next'
 import { DetailsList } from '@/components/common/DetailsList'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { Card, CardContent } from '@/components/ui/card'
+import { toast } from 'sonner'
 import { useAccess } from '@/features/auth/access'
+import { showApiError } from '@/lib/api/problem'
 import type { CompanyResponse } from '@/lib/api/types'
 import { formatDateTime, formatPhone } from '@/lib/format'
 import { CompanyDialog } from './CompanyDialog'
 import { NpKeyDialog } from './NpKeyDialog'
 import { NpSenderDialog } from './NpSenderDialog'
-import { useSetCompanyNpKey, useUpdateCompany } from './queries'
+import { useSetCompanyNpKey, useSetCompanyPhotos, useUpdateCompany } from './queries'
 
 export function CompanyStatusBadge({ active }: { active?: boolean }) {
   const { t } = useTranslation('companies')
@@ -41,6 +44,17 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
   const editable = canEdit || (isAdmin && !companyMode)
   const update = useUpdateCompany(company.id!)
   const setKey = useSetCompanyNpKey(company.id!)
+  const setPhotos = useSetCompanyPhotos(company.id!)
+  // Parcel photos are switched on per company by the platform admin; a manager only sees the state.
+  const photosEditable = isAdmin && !companyMode
+  const togglePhotos = async (value: boolean) => {
+    try {
+      await setPhotos.mutateAsync(value)
+      toast.success(t('common:common.saved'))
+    } catch (e) {
+      showApiError(e)
+    }
+  }
   const [editing, setEditing] = useState(false)
   const [keyOpen, setKeyOpen] = useState(false)
   const [senderOpen, setSenderOpen] = useState(false)
@@ -64,6 +78,26 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
               { label: t('companies:fields.address'), value: company.address },
               { label: t('companies:fields.npKey'), value: <NpKeyBadge configured={company.novaPoshtaKeyConfigured} /> },
               { label: t('novaPoshta:sender.field'), value: senderValue },
+              {
+                label: t('companies:fields.photos'),
+                value: (
+                  <span className="flex flex-col gap-1">
+                    <span className="flex items-center gap-2">
+                      {photosEditable && (
+                        <Switch
+                          id="company-photos"
+                          checked={company.photosEnabled === true}
+                          disabled={setPhotos.isPending}
+                          onCheckedChange={(c) => togglePhotos(c)}
+                          aria-label={t('companies:fields.photos')}
+                        />
+                      )}
+                      {company.photosEnabled ? t('companies:photos.enabled') : t('companies:photos.disabled')}
+                    </span>
+                    {photosEditable && <span className="text-xs font-normal text-muted-foreground">{t('companies:photos.hint')}</span>}
+                  </span>
+                ),
+              },
               { label: t('companies:fields.notes'), value: company.notes },
               { label: t('common:common.createdAt'), value: formatDateTime(company.createdAt) },
             ]}

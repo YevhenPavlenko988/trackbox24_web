@@ -15,6 +15,7 @@ export type ParcelCreateRequest = Schemas['ParcelCreateRequest']
 export type ParcelUpdateRequest = Schemas['ParcelUpdateRequest']
 export type ParcelStatusChangeRequest = Schemas['ParcelStatusChangeRequest']
 export type ParcelPaymentRequest = Schemas['ParcelPaymentRequest']
+export type ParcelPhotoResponse = Schemas['ParcelPhotoResponse']
 export type NpState = NonNullable<ParcelResponse['npState']>
 export type NpShipmentRequest = Schemas['NpShipmentRequest']
 export type NpShipmentResponse = Schemas['NpShipmentResponse']

@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { clientKeys } from '@/features/clients/queries'
 import type { PageParams } from '@/lib/api/page'
-import type { NpShipmentRequest, ParcelCreateRequest, ParcelPaymentRequest, ParcelResponse, ParcelStatusChangeRequest, ParcelUpdateRequest } from '@/lib/api/types'
+import type { NpShipmentRequest, ParcelCreateRequest, ParcelPaymentRequest, ParcelPhotoResponse, ParcelResponse, ParcelStatusChangeRequest, ParcelUpdateRequest } from '@/lib/api/types'
 import {
   changeParcelStatus,
   createNpWaybill,
@@ -18,6 +18,9 @@ import {
   restoreParcel,
   setParcelPayment,
   updateParcel,
+  addParcelPhotos,
+  deleteParcelPhoto,
+  listParcelPhotos,
   type ParcelListParams,
 } from './api'
 
@@ -26,6 +29,7 @@ export const parcelKeys = {
   list: (params: ParcelListParams) => ['parcels', 'list', params] as const,
   detail: (id: number) => ['parcels', 'detail', id] as const,
   history: (id: number) => ['parcels', 'detail', id, 'history'] as const,
+  photos: (id: number) => ['parcels', 'detail', id, 'photos'] as const,
   deleted: (params: PageParams) => ['parcels', 'deleted', params] as const,
 }
 
@@ -117,4 +121,31 @@ export function useDeleteNpWaybill(id: number) {
 
 export function useSetParcelPayment(id: number) {
   return useParcelMutation((body: ParcelPaymentRequest) => setParcelPayment(id, body))
+}
+
+/** Links inside expire in an hour; refetching on focus/mount is cheap and keeps them fresh for an open tab. */
+export function useParcelPhotos(id: number, enabled = true) {
+  return useQuery({ queryKey: parcelKeys.photos(id), queryFn: () => listParcelPhotos(id), enabled, staleTime: 5 * 60 * 1000 })
+}
+
+export function useAddParcelPhotos(id: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (files: File[]) => addParcelPhotos(id, files),
+    onSuccess: (added) => {
+      queryClient.setQueryData<ParcelPhotoResponse[]>(parcelKeys.photos(id), (old) => [...(old ?? []), ...added])
+      queryClient.invalidateQueries({ queryKey: parcelKeys.history(id) })
+    },
+  })
+}
+
+export function useDeleteParcelPhoto(id: number) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (photoId: number) => deleteParcelPhoto(id, photoId),
+    onSuccess: (_, photoId) => {
+      queryClient.setQueryData<ParcelPhotoResponse[]>(parcelKeys.photos(id), (old) => (old ?? []).filter((ph) => ph.id !== photoId))
+      queryClient.invalidateQueries({ queryKey: parcelKeys.history(id) })
+    },
+  })
 }

@@ -32,6 +32,11 @@ export function setCompanyActive(id: number, value: boolean): Promise<CompanyRes
   return unwrap(api.PUT('/api/companies/{id}/active', { params: { path: { id }, query: { value } } }))
 }
 
+/** Platform admin switch: without it the company gets 403 on photo upload; existing photos stay viewable. */
+export function setCompanyPhotos(id: number, value: boolean): Promise<CompanyResponse> {
+  return unwrap(api.PUT('/api/companies/{id}/photos', { params: { path: { id }, query: { value } } }))
+}
+
 export function setCompanyNpKey(id: number, body: NovaPoshtaKeyRequest): Promise<CompanyResponse> {
   return unwrap(api.PUT('/api/companies/{id}/nova-poshta', { params: { path: { id } }, body }))
 }

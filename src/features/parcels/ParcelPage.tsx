@@ -24,6 +24,7 @@ import { NpShipmentCard } from './NpShipmentCard'
 import { ChannelBadge } from '@/features/channels/channel'
 import { NpStateBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
+import { ParcelPhotosCard } from './ParcelPhotosCard'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 import { MarkPaidDialog } from './PaymentDialog'
 import { useDeleteParcel, useParcel, useParcelHistory, useRefreshParcelFromNp, useSetParcelPayment } from './queries'
@@ -267,6 +268,8 @@ export function ParcelPage() {
             />
           </CardContent>
         </Card>
+
+        <ParcelPhotosCard parcel={p} />
 
         {canSeeMoney && (
           <Card>
