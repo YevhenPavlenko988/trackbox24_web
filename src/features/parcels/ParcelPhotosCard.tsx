@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils'
 import { useAddParcelPhotos, useDeleteParcelPhoto, useParcelPhotos } from './queries'
 
 export const MAX_PHOTOS = 3
+/** Days after delivery the backend keeps the photos. */
+const PURGE_DAYS = 14
 
 /**
  * Up to three photos of a parcel. Files are sent as picked — the backend turns anything (HEIC too) into WebP — in one
@@ -79,7 +81,11 @@ export function ParcelPhotosCard({ parcel }: { parcel: ParcelResponse }) {
     }
   }
 
-  const emptyText = parcel.status === 'DELIVERED_TO_CLIENT' ? t('parcels:photos.emptyDelivered') : t('parcels:photos.empty')
+  // The backend wipes a delivered parcel's photos 14 days after hand-over: until then an empty list is just empty.
+  const deliveredAt = parcel.status === 'DELIVERED_TO_CLIENT' && parcel.statusChangedAt ? new Date(parcel.statusChangedAt).getTime() : null
+  const photosPurged = deliveredAt != null && Date.now() - deliveredAt > PURGE_DAYS * 86400e3
+  const emptyText = photosPurged ? t('parcels:photos.emptyDelivered') : t('parcels:photos.empty')
+  const purgeHint = deliveredAt != null && !photosPurged ? t('parcels:photos.purgeHint') : null
 
   return (
     <>
@@ -150,6 +156,7 @@ export function ParcelPhotosCard({ parcel }: { parcel: ParcelResponse }) {
               )}
             </div>
           )}
+          {purgeHint && <p className="mt-3 text-xs text-muted-foreground">{purgeHint}</p>}
           {canAdd && <p className="mt-3 text-xs text-muted-foreground">{t('parcels:photos.hint')}</p>}
         </CardContent>
       </Card>
