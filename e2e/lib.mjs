@@ -48,7 +48,24 @@ export async function ensureSeed() {
     await manager.post('/api/parcels', { clientId: client.id, description: 'Документи', seatsAmount: 3, senderName: 'Петренко Олег', senderPhone: '380501234567', senderCity: 'Львів' })
     await manager.post('/api/parcels', { description: 'Взуття', weightKg: 2.5, declaredValue: 1500, senderName: 'Іваненко', senderPhone: '380671112233' })
   }
+  await cancelLeftoverTrips(manager)
   return { company, manager }
+}
+
+/** Planned departures the scenarios use for the trips they open; a run that crashed leaves them behind. */
+const FIXTURE_DEPARTURES = ['2026-10-06T08:00:00Z', '2026-10-07T08:00:00Z', '2026-10-09T08:00:00Z']
+
+/**
+ * Open trips pile up run after run, and the trip select loads only the first hundred: a fresh fixture trip then
+ * never shows up. Cancelling the leftovers keeps the list short; their parcels go back to the representative.
+ */
+async function cancelLeftoverTrips(manager) {
+  for (const status of ['PLANNED', 'PREPARING']) {
+    const page = await manager.get(`/api/trips?status=${status}&size=200`)
+    for (const t of page.content ?? []) {
+      if (FIXTURE_DEPARTURES.includes(t.plannedDepartureAt)) await manager.post(`/api/trips/${t.id}/cancel`)
+    }
+  }
 }
 
 export async function createRunner(name) {
