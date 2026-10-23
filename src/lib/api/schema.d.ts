@@ -132,6 +132,7 @@ export interface paths {
          * Редагувати / збагатити дані посилки
          * @description Ручне доповнення даних, отриманих з НП. Часткове оновлення: поля, яких немає в запиті (або null), не змінюються. `needsEnrichment: false` знімає прапорець.
          *     Кількість місць можна змінити, поки жодне місце не завантажено (місця додаються / прибираються з кінця).
+         *     Водій змінює посилку, поки вона в нас (ACCEPTED_BY_DRIVER, AT_WAREHOUSE, IN_CAR), разом із ціною доставки; представник — без ціни доставки.
          */
         put: operations["update_3"];
         post?: never;
@@ -735,6 +736,7 @@ export interface paths {
         /**
          * Пошук посилок
          * @description Усі фільтри необов'язкові. За замовчуванням нові зверху.
+         *     Водій (без інших ролей) бачить лише посилки, прийняті водіями компанії (посилок з Нової Пошти — ні); `mine=true` — лише прийняті ним самим.
          */
         get: operations["search"];
         put?: never;
@@ -8707,6 +8709,11 @@ export interface operations {
                  * @example 2045154945
                  */
                 query?: string;
+                /**
+                 * @description true — лише посилки, які створив поточний користувач (напр. прийняв водій)
+                 * @example true
+                 */
+                mine?: boolean;
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */
