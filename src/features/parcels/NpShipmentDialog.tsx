@@ -26,7 +26,7 @@ const schema = z.object({
   // Nova Poshta builds the waybill from the parcel itself and refuses it without these three, so they are filled
   // in right here instead of sending the manager to the parcel form.
   description: z.string().trim(),
-  weightKg: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) > 0, 'number'),
+  weightKg: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number'),
   declaredValue: z.string().refine((s) => s === '' || (parseNumber(s) ?? -1) > 0, 'number'),
   recipientLastName: z.string().trim(),
   recipientFirstName: z.string().trim(),

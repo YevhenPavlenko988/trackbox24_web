@@ -47,12 +47,13 @@ export function NpShipmentCard({ parcel: p }: { parcel: ParcelResponse }) {
   const companyReady = !!company.data?.novaPoshtaKeyConfigured && !!company.data?.npSenderWarehouseRef
   const createWaybill = useCreateNpWaybill(p.id!)
   /**
-   * Nova Poshta builds the waybill from the parcel itself, and refuses it without these three. The backend says
-   * the same when the waybill is created; saying it here saves the manager a rejected button.
+   * Nova Poshta builds the waybill from the parcel itself, and refuses it without these. The backend says the same
+   * when the waybill is created; saying it here saves the manager a rejected button. Documents go without a weight —
+   * the backend sends 0.1 kg for them.
    */
   const missingOnParcel = [
     !p.description?.trim() ? t('novaPoshta:shipment.needDescription') : undefined,
-    !(p.weightKg && p.weightKg > 0) ? t('novaPoshta:shipment.needWeight') : undefined,
+    p.npShipment?.cargoType !== 'DOCUMENTS' && !(p.weightKg && p.weightKg > 0) ? t('novaPoshta:shipment.needWeight') : undefined,
     !(p.declaredValue && p.declaredValue > 0) ? t('novaPoshta:shipment.needDeclaredValue') : undefined,
   ].filter(Boolean) as string[]
 

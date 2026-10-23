@@ -1818,7 +1818,7 @@ export interface components {
              */
             description?: string;
             /**
-             * @description Вага, кг
+             * @description Вага, кг; 0 або не заповнено — допустимо для документів (тип вантажу НП «Документи»)
              * @example 2.5
              */
             weightKg?: number;
@@ -3131,7 +3131,7 @@ export interface components {
              */
             description?: string;
             /**
-             * @description Вага, кг
+             * @description Вага, кг; 0 або не заповнено — допустимо для документів (тип вантажу НП «Документи»)
              * @example 2.5
              */
             weightKg?: number;
