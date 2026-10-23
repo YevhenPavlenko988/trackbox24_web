@@ -3554,6 +3554,11 @@ export interface components {
              */
             status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
+             * @description false — подія без зміни статусу (додано фото, створено ЕН, переадресація НП тощо): показувати лише коментар, без плашок статусу; previousStatus і status тоді однакові. true — статус змінився або це перший запис
+             * @example true
+             */
+            statusChanged?: boolean;
+            /**
              * Format: int64
              * @description Склад після зміни (для AT_WAREHOUSE)
              * @example 2

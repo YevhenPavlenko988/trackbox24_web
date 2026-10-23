@@ -72,6 +72,8 @@ export function ParcelHistory({ entries, isLoading }: { entries?: ParcelHistoryR
  */
 function showsOurStatus(e: ParcelHistoryResponse): boolean {
   if (!e.status) return false
+  // Photo added, waybill created, NP redirect…: the status stayed, the comment is the whole story.
+  if (e.statusChanged === false) return false
   if (e.source !== 'NOVA_POSHTA') return true
   return !!e.previousStatus && e.previousStatus !== e.status
 }
