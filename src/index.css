@@ -135,4 +135,22 @@
   html:has(.landing) {
     scroll-behavior: smooth;
     }
+  .legal article {
+    @apply text-[17px] leading-relaxed text-navy/85;
+    }
+  .legal article h2 {
+    @apply mt-10 mb-3 text-xl font-bold text-navy;
+    }
+  .legal article h3 {
+    @apply mt-6 mb-2 text-base font-bold text-navy;
+    }
+  .legal article p {
+    @apply my-3;
+    }
+  .legal article ul {
+    @apply my-3 list-disc space-y-1.5 pl-6;
+    }
+  .legal article a {
+    @apply text-brand hover:underline;
+    }
 }

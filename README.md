@@ -48,7 +48,8 @@ src/
   components/layout/    AppShell (навігація за ролями, банер режиму компанії), PageHeader
   features/auth/        токен, AuthProvider (roles[]), useAccess, режим компанії для адміна, логін, зміна пароля
   features/landing/     лендінг для гостей: секції з презентації, скриншоти в public/landing/, форма «Запросити демо»
-                        (POST /api/public/demo-requests → Telegram), контакти в contacts.ts (порожні = кнопки сховані)
+                        (POST /api/public/demo-requests → Telegram), контакти в contacts.ts (порожні = кнопки сховані);
+                        legal/ — Умови (/terms), Політика конфіденційності (/privacy), Угода про обробку даних (/dpa), посилання у футері й на /login
   features/parcels/     список (фільтри, масове переміщення на склад), створення, картка (місця, оплата, НП, історія),
                         редагування, ручний статус (зі складом), етикетки, відправка НП зворотних посилок (ЕН)
   features/clients/     список, створення, картка, форма, ClientPicker

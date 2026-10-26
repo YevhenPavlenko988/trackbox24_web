@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { ContactLinks } from './ContactLinks'
 import { hasContacts } from './contacts'
+import { LEGAL_DOCS } from './legal/docs'
 import { DemoRequestForm } from './DemoRequestForm'
 
 type Item = { name: string; text: string }
@@ -65,11 +66,20 @@ export function LandingPage() {
               <p>{t('footer.tagline')}</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <Link to="/login" className="text-white hover:underline">
-              {t('footer.login')}
-            </Link>
-            <span>{t('footer.rights', { year: YEAR })}</span>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <nav className="flex flex-wrap gap-x-4 gap-y-1">
+              {LEGAL_DOCS.map((d) => (
+                <Link key={d.path} to={d.path} className="hover:text-white">
+                  {d.title}
+                </Link>
+              ))}
+            </nav>
+            <div className="flex flex-wrap items-center gap-4">
+              <Link to="/login" className="text-white hover:underline">
+                {t('footer.login')}
+              </Link>
+              <span>{t('footer.rights', { year: YEAR })}</span>
+            </div>
           </div>
         </div>
       </footer>

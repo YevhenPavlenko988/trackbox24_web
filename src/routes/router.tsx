@@ -31,6 +31,9 @@ const page = (load: () => Promise<PageModule>, name: string) => async () => {
 
 export const router = createBrowserRouter([
   { index: true, element: <RootPage /> },
+  { path: '/terms', lazy: page(() => import('@/features/landing/legal/TermsPage'), 'TermsPage') },
+  { path: '/privacy', lazy: page(() => import('@/features/landing/legal/PrivacyPage'), 'PrivacyPage') },
+  { path: '/dpa', lazy: page(() => import('@/features/landing/legal/DpaPage'), 'DpaPage') },
   {
     element: <RedirectIfAuthenticated />,
     children: [{ path: '/login', element: <LoginPage /> }],

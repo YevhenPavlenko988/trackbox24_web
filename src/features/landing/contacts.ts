@@ -10,6 +10,13 @@ export const CONTACTS = {
   email: '',
 }
 
+/** The operator as the legal documents name it; fill in the registered name before publishing. */
+export const LEGAL = {
+  name: 'TrackBox24',
+  /** Mailbox for legal and data requests; when empty the documents point at the demo form instead. */
+  email: CONTACTS.email,
+}
+
 export const hasContacts = () => !!(CONTACTS.phone || CONTACTS.telegram || CONTACTS.email)
 
 export const telegramHref = (v: string) => (v.startsWith('http') ? v : `https://t.me/${v.replace(/^@/, '')}`)

@@ -2,13 +2,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { useLocation, useNavigate, useSearchParams } from 'react-router'
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router'
 import { z } from 'zod'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { LEGAL_DOCS } from '@/features/landing/legal/docs'
 import { isApiError, showApiError } from '@/lib/api/problem'
 import { login as loginRequest } from './api'
 import { useAuth } from './useAuth'
@@ -49,7 +50,9 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted/40 p-4">
-      <img src="/logo-full.png" alt="TrackBox24" className="h-24 w-auto" />
+      <Link to="/" title={t('auth:toSite')}>
+        <img src="/logo-full.png" alt="TrackBox24" className="h-24 w-auto" />
+      </Link>
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>{t('auth:title')}</CardTitle>
@@ -91,6 +94,13 @@ export function LoginPage() {
           </form>
         </CardContent>
       </Card>
+      <nav className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        {LEGAL_DOCS.map((d) => (
+          <Link key={d.path} to={d.path} className="hover:text-foreground">
+            {d.title}
+          </Link>
+        ))}
+      </nav>
     </div>
   )
 }
