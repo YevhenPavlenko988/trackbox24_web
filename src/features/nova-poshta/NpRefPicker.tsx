@@ -14,6 +14,9 @@ export type NpRef = { ref?: string; name?: string }
 
 type Option = { ref?: string; label: string; hint?: string }
 
+/** Nova Poshta throttles directory lookups: one request per pause in typing, not per letter. */
+const NP_SEARCH_DELAY_MS = 400
+
 /**
  * Combobox over a live Nova Poshta directory: the typed text is debounced, the chosen `ref` and name are kept
  * together so the card still reads well when Nova Poshta is unreachable.
@@ -99,7 +102,7 @@ function RefPicker({
 export function NpCityPicker({ id, value, onChange, invalid }: { id?: string; value?: NpRef; onChange: (v: NpRef) => void; invalid?: boolean }) {
   const { t } = useTranslation('novaPoshta')
   const [search, setSearch] = useState('')
-  const debounced = useDebounce(search)
+  const debounced = useDebounce(search.trim(), NP_SEARCH_DELAY_MS)
   const cities = useNpCities(debounced, true)
   const short = debounced.trim().length < MIN_QUERY
 
@@ -138,7 +141,7 @@ export function NpBranchPicker({
 }) {
   const { t } = useTranslation('novaPoshta')
   const [search, setSearch] = useState('')
-  const debounced = useDebounce(search)
+  const debounced = useDebounce(search.trim(), NP_SEARCH_DELAY_MS)
   const branches = useNpBranches(cityRef, debounced, type, true)
 
   return (
@@ -174,7 +177,7 @@ export function NpStreetPicker({
 }) {
   const { t } = useTranslation('novaPoshta')
   const [search, setSearch] = useState('')
-  const debounced = useDebounce(search)
+  const debounced = useDebounce(search.trim(), NP_SEARCH_DELAY_MS)
   const streets = useNpStreets(cityRef, debounced, true)
   const short = debounced.trim().length < MIN_QUERY
 
