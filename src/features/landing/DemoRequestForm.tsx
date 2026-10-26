@@ -34,6 +34,8 @@ type FormValues = z.infer<typeof schema>
 export function DemoRequestForm() {
   const { t } = useTranslation('landing')
   const [state, setState] = useState<'idle' | 'sent' | 'failed'>('idle')
+  /** The backend's own words for a refusal (too many requests, Telegram off); generic text otherwise. */
+  const [detail, setDetail] = useState<string | null>(null)
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { name: '', phone: '', company: '', comment: '' },
@@ -42,13 +44,24 @@ export function DemoRequestForm() {
 
   const onSubmit = form.handleSubmit(async (v) => {
     setState('idle')
+    setDetail(null)
     try {
       const res = await fetch('/api/public/demo-requests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: v.name, phone: digits(v.phone), company: v.company || undefined, comment: v.comment || undefined }),
       })
-      setState(res.ok ? 'sent' : 'failed')
+      if (res.ok) {
+        setState('sent')
+        return
+      }
+      const problem = (await res.json().catch(() => null)) as { detail?: string; errors?: Record<string, string> } | null
+      for (const [field, message] of Object.entries(problem?.errors ?? {})) {
+        if (field in v) form.setError(field as keyof FormValues, { message })
+      }
+      if (problem?.errors && Object.keys(problem.errors).length) return
+      setDetail(problem?.detail ?? null)
+      setState('failed')
     } catch {
       setState('failed')
     }
@@ -110,7 +123,7 @@ export function DemoRequestForm() {
         </Field>
         {state === 'failed' && (
           <div className="rounded-lg bg-white/10 p-4 text-sm text-white" role="alert">
-            <p className={hasContacts() ? 'mb-3' : ''}>{t(hasContacts() ? 'cta.failed' : 'cta.failedNoContacts')}</p>
+            <p className={hasContacts() ? 'mb-3' : ''}>{detail ?? t(hasContacts() ? 'cta.failed' : 'cta.failedNoContacts')}</p>
             <ContactLinks />
           </div>
         )}

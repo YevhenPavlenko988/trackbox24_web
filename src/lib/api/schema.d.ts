@@ -726,6 +726,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/demo-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Залишити заявку на демо
+         * @description Без авторизації. Заявка надходить команді в Telegram; нічого не зберігається. З однієї IP-адреси — до 5 заявок на годину.
+         */
+        post: operations["submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parcels": {
         parameters: {
             query?: never;
@@ -3108,6 +3128,28 @@ export interface components {
              * @example Посилку вже завантажено в рейс 1
              */
             detail?: string;
+        };
+        DemoRequest: {
+            /**
+             * @description Ім'я
+             * @example Іван
+             */
+            name: string;
+            /**
+             * @description Телефон у міжнародному форматі без +, лише цифри з кодом країни (8–15 цифр)
+             * @example 380671234567
+             */
+            phone: string;
+            /**
+             * @description Компанія
+             * @example ТОВ Швидка доставка
+             */
+            company?: string;
+            /**
+             * @description Коментар: обсяги, напрямки
+             * @example Близько 300 посилок на місяць, Київ — Варшава
+             */
+            comment?: string;
         };
         ParcelCreateRequest: {
             /**
@@ -8658,6 +8700,51 @@ export interface operations {
                      */
                     "application/problem+json": components["schemas"]["Problem"];
                 };
+            };
+        };
+    };
+    submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DemoRequest"];
+            };
+        };
+        responses: {
+            /** @description Заявку прийнято */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Забагато заявок з цієї адреси; заголовок Retry-After */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Сповіщення в Telegram вимкнені — заявки не приймаються */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };
