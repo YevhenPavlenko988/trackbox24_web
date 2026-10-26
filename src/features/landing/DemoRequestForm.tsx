@@ -10,6 +10,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ContactLinks } from './ContactLinks'
+import { hasContacts } from './contacts'
 
 const digits = (s: string) => s.replace(/\D/g, '')
 
@@ -109,7 +110,7 @@ export function DemoRequestForm() {
         </Field>
         {state === 'failed' && (
           <div className="rounded-lg bg-white/10 p-4 text-sm text-white" role="alert">
-            <p className="mb-3">{t('cta.failed')}</p>
+            <p className={hasContacts() ? 'mb-3' : ''}>{t(hasContacts() ? 'cta.failed' : 'cta.failedNoContacts')}</p>
             <ContactLinks />
           </div>
         )}
