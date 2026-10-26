@@ -4,10 +4,10 @@
  */
 export const CONTACTS = {
   /** Digits with the country code, e.g. '380671234567'; shown formatted and used in `tel:`. */
-  phone: '',
+  phone: '380985720218',
   /** Telegram username without `@`, or a full `https://t.me/...` link. */
-  telegram: '',
-  email: '',
+  telegram: 'epavlenko',
+  email: 'yevhenpavlenko988@gmail.com',
 }
 
 /** The operator as the legal documents name it; fill in the registered name before publishing. */
