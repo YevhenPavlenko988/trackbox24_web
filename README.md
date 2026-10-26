@@ -23,6 +23,7 @@ npm run dev            # http://localhost:5173
 | `VIEWER` | ті самі екрани без кнопок дій (включно з грошима) |
 | `ADMIN` | компанії та їхні користувачі; з картки компанії «Відкрити компанію» → ті самі екрани менеджера **лише для читання** (запити йдуть із заголовком `X-Company-Id`); банер зверху, «Вийти з режиму» |
 | `REPRESENTATIVE` / `DRIVER` (без інших ролей) | сторінка «користуйтесь мобільним застосунком» |
+| гість | лендінг на `/` (продаюча сторінка з презентації), вхід на `/login` |
 
 У користувача може бути кілька ролей; права — об'єднання. Логіка в `src/features/auth/access.ts` (`useAccess`: `canEdit`, `canSeeMoney`, `companyMode`…).
 
@@ -46,6 +47,8 @@ src/
   components/common/    DataTable (з вибором рядків), Pagination, LinkButton, ConfirmDialog, DetailsList
   components/layout/    AppShell (навігація за ролями, банер режиму компанії), PageHeader
   features/auth/        токен, AuthProvider (roles[]), useAccess, режим компанії для адміна, логін, зміна пароля
+  features/landing/     лендінг для гостей: секції з презентації, скриншоти в public/landing/, форма «Запросити демо»
+                        (POST /api/public/demo-requests → Telegram), контакти в contacts.ts (порожні = кнопки сховані)
   features/parcels/     список (фільтри, масове переміщення на склад), створення, картка (місця, оплата, НП, історія),
                         редагування, ручний статус (зі складом), етикетки, відправка НП зворотних посилок (ЕН)
   features/clients/     список, створення, картка, форма, ClientPicker

@@ -3,7 +3,7 @@ import { createBrowserRouter } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { MobileOnlyPage, NotFoundPage } from './ErrorPages'
-import { HomeRedirect, RedirectIfAuthenticated, RequireAdmin, RequireAuth, RequireCompanyAccess } from './guards'
+import { RedirectIfAuthenticated, RequireAdmin, RequireAuth, RequireCompanyAccess, RootPage } from './guards'
 
 type PageModule = Record<string, unknown>
 
@@ -30,6 +30,7 @@ const page = (load: () => Promise<PageModule>, name: string) => async () => {
 }
 
 export const router = createBrowserRouter([
+  { index: true, element: <RootPage /> },
   {
     element: <RedirectIfAuthenticated />,
     children: [{ path: '/login', element: <LoginPage /> }],
@@ -45,7 +46,6 @@ export const router = createBrowserRouter([
       {
         element: <AppShell />,
         children: [
-          { index: true, element: <HomeRedirect /> },
           {
             element: <RequireCompanyAccess />,
             children: [

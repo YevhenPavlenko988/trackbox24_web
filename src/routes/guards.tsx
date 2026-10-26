@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAccess, type Access } from '@/features/auth/access'
 import { useAuth } from '@/features/auth/useAuth'
@@ -32,6 +33,19 @@ export function homePathFor(access: Access): string {
   if (access.isAdmin && !access.companyMode) return '/companies'
   if (access.mobileOnly) return '/mobile-only'
   return '/parcels'
+}
+
+const LandingPage = lazy(() => import('@/features/landing/LandingPage').then((m) => ({ default: m.LandingPage })))
+
+/** `/`: the public landing page for visitors, the role home for anyone signed in. */
+export function RootPage() {
+  const { user } = useAuth()
+  if (user) return <HomeRedirect />
+  return (
+    <Suspense fallback={null}>
+      <LandingPage />
+    </Suspense>
+  )
 }
 
 export function HomeRedirect() {
