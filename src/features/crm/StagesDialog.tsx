@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { showApiError } from '@/lib/api/problem'
-import type { CrmStageKind, CrmStageResponse } from '@/lib/api/types'
+import type { CrmStageKind, CrmStageResponse, CrmStageRole } from '@/lib/api/types'
 import { ColorDot } from './ColorDot'
 import { STAGE_COLORS, stageSwatch } from './colors'
 import { useCreateStage, useDeleteStage, useStages, useUpdateStage } from './queries'
@@ -42,6 +42,7 @@ export function StagesDialog({ open, onOpenChange }: { open: boolean; onOpenChan
             <StageRow key={s.id} stage={s} first={i === 0} last={i === stages.length - 1} />
           ))}
         </div>
+        <RoleSettings stages={stages} />
         <div className="flex gap-2">
           <Input value={name} placeholder={t('crm:stages.name')} onChange={(e) => setName(e.target.value)} aria-label={t('crm:stages.name')} />
           <Button onClick={add} disabled={!name.trim() || create.isPending}>
@@ -51,6 +52,53 @@ export function StagesDialog({ open, onOpenChange }: { open: boolean; onOpenChan
         </div>
       </DialogContent>
     </Dialog>
+  )
+}
+
+const ROLES: CrmStageRole[] = ['TRIAL', 'AWAITING_PAYMENT']
+
+/** Which open stage the system moves deals to after the conversion, and after the trial; the role moves with the choice. */
+function RoleSettings({ stages }: { stages: CrmStageResponse[] }) {
+  const { t } = useTranslation(['crm', 'common'])
+  const update = useUpdateStage()
+  const open = stages.filter((s) => s.kind === 'OPEN')
+  const assign = async (role: CrmStageRole, id: number) => {
+    const stage = stages.find((s) => s.id === id)
+    if (!stage) return
+    try {
+      await update.mutateAsync({ id, body: { name: stage.name ?? '', role } })
+      toast.success(t('common:common.saved'))
+    } catch (e) {
+      showApiError(e)
+    }
+  }
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border bg-muted/30 p-3">
+      <div>
+        <p className="text-sm font-medium">{t('crm:stages.automation')}</p>
+        <p className="text-xs text-muted-foreground">{t('crm:stages.automationHint')}</p>
+      </div>
+      {ROLES.map((role) => {
+        const holder = stages.find((s) => s.role === role)
+        return (
+          <div key={role} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <span className="text-sm">{t(`crm:stageRole.${role}`)}</span>
+            <Select value={holder?.id != null ? String(holder.id) : ''} onValueChange={(v) => assign(role, Number(v))}>
+              <SelectTrigger className="w-full sm:w-56" aria-label={t(`crm:stageRole.${role}`)}>
+                <SelectValue placeholder={t('crm:stages.noRole')}>{holder?.name}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {open.map((s) => (
+                  <SelectItem key={s.id} value={String(s.id)}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 

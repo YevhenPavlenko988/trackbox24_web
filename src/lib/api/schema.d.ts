@@ -3164,6 +3164,14 @@ export interface components {
              * @example violet
              */
             color?: string;
+            /**
+             * @description Роль для автоматики, лише для OPEN: TRIAL — сюди переходить угода після «Перетворити на клієнта»,
+             *     AWAITING_PAYMENT — сюди система переносить угоду, коли тестовий період компанії скінчився.
+             *     Роль переходить на цей етап з іншого; не передано — без змін
+             * @example TRIAL
+             * @enum {string}
+             */
+            role?: "TRIAL" | "AWAITING_PAYMENT";
         };
         CrmStageResponse: {
             /**
@@ -3200,6 +3208,12 @@ export interface components {
              * @example 4
              */
             dealCount?: number;
+            /**
+             * @description Роль для автоматики: TRIAL — тестовий період, AWAITING_PAYMENT — очікуємо оплату; немає — звичайний етап
+             * @example TRIAL
+             * @enum {string}
+             */
+            role?: "TRIAL" | "AWAITING_PAYMENT";
         };
         BillingPriceRequest: {
             /**
