@@ -96,3 +96,4 @@ export type InvoiceLineResponse = Schemas['InvoiceLineResponse']
 export type InvoiceStatus = NonNullable<InvoiceResponse['status']>
 export type InvoicePaymentRequest = Schemas['InvoicePaymentRequest']
 export type InvoiceSummaryResponse = Schemas['InvoiceSummaryResponse']
+export type CrmStageRole = NonNullable<CrmStageResponse['role']>
