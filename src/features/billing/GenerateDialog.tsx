@@ -1,4 +1,4 @@
-import { format, subMonths } from 'date-fns'
+import { format } from 'date-fns'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -9,11 +9,11 @@ import { Input } from '@/components/ui/input'
 import { showApiError } from '@/lib/api/problem'
 import { useGenerateInvoices } from './queries'
 
-/** Drafts for a month by hand, e.g. the current one before it ends; repeating it creates nothing twice. */
+/** Drafts in advance for a month by hand, e.g. the next one early; repeating it creates nothing twice. */
 export function GenerateDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useTranslation(['billing', 'common'])
   const generate = useGenerateInvoices()
-  const [month, setMonth] = useState(() => format(subMonths(new Date(), 1), 'yyyy-MM'))
+  const [month, setMonth] = useState(() => format(new Date(), 'yyyy-MM'))
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
