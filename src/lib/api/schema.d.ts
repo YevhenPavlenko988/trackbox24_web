@@ -189,6 +189,92 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/crm/tasks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Задача */
+        get: operations["task"];
+        /**
+         * Редагувати задачу / перенести в колонку
+         * @description Замінює всі поля (не передане очищається), крім `status`: не передано — без змін.
+         */
+        put: operations["updateTask"];
+        post?: never;
+        /** Видалити задачу */
+        delete: operations["deleteTask"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/stages/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Перейменувати / перемістити етап */
+        put: operations["updateStage"];
+        post?: never;
+        /**
+         * Видалити етап
+         * @description Лише порожній; у воронці лишається хоча б по одному етапу OPEN, WON і LOST.
+         */
+        delete: operations["deleteStage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/deals/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Угода */
+        get: operations["deal"];
+        /**
+         * Редагувати угоду
+         * @description Етап змінюється окремо: `POST …/stage`.
+         */
+        put: operations["updateDeal"];
+        post?: never;
+        /**
+         * Видалити угоду
+         * @description Назавжди, разом з її задачами й історією (спам, помилка). Втрачену угоду краще перенести на LOST.
+         */
+        delete: operations["deleteDeal"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/contacts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Контакт */
+        get: operations["contact"];
+        /** Редагувати контакт */
+        put: operations["updateContact"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}": {
         parameters: {
             query?: never;
@@ -213,6 +299,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/public-tracking": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Увімкнути / вимкнути публічне відстеження
+         * @description ADMIN або SALES. Увімкнено — клієнти бачать статус посилок компанії на публічній сторінці за PT або ТТН,
+         *     а в посилках з'являється `trackingUrl` для поширення. Вимкнено — пошук відповідає «не знайдено».
+         */
+        put: operations["setPublicTrackingEnabled"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/photos": {
         parameters: {
             query?: never;
@@ -223,7 +330,7 @@ export interface paths {
         get?: never;
         /**
          * Увімкнути / вимкнути фото посилок
-         * @description Тільки ADMIN. Без цього компанія не може додавати фото (403); уже додані фото лишаються доступними для перегляду й видалення.
+         * @description ADMIN або SALES. Без цього компанія не може додавати фото (403); уже додані фото лишаються доступними для перегляду й видалення.
          *     Стан — `photosEnabled` у відповіді компанії (зокрема `GET /api/companies/current`).
          */
         put: operations["setPhotosEnabled"];
@@ -737,7 +844,7 @@ export interface paths {
         put?: never;
         /**
          * Залишити заявку на демо
-         * @description Без авторизації. Заявка надходить команді в Telegram; нічого не зберігається. З однієї IP-адреси — до 5 заявок на годину.
+         * @description Без авторизації. Заявка стає угодою в CRM (етап «Нова заявка», задача «Зв'язатися») і надходить команді в Telegram. З однієї IP-адреси — до 5 заявок на годину.
          */
         post: operations["submit"];
         delete?: never;
@@ -908,6 +1015,152 @@ export interface paths {
          * @description Імпорт нових вхідних ТТН представників компанії і оновлення статусів посилок, що ще в НП
          */
         post: operations["sync"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/tasks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Задачі (дошка)
+         * @description Найближчий термін першим, без терміну — в кінці. Для дошки — без фільтрів і групувати за `status`. \
+         *     `mine=true` — мої; `due=TODAY` — на сьогодні й прострочені, `due=OVERDUE` — лише прострочені (без виконаних).
+         */
+        get: operations["tasks"];
+        put?: never;
+        /**
+         * Нова задача
+         * @description Без виконавця — на себе.
+         */
+        post: operations["createTask"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/stages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Етапи воронки
+         * @description У порядку воронки, з кількістю угод на кожному.
+         */
+        get: operations["stages"];
+        put?: never;
+        /** Додати етап */
+        post: operations["createStage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/deals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Угоди
+         * @description Нові зверху. Для дошки воронки — `open=true&size=200` і групувати за `stage`.
+         */
+        get: operations["deals"];
+        put?: never;
+        /**
+         * Нова угода
+         * @description Стає на перший етап. Контакт — наявний (`contactId`) або новий (`contact`).
+         */
+        post: operations["createDeal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/deals/{id}/stage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Перенести на етап
+         * @description LOST — з причиною. WON — лише після «Перетворити на клієнта» (воно саме ставить WON).
+         */
+        post: operations["changeStage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/deals/{id}/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Перетворити на клієнта
+         * @description Створює компанію в TrackBox24 з першим менеджером (отримає доступ у веб) і вибраними опціями, \
+         *     прив'язує до неї угоду й контакт, переносить угоду на етап WON.
+         */
+        post: operations["convert"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/deals/{id}/comments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Коментар до угоди */
+        post: operations["comment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Контакти */
+        get: operations["contacts"];
+        put?: never;
+        /** Новий контакт */
+        post: operations["createContact"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1185,7 +1438,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/public/tracking/{barcode}": {
+    "/api/public/tracking/{code}": {
         parameters: {
             query?: never;
             header?: never;
@@ -1193,8 +1446,11 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Статус посилки за нашим штрих-кодом
-         * @description Без авторизації. Повертає тільки статус, без персональних даних.
+         * Статус і переходи посилки за PT або ТТН
+         * @description Без авторизації, для відправника й отримувача. Код — наш штрих-код (`PT0123456789`, також місце `PT0123456789-2`) \
+         *     або 14 цифр ТТН Нової Пошти: вхідна, до переадресації чи наша ЕН відправки; пробіли й регістр не важливі. \
+         *     Лише посилки компаній з увімкненим публічним відстеженням. Відповідь — статус і переходи з датами, \
+         *     без людей, адрес і сум. Невідомий код — 404; забагато невідомих кодів з однієї адреси — 429.
          */
         get: operations["track"];
         put?: never;
@@ -1297,6 +1553,46 @@ export interface paths {
          * @description За частиною назви, до 50 результатів. Ref — для cityRef.
          */
         get: operations["cities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Команда
+         * @description Активні ADMIN і SALES — кому можна призначати угоди й задачі.
+         */
+        get: operations["team"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/deals/{id}/activity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Історія угоди
+         * @description Створення, коментарі, зміни етапу й відповідального, перетворення на клієнта; нові зверху.
+         */
+        get: operations["activity"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1532,7 +1828,7 @@ export interface components {
              *       "DRIVER"
              *     ]
              */
-            roles?: ("ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER")[];
+            roles?: ("ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER" | "SALES")[];
             /**
              * @description Примітки; не передано — не змінюються
              * @example Працює лише у вихідні
@@ -1579,7 +1875,7 @@ export interface components {
              *       "DRIVER"
              *     ]
              */
-            roles?: ("ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER")[];
+            roles?: ("ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER" | "SALES")[];
             /**
              * @description Номер посвідчення водія
              * @example ВХК123456
@@ -2341,6 +2637,11 @@ export interface components {
              * @example 2026-10-01T08:30:00Z
              */
             createdAt?: string;
+            /**
+             * @description Посилання на публічне відстеження для клієнта (поділитися); null — у компанії вимкнено публічне відстеження
+             * @example https://trackbox24.com/track/PT0123456789
+             */
+            trackingUrl?: string;
         };
         ParcelSeatResponse: {
             /**
@@ -2494,6 +2795,372 @@ export interface components {
              */
             codAmount?: number;
         };
+        CrmTaskRequest: {
+            /**
+             * @description Що зробити
+             * @example Передзвонити після демо
+             */
+            title: string;
+            /** @description Деталі */
+            description?: string;
+            /**
+             * @description Колонка дошки: TODO, IN_PROGRESS, DONE; не передано — TODO або без змін
+             * @example TODO
+             * @enum {string}
+             */
+            status?: "TODO" | "IN_PROGRESS" | "DONE";
+            /**
+             * Format: int64
+             * @description Виконавець (ADMIN або SALES); не передано при створенні — поточний користувач
+             * @example 3
+             */
+            assigneeId?: number;
+            /**
+             * Format: date-time
+             * @description Термін, UTC
+             * @example 2026-10-30T09:00:00Z
+             */
+            dueAt?: string;
+            /**
+             * Format: int64
+             * @description Угода, якої стосується
+             * @example 7
+             */
+            dealId?: number;
+            /**
+             * Format: int64
+             * @description Компанія-клієнт, якої стосується
+             * @example 5
+             */
+            companyId?: number;
+        };
+        CrmRef: {
+            /**
+             * Format: int64
+             * @description ID
+             * @example 3
+             */
+            id?: number;
+            /**
+             * @description Назва або ім'я
+             * @example Олена Петренко
+             */
+            name?: string;
+        };
+        CrmTaskResponse: {
+            /**
+             * Format: int64
+             * @description ID задачі
+             * @example 21
+             */
+            id?: number;
+            /**
+             * @description Що зробити
+             * @example Передзвонити після демо
+             */
+            title?: string;
+            /** @description Деталі */
+            description?: string;
+            /**
+             * @description Колонка дошки
+             * @example TODO
+             * @enum {string}
+             */
+            status?: "TODO" | "IN_PROGRESS" | "DONE";
+            /** @description Виконавець */
+            assignee?: components["schemas"]["CrmRef"];
+            /**
+             * @description Хто поставив; null — система
+             * @example Олена Петренко
+             */
+            createdBy?: string;
+            /**
+             * Format: date-time
+             * @description Термін
+             * @example 2026-10-30T09:00:00Z
+             */
+            dueAt?: string;
+            /**
+             * @description Прострочена: термін минув, а задача не виконана
+             * @example false
+             */
+            overdue?: boolean;
+            /** @description Угода */
+            deal?: components["schemas"]["CrmRef"];
+            /** @description Компанія-клієнт */
+            company?: components["schemas"]["CrmRef"];
+            /**
+             * Format: date-time
+             * @description Коли виконано
+             */
+            completedAt?: string;
+            /**
+             * Format: date-time
+             * @description Коли створено
+             * @example 2026-10-28T09:00:00Z
+             */
+            createdAt?: string;
+        };
+        CrmStageRequest: {
+            /**
+             * @description Назва етапу
+             * @example Демо призначено
+             */
+            name: string;
+            /**
+             * @description OPEN — угода в роботі; WON — стала клієнтом; LOST — втрачена. За замовчуванням OPEN
+             * @example OPEN
+             * @enum {string}
+             */
+            kind?: "OPEN" | "WON" | "LOST";
+            /**
+             * Format: int32
+             * @description Місце у воронці, з 1; не передано — в кінець (при створенні) або без змін
+             * @example 3
+             */
+            position?: number;
+            /**
+             * @description Колір на дошці: slate, blue, violet, cyan, amber, orange, emerald, red, pink; не передано — slate або без змін
+             * @example violet
+             */
+            color?: string;
+        };
+        CrmStageResponse: {
+            /**
+             * Format: int64
+             * @description ID етапу
+             * @example 3
+             */
+            id?: number;
+            /**
+             * @description Назва
+             * @example Демо призначено
+             */
+            name?: string;
+            /**
+             * Format: int32
+             * @description Місце у воронці, з 1
+             * @example 3
+             */
+            position?: number;
+            /**
+             * @description OPEN / WON / LOST
+             * @example OPEN
+             * @enum {string}
+             */
+            kind?: "OPEN" | "WON" | "LOST";
+            /**
+             * @description Колір на дошці (назва з палітри)
+             * @example violet
+             */
+            color?: string;
+            /**
+             * Format: int64
+             * @description Угод на етапі
+             * @example 4
+             */
+            dealCount?: number;
+        };
+        CrmContactRequest: {
+            /**
+             * @description Ім'я та прізвище
+             * @example Іван Коваль
+             */
+            fullName: string;
+            /**
+             * @description Телефон, будь-який формат
+             * @example +380671234567
+             */
+            phone?: string;
+            /**
+             * Format: email
+             * @description Email
+             * @example ivan@carrier.ua
+             */
+            email?: string;
+            /**
+             * @description Посада
+             * @example Власник
+             */
+            jobTitle?: string;
+            /**
+             * @description Нотатки
+             * @example Краще писати в Telegram
+             */
+            notes?: string;
+            /**
+             * Format: int64
+             * @description ID компанії-клієнта в TrackBox24, якщо контакт з неї
+             * @example 5
+             */
+            companyId?: number;
+        };
+        CrmDealRequest: {
+            /**
+             * @description Назва компанії-перевізника
+             * @example Швидка доставка
+             */
+            title: string;
+            /**
+             * Format: int64
+             * @description Наявний контакт; або нового передати в `contact`
+             * @example 12
+             */
+            contactId?: number;
+            /** @description Новий контакт (якщо не передано `contactId`) */
+            contact?: components["schemas"]["CrmContactRequest"];
+            /**
+             * Format: int64
+             * @description Відповідальний з нашого боку (ADMIN або SALES); не передано при створенні — поточний користувач
+             * @example 3
+             */
+            ownerId?: number;
+            /**
+             * @description Звідки угода: SITE_FORM, REFERRAL, CALL, SOCIAL, OTHER; за замовчуванням OTHER
+             * @example REFERRAL
+             * @enum {string}
+             */
+            source?: "SITE_FORM" | "REFERRAL" | "CALL" | "SOCIAL" | "OTHER";
+            /**
+             * @description Опції, що цікавлять: PHOTOS, PUBLIC_TRACKING
+             * @example [
+             *       "PHOTOS"
+             *     ]
+             */
+            interestedOptions?: ("PHOTOS" | "PUBLIC_TRACKING")[];
+            /**
+             * @description Очікуваний тариф, € на місяць
+             * @example 49
+             */
+            expectedMonthlyEur?: number;
+            /**
+             * @description Нотатки
+             * @example Возять Київ — Варшава, ~300 посилок на місяць
+             */
+            notes?: string;
+        };
+        CrmContactResponse: {
+            /**
+             * Format: int64
+             * @description ID контакту
+             * @example 12
+             */
+            id?: number;
+            /**
+             * @description Ім'я та прізвище
+             * @example Іван Коваль
+             */
+            fullName?: string;
+            /**
+             * @description Телефон
+             * @example +380671234567
+             */
+            phone?: string;
+            /**
+             * @description Email
+             * @example ivan@carrier.ua
+             */
+            email?: string;
+            /**
+             * @description Посада
+             * @example Власник
+             */
+            jobTitle?: string;
+            /** @description Нотатки */
+            notes?: string;
+            /** @description Компанія-клієнт у TrackBox24 */
+            company?: components["schemas"]["CrmRef"];
+            /**
+             * Format: date-time
+             * @description Коли додано
+             * @example 2026-10-28T09:00:00Z
+             */
+            createdAt?: string;
+        };
+        CrmDealResponse: {
+            /**
+             * Format: int64
+             * @description ID угоди
+             * @example 7
+             */
+            id?: number;
+            /**
+             * @description Назва компанії-перевізника
+             * @example Швидка доставка
+             */
+            title?: string;
+            /** @description Етап воронки */
+            stage?: components["schemas"]["CrmRef"];
+            /**
+             * @description Тип етапу: OPEN / WON / LOST
+             * @example OPEN
+             * @enum {string}
+             */
+            stageKind?: "OPEN" | "WON" | "LOST";
+            /**
+             * @description Колір етапу
+             * @example violet
+             */
+            stageColor?: string;
+            /** @description Контакт */
+            contact?: components["schemas"]["CrmContactResponse"];
+            /** @description Компанія-клієнт у TrackBox24, якою стала угода */
+            company?: components["schemas"]["CrmRef"];
+            /** @description Відповідальний */
+            owner?: components["schemas"]["CrmRef"];
+            /**
+             * @description Звідки угода
+             * @example SITE_FORM
+             * @enum {string}
+             */
+            source?: "SITE_FORM" | "REFERRAL" | "CALL" | "SOCIAL" | "OTHER";
+            /**
+             * @description UTM з сайту
+             * @example google
+             */
+            utmSource?: string;
+            utmMedium?: string;
+            utmCampaign?: string;
+            utmTerm?: string;
+            utmContent?: string;
+            /** @description Опції, що цікавлять */
+            interestedOptions?: ("PHOTOS" | "PUBLIC_TRACKING")[];
+            /**
+             * @description Очікуваний тариф, € на місяць
+             * @example 49
+             */
+            expectedMonthlyEur?: number;
+            /**
+             * @description Причина втрати (етап LOST)
+             * @example Дорого
+             */
+            lostReason?: string;
+            /** @description Нотатки */
+            notes?: string;
+            /**
+             * Format: int64
+             * @description Відкритих задач по угоді
+             * @example 1
+             */
+            openTasks?: number;
+            /**
+             * Format: date-time
+             * @description Коли закрито (WON / LOST)
+             */
+            closedAt?: string;
+            /**
+             * Format: date-time
+             * @description Коли створено
+             * @example 2026-10-28T09:00:00Z
+             */
+            createdAt?: string;
+            /**
+             * Format: date-time
+             * @description Коли змінено
+             * @example 2026-10-28T10:00:00Z
+             */
+            updatedAt?: string;
+        };
         CompanyRequest: {
             /**
              * @description Назва компанії
@@ -2569,6 +3236,11 @@ export interface components {
              * @example true
              */
             photosEnabled?: boolean;
+            /**
+             * @description Публічна сторінка відстеження для клієнтів (вмикає адміністратор платформи); false — посилання на трекінг не формуються
+             * @example true
+             */
+            publicTrackingEnabled?: boolean;
             /**
              * @description Чи збережено резервний API-ключ НП компанії (сам ключ не повертається)
              * @example true
@@ -2950,7 +3622,7 @@ export interface components {
              *       "DRIVER"
              *     ]
              */
-            roles: ("ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER")[];
+            roles: ("ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER" | "SALES")[];
             /**
              * @description Номер посвідчення водія (для водіїв)
              * @example ВХК123456
@@ -3150,6 +3822,15 @@ export interface components {
              * @example Близько 300 посилок на місяць, Київ — Варшава
              */
             comment?: string;
+            /**
+             * @description UTM-мітки з адреси сторінки, з якої прийшли (необов'язково)
+             * @example google
+             */
+            utmSource?: string;
+            utmMedium?: string;
+            utmCampaign?: string;
+            utmTerm?: string;
+            utmContent?: string;
         };
         ParcelCreateRequest: {
             /**
@@ -3360,6 +4041,115 @@ export interface components {
              */
             lastError?: string;
         };
+        CrmStageChangeRequest: {
+            /**
+             * Format: int64
+             * @description Новий етап
+             * @example 4
+             */
+            stageId: number;
+            /**
+             * @description Причина — обов'язкова для етапу LOST
+             * @example Обрали іншу систему
+             */
+            lostReason?: string;
+        };
+        CrmConvertRequest: {
+            /**
+             * @description Назва компанії; не передано — назва угоди
+             * @example Швидка доставка
+             */
+            companyName?: string;
+            /**
+             * @description ЄДРПОУ
+             * @example 12345678
+             */
+            edrpou?: string;
+            /** @description Перший менеджер компанії — отримає доступ у веб */
+            manager: components["schemas"]["Manager"];
+            /**
+             * @description Опції, які вмикаються одразу: PHOTOS, PUBLIC_TRACKING
+             * @example [
+             *       "PHOTOS"
+             *     ]
+             */
+            options?: ("PHOTOS" | "PUBLIC_TRACKING")[];
+        };
+        Manager: {
+            /**
+             * @description Ім'я
+             * @example Іван
+             */
+            firstName: string;
+            /**
+             * @description Прізвище
+             * @example Коваль
+             */
+            lastName: string;
+            /**
+             * Format: email
+             * @description Email — логін
+             * @example ivan@carrier.ua
+             */
+            email: string;
+            /**
+             * @description Тимчасовий пароль, від 8 символів
+             * @example Start2026!
+             */
+            password: string;
+            /**
+             * @description Телефон у міжнародному форматі без +, лише цифри з кодом країни (8–15 цифр)
+             * @example 380671234567
+             */
+            phone?: string;
+        };
+        CrmCommentRequest: {
+            /**
+             * @description Текст
+             * @example Домовились про демо в четвер о 10:00
+             */
+            text: string;
+        };
+        CrmDealActivityResponse: {
+            /**
+             * Format: int64
+             * @description ID запису
+             * @example 40
+             */
+            id?: number;
+            /**
+             * @description CREATED, COMMENT, STAGE_CHANGED, OWNER_CHANGED, CONVERTED
+             * @example STAGE_CHANGED
+             * @enum {string}
+             */
+            type?: "CREATED" | "COMMENT" | "STAGE_CHANGED" | "OWNER_CHANGED" | "CONVERTED";
+            /**
+             * @description Текст: коментар або опис події
+             * @example Домовились про демо в четвер
+             */
+            text?: string;
+            /**
+             * @description Етап до (STAGE_CHANGED)
+             * @example Зв'язались
+             */
+            fromStage?: string;
+            /**
+             * @description Етап після (STAGE_CHANGED)
+             * @example Демо призначено
+             */
+            toStage?: string;
+            /**
+             * @description Хто; null — система (заявка з сайту)
+             * @example Олена Петренко
+             */
+            actor?: string;
+            /**
+             * Format: date-time
+             * @description Коли
+             * @example 2026-10-28T10:00:00Z
+             */
+            at?: string;
+        };
         ChangePasswordRequest: {
             /**
              * @description Поточний пароль
@@ -3551,22 +4341,74 @@ export interface components {
         };
         PublicTrackingResponse: {
             /**
-             * @description Наш штрих-код
+             * @description Наш штрих-код; немає — посилка ще в Новій Пошті
              * @example PT0123456789
              */
             barcode?: string;
             /**
-             * @description Статус посилки
+             * @description ТТН Нової Пошти, з якою посилка прийшла до перевізника
+             * @example 20451234567890
+             */
+            npTtn?: string;
+            /**
+             * @description Перевізник
+             * @example Demo Logistics
+             */
+            carrier?: string;
+            /**
+             * @description Поточний статус
              * @example IN_CAR
              * @enum {string}
              */
             status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
             /**
+             * @description Поточний статус словами для клієнта
+             * @example В дорозі
+             */
+            statusLabel?: string;
+            /**
              * Format: date-time
-             * @description Коли змінено статус
-             * @example 2026-10-01T08:30:00Z
+             * @description Коли посилка перейшла в поточний статус
+             * @example 2026-10-21T06:10:00Z
              */
             statusChangedAt?: string;
+            /**
+             * @description Статус у Новій Пошті, поки посилка там (IN_NOVA_POSHTA)
+             * @example Прибув у відділення
+             */
+            npStatus?: string;
+            /**
+             * Format: date-time
+             * @description Планове прибуття рейсу, поки посилка в дорозі (IN_CAR)
+             * @example 2026-10-23T18:00:00Z
+             */
+            expectedArrivalAt?: string;
+            /**
+             * @description ТТН Нової Пошти, якою перевізник відправив посилку отримувачу в Україні (зворотна посилка)
+             * @example 20450000012345
+             */
+            outgoingWaybill?: string;
+            /** @description Переходи посилки, від першого до останнього: лише зміни статусу */
+            history?: components["schemas"]["Step"][];
+        };
+        Step: {
+            /**
+             * @description Статус
+             * @example AT_WAREHOUSE
+             * @enum {string}
+             */
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            /**
+             * @description Статус словами для клієнта
+             * @example На складі
+             */
+            label?: string;
+            /**
+             * Format: date-time
+             * @description Коли
+             * @example 2026-10-20T15:32:00Z
+             */
+            at?: string;
         };
         PagedModelParcelHistoryResponse: {
             content?: components["schemas"]["ParcelHistoryResponse"][];
@@ -3686,6 +4528,14 @@ export interface components {
             ref?: string;
             name?: string;
             area?: string;
+        };
+        PagedModelCrmDealResponse: {
+            content?: components["schemas"]["CrmDealResponse"][];
+            page?: components["schemas"]["PageMetadata"];
+        };
+        PagedModelCrmContactResponse: {
+            content?: components["schemas"]["CrmContactResponse"][];
+            page?: components["schemas"]["PageMetadata"];
         };
         PagedModelCompanyResponse: {
             content?: components["schemas"]["CompanyResponse"][];
@@ -5394,6 +6244,1000 @@ export interface operations {
             };
         };
     };
+    task: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmTaskResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmTaskRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmTaskResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/tasks/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmStageRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmStageResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/stages/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/stages/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/stages/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/stages/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/stages/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/stages/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/stages/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/stages/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deal: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmDealResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateDeal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmDealRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmDealResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteDeal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/deals/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    contact: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmContactResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/contacts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/contacts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/contacts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/contacts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmContactRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmContactResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/contacts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/contacts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/contacts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/contacts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     get_4: {
         parameters: {
             query?: never;
@@ -5586,6 +7430,114 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/companies/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setPublicTrackingEnabled: {
+        parameters: {
+            query: {
+                /**
+                 * @description true — увімкнути, false — вимкнути
+                 * @example true
+                 */
+                value: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/{id}/public-tracking"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/{id}/public-tracking"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/companies/{id}/public-tracking"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/companies/{id}/public-tracking"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -7046,7 +8998,7 @@ export interface operations {
                  * @description Фільтр за роллю
                  * @example DRIVER
                  */
-                role?: "ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER";
+                role?: "ADMIN" | "MANAGER" | "REPRESENTATIVE" | "DRIVER" | "VIEWER" | "SALES";
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */
@@ -8739,13 +10691,6 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Сповіщення в Telegram вимкнені — заявки не приймаються */
-            503: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
         };
     };
     search: {
@@ -9820,6 +11765,1025 @@ export interface operations {
                      *       "status": 502,
                      *       "detail": "TrackingDocument.getStatusDocuments failed: [API key expired]",
                      *       "instance": "/api/nova-poshta/sync"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    tasks: {
+        parameters: {
+            query?: {
+                /** @description Колонки: TODO, IN_PROGRESS, DONE; кілька через кому */
+                status?: ("TODO" | "IN_PROGRESS" | "DONE")[];
+                /** @description Виконавець */
+                assigneeId?: number;
+                /** @description Лише мої */
+                mine?: boolean;
+                /** @description Угода */
+                dealId?: number;
+                /** @description Компанія-клієнт */
+                companyId?: number;
+                /** @description TODAY або OVERDUE */
+                due?: "TODAY" | "OVERDUE";
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmTaskResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/tasks"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/tasks"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/tasks"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createTask: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmTaskRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmTaskResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/tasks"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/tasks"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/tasks"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stages: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmStageResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/stages"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/stages"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/stages"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmStageRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmStageResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/stages"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/stages"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/stages"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deals: {
+        parameters: {
+            query?: {
+                /** @description Етап */
+                stageId?: number;
+                /** @description Відповідальний */
+                ownerId?: number;
+                /** @description Компанія-клієнт */
+                companyId?: number;
+                /** @description true — у роботі, false — закриті */
+                open?: boolean;
+                /** @description Назва, ім'я, телефон або email контакту */
+                query?: string;
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagedModelCrmDealResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/deals"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/deals"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/deals"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createDeal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmDealRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmDealResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/deals"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/deals"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/deals"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    changeStage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmStageChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmDealResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/deals/{id}/stage"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/deals/{id}/stage"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/deals/{id}/stage"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/deals/{id}/stage"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    convert: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmConvertRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmDealResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/deals/{id}/convert"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/deals/{id}/convert"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/deals/{id}/convert"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/deals/{id}/convert"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    comment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmCommentRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmDealActivityResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/deals/{id}/comments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/deals/{id}/comments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/deals/{id}/comments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/deals/{id}/comments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    contacts: {
+        parameters: {
+            query?: {
+                /** @description Компанія-клієнт */
+                companyId?: number;
+                /** @description Ім'я, телефон або email */
+                query?: string;
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagedModelCrmContactResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/contacts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/contacts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/contacts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmContactRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmContactResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/contacts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/contacts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/contacts"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -11249,21 +14213,16 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                barcode: string;
+                /**
+                 * @description PT або ТТН
+                 * @example PT0123456789
+                 */
+                code: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
-            /** @description OK */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "*/*": components["schemas"]["PublicTrackingResponse"];
-                };
-            };
             /** @description Невалідний запит або дія недоступна в поточному стані */
             400: {
                 headers: {
@@ -11276,28 +14235,28 @@ export interface operations {
                      *       "title": "Bad Request",
                      *       "status": 400,
                      *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
-                     *       "instance": "/api/public/tracking/{barcode}"
+                     *       "instance": "/api/public/tracking/{code}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
                 };
             };
-            /** @description Не знайдено (або належить іншій компанії) */
+            /** @description Посилку не знайдено (або номер у невірному форматі) */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    /**
-                     * @example {
-                     *       "type": "about:blank",
-                     *       "title": "Not Found",
-                     *       "status": 404,
-                     *       "detail": "Parcel with id 10 not found",
-                     *       "instance": "/api/public/tracking/{barcode}"
-                     *     }
-                     */
-                    "application/problem+json": components["schemas"]["Problem"];
+                    "*/*": components["schemas"]["PublicTrackingResponse"];
+                };
+            };
+            /** @description Забагато пошуків незнайдених посилок; `Retry-After` — через скільки секунд */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PublicTrackingResponse"];
                 };
             };
         };
@@ -11802,6 +14761,184 @@ export interface operations {
                      *       "status": 502,
                      *       "detail": "TrackingDocument.getStatusDocuments failed: [API key expired]",
                      *       "instance": "/api/nova-poshta/cities"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    team: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmRef"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/team"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/team"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/team"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    activity: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CrmDealActivityResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/deals/{id}/activity"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/deals/{id}/activity"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/deals/{id}/activity"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/deals/{id}/activity"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

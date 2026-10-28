@@ -8,7 +8,9 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useAccess } from '@/features/auth/access'
 import { useCompanyView } from '@/features/auth/companyView'
+import { CompanyCrmSection } from '@/features/crm/CompanyCrmSection'
 import { UsersSection } from '@/features/users/UsersSection'
 import { useListParams } from '@/hooks/use-list-params'
 import { showApiError } from '@/lib/api/problem'
@@ -23,6 +25,7 @@ export function CompanyPage() {
   const query = useCompany(companyId)
   const setActive = useSetCompanyActive(companyId)
   const companyView = useCompanyView()
+  const { isAdmin } = useAccess()
   const navigate = useNavigate()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const { get, set } = useListParams()
@@ -48,6 +51,7 @@ export function CompanyPage() {
         title={company.name}
         badges={<CompanyStatusBadge active={company.active} />}
         actions={
+          isAdmin && (
           <>
             <Button
               variant="outline"
@@ -71,19 +75,24 @@ export function CompanyPage() {
               </Button>
             )}
           </>
+          )
         }
       />
 
       <Tabs value={tab} onValueChange={(v) => set({ tab: v === 'info' ? undefined : String(v), page: undefined, role: undefined })}>
         <TabsList>
           <TabsTrigger value="info">{t('companies:tabs.info')}</TabsTrigger>
-          <TabsTrigger value="users">{t('companies:tabs.users')}</TabsTrigger>
+          {isAdmin && <TabsTrigger value="users">{t('companies:tabs.users')}</TabsTrigger>}
+          <TabsTrigger value="crm">{t('companies:tabs.crm')}</TabsTrigger>
         </TabsList>
         <TabsContent value="info" className="mt-4">
           <CompanyDetails company={company} />
         </TabsContent>
         <TabsContent value="users" className="mt-4">
-          {tab === 'users' && <UsersSection companyId={companyId} />}
+          {tab === 'users' && isAdmin && <UsersSection companyId={companyId} />}
+        </TabsContent>
+        <TabsContent value="crm" className="mt-4">
+          {tab === 'crm' && <CompanyCrmSection companyId={companyId} />}
         </TabsContent>
       </Tabs>
 

@@ -6,6 +6,10 @@ export type Access = {
   roles: Role[]
   has: (role: Role) => boolean
   isAdmin: boolean
+  /** Our own sales and support: the CRM and the companies' options, no carrier data. */
+  isSales: boolean
+  /** The TrackBox24 team (admin or sales): the CRM and the companies section. */
+  isPlatform: boolean
   isManager: boolean
   isViewer: boolean
   /** Platform admin browsing one company's data (read-only, via X-Company-Id). */
@@ -26,6 +30,7 @@ export function useAccess(): Access {
   const { company } = useCompanyView()
   const has = (role: Role) => roles.includes(role)
   const isAdmin = has('ADMIN')
+  const isSales = has('SALES')
   const isManager = has('MANAGER')
   const isViewer = has('VIEWER')
   const companyMode = isAdmin && company != null
@@ -36,6 +41,8 @@ export function useAccess(): Access {
     roles,
     has,
     isAdmin,
+    isSales,
+    isPlatform: isAdmin || isSales,
     isManager,
     isViewer,
     companyMode,

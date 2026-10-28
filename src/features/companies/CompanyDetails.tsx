@@ -14,7 +14,7 @@ import { formatDateTime, formatPhone } from '@/lib/format'
 import { CompanyDialog } from './CompanyDialog'
 import { NpKeyDialog } from './NpKeyDialog'
 import { NpSenderDialog } from './NpSenderDialog'
-import { useSetCompanyNpKey, useSetCompanyPhotos, useUpdateCompany } from './queries'
+import { useSetCompanyNpKey, useSetCompanyPhotos, useSetCompanyPublicTracking, useUpdateCompany } from './queries'
 
 export function CompanyStatusBadge({ active }: { active?: boolean }) {
   const { t } = useTranslation('companies')
@@ -39,22 +39,32 @@ export function NpKeyBadge({ configured }: { configured?: boolean }) {
 /** Details card with edit + NP backup key dialogs; used by admin's company page and manager's own-company page. */
 export function CompanyDetails({ company }: { company: CompanyResponse }) {
   const { t } = useTranslation(['companies', 'common', 'novaPoshta'])
-  const { canEdit, isAdmin, companyMode } = useAccess()
+  const { canEdit, isAdmin, isPlatform, companyMode } = useAccess()
   // Admins may edit company requisites from the companies section, but not while browsing a company read-only.
   const editable = canEdit || (isAdmin && !companyMode)
   const update = useUpdateCompany(company.id!)
   const setKey = useSetCompanyNpKey(company.id!)
   const setPhotos = useSetCompanyPhotos(company.id!)
-  // Parcel photos are switched on per company by the platform admin; a manager only sees the state.
-  const photosEditable = isAdmin && !companyMode
-  const togglePhotos = async (value: boolean) => {
+  const setPublicTracking = useSetCompanyPublicTracking(company.id!)
+  // Paid options are switched on per company by the TrackBox24 team (admin or sales); a manager only sees the state.
+  const optionsEditable = isPlatform && !companyMode
+  const toggle = (mutation: { mutateAsync: (value: boolean) => Promise<unknown> }) => async (value: boolean) => {
     try {
-      await setPhotos.mutateAsync(value)
+      await mutation.mutateAsync(value)
       toast.success(t('common:common.saved'))
     } catch (e) {
       showApiError(e)
     }
   }
+  const option = (id: string, label: string, on: boolean | undefined, pending: boolean, onChange: (v: boolean) => void, hint: string, labels: { on: string; off: string }) => (
+    <span className="flex flex-col gap-1">
+      <span className="flex items-center gap-2">
+        {optionsEditable && <Switch id={id} checked={on === true} disabled={pending} onCheckedChange={(c) => onChange(c)} aria-label={label} />}
+        {on ? labels.on : labels.off}
+      </span>
+      {optionsEditable && <span className="text-xs font-normal text-muted-foreground">{hint}</span>}
+    </span>
+  )
   const [editing, setEditing] = useState(false)
   const [keyOpen, setKeyOpen] = useState(false)
   const [senderOpen, setSenderOpen] = useState(false)
@@ -80,23 +90,14 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
               { label: t('novaPoshta:sender.field'), value: senderValue },
               {
                 label: t('companies:fields.photos'),
-                value: (
-                  <span className="flex flex-col gap-1">
-                    <span className="flex items-center gap-2">
-                      {photosEditable && (
-                        <Switch
-                          id="company-photos"
-                          checked={company.photosEnabled === true}
-                          disabled={setPhotos.isPending}
-                          onCheckedChange={(c) => togglePhotos(c)}
-                          aria-label={t('companies:fields.photos')}
-                        />
-                      )}
-                      {company.photosEnabled ? t('companies:photos.enabled') : t('companies:photos.disabled')}
-                    </span>
-                    {photosEditable && <span className="text-xs font-normal text-muted-foreground">{t('companies:photos.hint')}</span>}
-                  </span>
-                ),
+                value: option('company-photos', t('companies:fields.photos'), company.photosEnabled, setPhotos.isPending, toggle(setPhotos),
+                  t('companies:photos.hint'), { on: t('companies:photos.enabled'), off: t('companies:photos.disabled') }),
+              },
+              {
+                label: t('companies:fields.publicTracking'),
+                value: option('company-public-tracking', t('companies:fields.publicTracking'), company.publicTrackingEnabled, setPublicTracking.isPending,
+                  toggle(setPublicTracking), t('companies:publicTracking.hint'),
+                  { on: t('companies:publicTracking.enabled'), off: t('companies:publicTracking.disabled') }),
               },
               { label: t('companies:fields.notes'), value: company.notes },
               { label: t('common:common.createdAt'), value: formatDateTime(company.createdAt) },

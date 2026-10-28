@@ -32,6 +32,11 @@ export function setCompanyActive(id: number, value: boolean): Promise<CompanyRes
   return unwrap(api.PUT('/api/companies/{id}/active', { params: { path: { id }, query: { value } } }))
 }
 
+/** Public tracking page for the company's clients; admin or sales. */
+export function setCompanyPublicTracking(id: number, value: boolean): Promise<CompanyResponse> {
+  return unwrap(api.PUT('/api/companies/{id}/public-tracking', { params: { path: { id }, query: { value } } }))
+}
+
 /** Platform admin switch: without it the company gets 403 on photo upload; existing photos stay viewable. */
 export function setCompanyPhotos(id: number, value: boolean): Promise<CompanyResponse> {
   return unwrap(api.PUT('/api/companies/{id}/photos', { params: { path: { id }, query: { value } } }))

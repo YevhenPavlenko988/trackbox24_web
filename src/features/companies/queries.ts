@@ -11,6 +11,7 @@ import {
   setCompanyNpKey,
   setCompanyNpSender,
   setCompanyPhotos,
+  setCompanyPublicTracking,
   syncNovaPoshta,
   updateCompany,
 } from './api'
@@ -66,6 +67,10 @@ export function useSetCompanyActive(id: number) {
 
 export function useSetCompanyPhotos(id: number) {
   return useCompanyMutation((value: boolean) => setCompanyPhotos(id, value))
+}
+
+export function useSetCompanyPublicTracking(id: number) {
+  return useCompanyMutation((value: boolean) => setCompanyPublicTracking(id, value))
 }
 
 export function useSetCompanyNpKey(id: number) {

@@ -13,7 +13,10 @@
     "warehouses": "Склади",
     "logout": "Вийти",
     "changePassword": "Змінити пароль",
-    "trash": "Кошик"
+    "trash": "Кошик",
+    "crmDeals": "Угоди",
+    "crmTasks": "Задачі",
+    "crmTeam": "Команда"
   },
   "companyMode": {
     "banner": "Перегляд компанії «{{name}}» — лише читання",
@@ -84,14 +87,16 @@
     "npPhone": "Лише український номер: 380XXXXXXXXX",
     "max500": "До 500 символів",
     "sizeRange": "Від 0,1 до 9999",
-    "docWeightMax": "Документи — до 1 кг, інакше оберіть «Посилка»"
+    "docWeightMax": "Документи — до 1 кг, інакше оберіть «Посилка»",
+    "edrpou": "ЄДРПОУ — 8–10 цифр"
   },
   "roles": {
     "ADMIN": "Адміністратор",
     "MANAGER": "Менеджер",
     "REPRESENTATIVE": "Представник",
     "DRIVER": "Водій",
-    "VIEWER": "Перегляд"
+    "VIEWER": "Перегляд",
+    "SALES": "Продажі"
   },
   "parcelStatus": {
     "IN_NOVA_POSHTA": "У Новій Пошті",
