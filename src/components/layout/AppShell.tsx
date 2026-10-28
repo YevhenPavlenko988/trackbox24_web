@@ -1,4 +1,4 @@
-import { Building2, Contact, Eye, Handshake, KeyRound, ListTodo, LogOut, Package, Route, Trash2, Truck, Users, UsersRound, Warehouse, X, type LucideIcon } from 'lucide-react'
+import { Building2, Contact, Eye, Handshake, KeyRound, ListTodo, LogOut, Package, Receipt, Route, Trash2, Truck, Users, UsersRound, Warehouse, X, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
@@ -35,6 +35,7 @@ const NAV: NavItem[] = [
   { to: '/trash', labelKey: 'nav.trash', icon: Trash2, show: (a) => a.hasCompanyAccess },
   { to: '/crm/deals', labelKey: 'nav.crmDeals', icon: Handshake, show: (a) => a.isPlatform && !a.companyMode },
   { to: '/crm/tasks', labelKey: 'nav.crmTasks', icon: ListTodo, show: (a) => a.isPlatform && !a.companyMode },
+  { to: '/crm/invoices', labelKey: 'nav.crmInvoices', icon: Receipt, show: (a) => a.isPlatform && !a.companyMode },
   { to: '/companies', labelKey: 'nav.companies', icon: Building2, show: (a) => a.isPlatform },
   { to: '/crm/team', labelKey: 'nav.crmTeam', icon: Contact, show: (a) => a.isPlatform && !a.companyMode },
 ]

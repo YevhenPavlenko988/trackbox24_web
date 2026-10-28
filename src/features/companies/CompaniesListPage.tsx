@@ -28,7 +28,12 @@ export function CompaniesListPage() {
     { key: 'name', header: t('companies:fields.name'), cell: (c) => <span className="font-medium">{c.name}</span> },
     { key: 'edrpou', header: t('companies:fields.edrpou'), cell: (c) => c.edrpou ?? '—' },
     { key: 'phone', header: t('companies:fields.phone'), cell: (c) => formatPhone(c.phone) },
-    { key: 'active', header: t('companies:fields.active'), cell: (c) => <CompanyStatusBadge active={c.active} /> },
+    { key: 'active', header: t('companies:fields.active'), cell: (c) => (
+        <span className="flex flex-wrap gap-1">
+          <CompanyStatusBadge active={c.active} suspended={c.suspended} inTrial={c.inTrial} />
+        </span>
+      ),
+    },
     { key: 'np', header: t('companies:fields.npKey'), cell: (c) => <NpKeyBadge configured={c.novaPoshtaKeyConfigured} /> },
     { key: 'createdAt', header: t('common:common.createdAt'), cell: (c) => formatDateTime(c.createdAt) },
   ]
@@ -48,6 +53,7 @@ export function CompaniesListPage() {
         columns={columns}
         rows={data.content}
         rowKey={(c) => c.id ?? 0}
+        rowClassName={(c) => (c.suspended ? 'bg-red-50 hover:bg-red-100/70 dark:bg-red-950/30' : undefined)}
         onRowClick={(c) => navigate(`/companies/${c.id}`)}
         isLoading={query.isPending}
       />

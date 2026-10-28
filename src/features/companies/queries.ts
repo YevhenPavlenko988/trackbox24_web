@@ -49,6 +49,8 @@ function useCompanyMutation<TVars>(mutationFn: (vars: TVars) => Promise<CompanyR
     onSuccess: (company) => {
       if (company.id != null) queryClient.setQueryData(companyKeys.detail(company.id), company)
       queryClient.invalidateQueries({ queryKey: companyKeys.all })
+      // an option turned on or off changes the company's tariff
+      queryClient.invalidateQueries({ queryKey: ['billing'] })
     },
   })
 }

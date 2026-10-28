@@ -76,6 +76,7 @@ export const router = createBrowserRouter([
               { path: 'crm/deals', lazy: page(() => import('@/features/crm/DealsBoardPage'), 'DealsBoardPage') },
               { path: 'crm/deals/:id', lazy: page(() => import('@/features/crm/DealPage'), 'DealPage') },
               { path: 'crm/tasks', lazy: page(() => import('@/features/crm/TasksBoardPage'), 'TasksBoardPage') },
+              { path: 'crm/invoices', lazy: page(() => import('@/features/billing/InvoicesPage'), 'InvoicesPage') },
               { path: 'crm/team', lazy: page(() => import('@/features/crm/TeamPage'), 'TeamPage') },
             ],
           },
