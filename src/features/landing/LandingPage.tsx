@@ -113,6 +113,9 @@ function Header() {
           ))}
         </nav>
         <div className="hidden items-center gap-2 md:flex">
+          <Link to="/track" className="inline-flex h-10 items-center rounded-lg px-3 text-sm font-semibold hover:text-brand">
+            {t('nav.track')}
+          </Link>
           <Link to="/login" className="inline-flex h-10 items-center rounded-lg border border-navy/20 px-4 text-sm font-semibold hover:bg-sand">
             {t('nav.login')}
           </Link>
@@ -132,6 +135,9 @@ function Header() {
                 {label}
               </a>
             ))}
+            <Link to="/track" className="rounded-lg px-2 py-2 hover:bg-sand">
+              {t('nav.track')}
+            </Link>
             <div className="mt-2 flex gap-2">
               <Link to="/login" className="inline-flex h-11 flex-1 items-center justify-center rounded-lg border border-navy/20 font-semibold">
                 {t('nav.login')}
