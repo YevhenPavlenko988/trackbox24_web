@@ -7,7 +7,7 @@ import { NpNumber } from '@/components/common/NpNumber'
 import { PARCEL_STATUS_STYLES } from '@/features/parcels/statusStyles'
 import { isApiError } from '@/lib/api/problem'
 import type { PublicTrackingResponse } from '@/lib/api/types'
-import { formatDateTime } from '@/lib/format'
+import { formatDate, formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { normalizeTrackingCode, npTrackingUrl, TRACKING_CODE, trackParcel } from './api'
 
@@ -148,7 +148,19 @@ function Result({ data }: { data: PublicTrackingResponse }) {
           {data.npTtn && <Item label={t('npTtn')} value={<NpNumber value={data.npTtn} grouped />} />}
           {data.carrier && <Item label={t('carrier')} value={data.carrier} />}
           {data.npStatus && <Item label={t('npStatus')} value={data.npStatus} />}
-          {data.expectedArrivalAt && <Item label={t('expectedArrival')} value={formatDateTime(data.expectedArrivalAt)} />}
+          {data.expectedDeliveryOn ? (
+            <Item
+              label={t('expectedDelivery')}
+              value={
+                <span className="flex flex-col">
+                  <span>{formatDate(data.expectedDeliveryOn)}</span>
+                  {data.expectedDeliverySource && <span className="text-sm font-normal text-navy/55">{t(`estimateSource.${data.expectedDeliverySource}`)}</span>}
+                </span>
+              }
+            />
+          ) : (
+            data.expectedArrivalAt && <Item label={t('expectedArrival')} value={formatDateTime(data.expectedArrivalAt)} />
+          )}
           {data.outgoingWaybill && (
             <Item
               label={t('outgoingWaybill')}

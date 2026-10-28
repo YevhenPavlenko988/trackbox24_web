@@ -12,6 +12,11 @@
   "since": "з {{date}}",
   "npStatus": "У Новій Пошті",
   "expectedArrival": "Планове прибуття",
+  "expectedDelivery": "Орієнтовна доставка",
+  "estimateSource": {
+    "TRIP": "за планом рейсу перевізника",
+    "NOVA_POSHTA": "за прогнозом Нової Пошти"
+  },
   "outgoingWaybill": "ТТН доставки по Україні",
   "npTrack": "Відстежити на сайті Нової Пошти",
   "history": "Історія",

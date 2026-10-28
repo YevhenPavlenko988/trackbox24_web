@@ -4869,6 +4869,19 @@ export interface components {
              */
             expectedArrivalAt?: string;
             /**
+             * Format: date
+             * @description Орієнтовна дата доставки отримувачу: прогноз Нової Пошти для ЕН відправки, інакше планове прибуття рейсу,
+             *     у який посилку заплановано чи завантажено. Немає — ще не відомо або посилку вже видано
+             * @example 2026-10-24
+             */
+            expectedDeliveryOn?: string;
+            /**
+             * @description Звідки дата: TRIP — за планом рейсу, NOVA_POSHTA — за прогнозом Нової Пошти
+             * @example TRIP
+             * @enum {string}
+             */
+            expectedDeliverySource?: "TRIP" | "NOVA_POSHTA";
+            /**
              * @description ТТН Нової Пошти, якою перевізник відправив посилку отримувачу в Україні (зворотна посилка)
              * @example 20450000012345
              */
