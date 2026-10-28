@@ -13,5 +13,5 @@ export function normalizeTrackingCode(input: string): string {
 // The spec declares this response as */* rather than JSON, so openapi-fetch cannot infer it; name the type here.
 export const trackParcel = (code: string) => unwrap<PublicTrackingResponse>(api.GET('/api/public/tracking/{code}', { params: { path: { code } } }))
 
-/** Nova Poshta's own tracking page for a waybill. */
-export const npTrackingUrl = (ttn: string) => `https://novaposhta.ua/tracking/?cargo_number=${encodeURIComponent(ttn)}`
+/** Nova Poshta's own tracking page, opened straight on the waybill (the ?cargo_number= form lands on an empty search). */
+export const npTrackingUrl = (ttn: string) => `https://novaposhta.ua/tracking/${encodeURIComponent(ttn)}`
