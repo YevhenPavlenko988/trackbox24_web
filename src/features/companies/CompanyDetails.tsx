@@ -16,12 +16,18 @@ import { NpKeyDialog } from './NpKeyDialog'
 import { NpSenderDialog } from './NpSenderDialog'
 import { useSetCompanyNpKey, useSetCompanyPhotos, useSetCompanyPublicTracking, useUpdateCompany } from './queries'
 
-export function CompanyStatusBadge({ active }: { active?: boolean }) {
+/** Deactivated, restricted for non-payment, in the trial, or simply active. */
+export function CompanyStatusBadge({ active, suspended, inTrial }: { active?: boolean; suspended?: boolean; inTrial?: boolean }) {
   const { t } = useTranslation('companies')
-  return active === false ? (
-    <Badge variant="destructive">{t('status.inactive')}</Badge>
-  ) : (
-    <Badge className="bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200">{t('status.active')}</Badge>
+  if (active === false) return <Badge variant="destructive">{t('status.inactive')}</Badge>
+  if (suspended) return <Badge variant="destructive">{t('status.suspended')}</Badge>
+  return (
+    <>
+      <Badge className="bg-emerald-100 text-emerald-900 dark:bg-emerald-900/40 dark:text-emerald-200">{t('status.active')}</Badge>
+      {inTrial && (
+        <Badge className="bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">{t('status.trial')}</Badge>
+      )}
+    </>
   )
 }
 

@@ -87,3 +87,12 @@ export type CrmConvertRequest = Schemas['CrmConvertRequest']
 export type CrmTaskRequest = Schemas['CrmTaskRequest']
 export type CrmTaskResponse = Schemas['CrmTaskResponse']
 export type CrmTaskStatus = NonNullable<CrmTaskResponse['status']>
+
+export type BillingPriceResponse = Schemas['BillingPriceResponse']
+export type BillingItem = NonNullable<BillingPriceResponse['code']>
+export type CompanyBillingResponse = Schemas['CompanyBillingResponse']
+export type InvoiceResponse = Schemas['InvoiceResponse']
+export type InvoiceLineResponse = Schemas['InvoiceLineResponse']
+export type InvoiceStatus = NonNullable<InvoiceResponse['status']>
+export type InvoicePaymentRequest = Schemas['InvoicePaymentRequest']
+export type InvoiceSummaryResponse = Schemas['InvoiceSummaryResponse']

@@ -6,7 +6,8 @@
   "tabs": {
     "info": "Дані",
     "users": "Користувачі",
-    "crm": "CRM"
+    "crm": "CRM",
+    "billing": "Оплата"
   },
   "fields": {
     "name": "Назва",
@@ -24,7 +25,9 @@
   },
   "status": {
     "active": "Активна",
-    "inactive": "Деактивована"
+    "inactive": "Деактивована",
+    "suspended": "Доступ обмежено за несплату",
+    "trial": "Тестовий період"
   },
   "actions": {
     "activate": "Активувати",

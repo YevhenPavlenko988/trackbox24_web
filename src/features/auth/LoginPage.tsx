@@ -28,6 +28,7 @@ export function LoginPage() {
   const location = useLocation()
   const [searchParams] = useSearchParams()
   const [failed, setFailed] = useState(false)
+  const [blocked, setBlocked] = useState<string>()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -37,6 +38,7 @@ export function LoginPage() {
 
   const onSubmit = form.handleSubmit(async (values) => {
     setFailed(false)
+    setBlocked(undefined)
     try {
       const { accessToken } = await loginRequest(values)
       await login(accessToken)
@@ -44,6 +46,8 @@ export function LoginPage() {
       navigate(from ?? '/', { replace: true })
     } catch (e) {
       if (isApiError(e) && e.status === 401) setFailed(true)
+      // the company's access is restricted for non-payment: the backend says so and what to do
+      else if (isApiError(e) && e.status === 403 && e.detail) setBlocked(e.detail)
       else showApiError(e)
     }
   })
@@ -64,6 +68,11 @@ export function LoginPage() {
               {searchParams.get('reason') === 'expired' && !failed && (
                 <Alert>
                   <AlertDescription>{t('auth:sessionExpired')}</AlertDescription>
+                </Alert>
+              )}
+              {blocked && (
+                <Alert variant="destructive">
+                  <AlertDescription>{blocked}</AlertDescription>
                 </Alert>
               )}
               {failed && (

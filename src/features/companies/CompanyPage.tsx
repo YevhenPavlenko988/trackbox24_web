@@ -10,6 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAccess } from '@/features/auth/access'
 import { useCompanyView } from '@/features/auth/companyView'
+import { CompanyBillingSection } from '@/features/billing/CompanyBillingSection'
 import { CompanyCrmSection } from '@/features/crm/CompanyCrmSection'
 import { UsersSection } from '@/features/users/UsersSection'
 import { useListParams } from '@/hooks/use-list-params'
@@ -49,7 +50,7 @@ export function CompanyPage() {
     <>
       <PageHeader
         title={company.name}
-        badges={<CompanyStatusBadge active={company.active} />}
+        badges={<CompanyStatusBadge active={company.active} suspended={company.suspended} inTrial={company.inTrial} />}
         actions={
           isAdmin && (
           <>
@@ -84,6 +85,7 @@ export function CompanyPage() {
           <TabsTrigger value="info">{t('companies:tabs.info')}</TabsTrigger>
           {isAdmin && <TabsTrigger value="users">{t('companies:tabs.users')}</TabsTrigger>}
           <TabsTrigger value="crm">{t('companies:tabs.crm')}</TabsTrigger>
+          <TabsTrigger value="billing">{t('companies:tabs.billing')}</TabsTrigger>
         </TabsList>
         <TabsContent value="info" className="mt-4">
           <CompanyDetails company={company} />
@@ -93,6 +95,9 @@ export function CompanyPage() {
         </TabsContent>
         <TabsContent value="crm" className="mt-4">
           {tab === 'crm' && <CompanyCrmSection companyId={companyId} />}
+        </TabsContent>
+        <TabsContent value="billing" className="mt-4">
+          {tab === 'billing' && <CompanyBillingSection companyId={companyId} />}
         </TabsContent>
       </Tabs>
 
