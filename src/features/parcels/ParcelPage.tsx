@@ -1,5 +1,6 @@
-import { AlertCircle, ArrowLeft, BadgeCheck, BadgeX, Copy, Pencil, Printer, RefreshCw, Repeat, Trash2 } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BadgeCheck, BadgeX, Copy, Link2, Pencil, Printer, RefreshCw, Repeat, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import i18n from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -119,6 +120,12 @@ export function ParcelPage() {
         description={`${t('parcels:fields.statusChangedAt')}: ${formatDateTime(p.statusChangedAt)}${p.statusChangedBy ? ` · ${p.statusChangedBy}` : ''}`}
         actions={
           <>
+            {p.trackingUrl && (
+              <Button variant="outline" onClick={() => copyTrackingLink(p.trackingUrl!)}>
+                <Link2 />
+                {t('parcels:actions.copyTrackingLink')}
+              </Button>
+            )}
             {canEdit && p.npTtn && (
               <Button variant="outline" onClick={onRefresh} disabled={refresh.isPending}>
                 <RefreshCw className={refresh.isPending ? 'animate-spin' : undefined} />
@@ -370,6 +377,13 @@ export function ParcelPage() {
       <ConfirmDialog open={unpaying} onOpenChange={setUnpaying} title={t('parcels:payment.unpaidConfirm')} confirmLabel={t('parcels:payment.markUnpaid')} destructive pending={setPayment.isPending} onConfirm={onUnpaid} />
     </>
   )
+}
+
+/** The public tracking page of the parcel, for the sender or recipient; the URL is there only when the company has the option on. */
+function copyTrackingLink(url: string) {
+  const done = () => toast.success(i18n.t('parcels:actions.trackingLinkCopied'))
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => window.prompt(i18n.t('parcels:actions.copyTrackingLink'), url))
+  else window.prompt(i18n.t('parcels:actions.copyTrackingLink'), url)
 }
 
 /** Monospace code with a copy button (TTN numbers are typed into the Nova Poshta site/app by hand otherwise). */

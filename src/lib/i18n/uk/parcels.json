@@ -66,6 +66,8 @@
     "syncNpDone": "Імпортовано нових: {{imported}}, оновлено статусів: {{tracked}}",
     "syncNpFailures": "Помилок запитів до НП: {{failures}}",
     "printLabels": "Етикетки",
+    "copyTrackingLink": "Копіювати посилання",
+    "trackingLinkCopied": "Посилання для відстеження скопійовано",
     "delete": "Видалити",
     "restore": "Відновити"
   },

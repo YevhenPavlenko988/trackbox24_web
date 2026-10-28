@@ -34,6 +34,7 @@ export const router = createBrowserRouter([
   { path: '/terms', lazy: page(() => import('@/features/landing/legal/TermsPage'), 'TermsPage') },
   { path: '/privacy', lazy: page(() => import('@/features/landing/legal/PrivacyPage'), 'PrivacyPage') },
   { path: '/dpa', lazy: page(() => import('@/features/landing/legal/DpaPage'), 'DpaPage') },
+  { path: '/track/:code?', lazy: page(() => import('@/features/tracking/TrackingPage'), 'TrackingPage') },
   {
     element: <RedirectIfAuthenticated />,
     children: [{ path: '/login', element: <LoginPage /> }],
