@@ -3,7 +3,7 @@ import { createBrowserRouter } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { MobileOnlyPage, NotFoundPage } from './ErrorPages'
-import { RedirectIfAuthenticated, RequireAdmin, RequireAuth, RequireCompanyAccess, RootPage } from './guards'
+import { RedirectIfAuthenticated, RequireAuth, RequireCompanyAccess, RequirePlatform, RootPage } from './guards'
 
 type PageModule = Record<string, unknown>
 
@@ -68,10 +68,14 @@ export const router = createBrowserRouter([
             ],
           },
           {
-            element: <RequireAdmin />,
+            element: <RequirePlatform />,
             children: [
               { path: 'companies', lazy: page(() => import('@/features/companies/CompaniesListPage'), 'CompaniesListPage') },
               { path: 'companies/:id', lazy: page(() => import('@/features/companies/CompanyPage'), 'CompanyPage') },
+              { path: 'crm/deals', lazy: page(() => import('@/features/crm/DealsBoardPage'), 'DealsBoardPage') },
+              { path: 'crm/deals/:id', lazy: page(() => import('@/features/crm/DealPage'), 'DealPage') },
+              { path: 'crm/tasks', lazy: page(() => import('@/features/crm/TasksBoardPage'), 'TasksBoardPage') },
+              { path: 'crm/team', lazy: page(() => import('@/features/crm/TeamPage'), 'TeamPage') },
             ],
           },
           { path: '*', element: <NotFoundPage /> },

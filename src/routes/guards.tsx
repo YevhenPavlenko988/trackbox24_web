@@ -23,6 +23,12 @@ export function RequireAdmin() {
   return isAdmin ? <Outlet /> : <ForbiddenPage />
 }
 
+/** The TrackBox24 team: admins and sales (CRM, companies). */
+export function RequirePlatform() {
+  const { isPlatform } = useAccess()
+  return isPlatform ? <Outlet /> : <ForbiddenPage />
+}
+
 export function RedirectIfAuthenticated() {
   const { user } = useAuth()
   if (user) return <Navigate to="/" replace />
@@ -31,6 +37,7 @@ export function RedirectIfAuthenticated() {
 
 export function homePathFor(access: Access): string {
   if (access.isAdmin && !access.companyMode) return '/companies'
+  if (access.isSales) return '/crm/deals'
   if (access.mobileOnly) return '/mobile-only'
   return '/parcels'
 }

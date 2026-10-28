@@ -68,3 +68,20 @@ export type TripPayments = NonNullable<TripResponse['payments']>
 export type TripPaymentLine = NonNullable<TripPayments['received']>[number]
 
 export type Channel = NonNullable<ClientRequest['channel']>
+
+export type CrmRef = Schemas['CrmRef']
+export type CrmStageRequest = Schemas['CrmStageRequest']
+export type CrmStageResponse = Schemas['CrmStageResponse']
+export type CrmStageKind = NonNullable<CrmStageResponse['kind']>
+export type CrmContactRequest = Schemas['CrmContactRequest']
+export type CrmContactResponse = Schemas['CrmContactResponse']
+export type CrmDealRequest = Schemas['CrmDealRequest']
+export type CrmDealResponse = Schemas['CrmDealResponse']
+export type CrmDealSource = NonNullable<CrmDealResponse['source']>
+export type CompanyOption = NonNullable<CrmDealResponse['interestedOptions']>[number]
+export type CrmStageChangeRequest = Schemas['CrmStageChangeRequest']
+export type CrmDealActivityResponse = Schemas['CrmDealActivityResponse']
+export type CrmConvertRequest = Schemas['CrmConvertRequest']
+export type CrmTaskRequest = Schemas['CrmTaskRequest']
+export type CrmTaskResponse = Schemas['CrmTaskResponse']
+export type CrmTaskStatus = NonNullable<CrmTaskResponse['status']>

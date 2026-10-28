@@ -224,7 +224,7 @@ function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }
       lastName: user.lastName ?? '',
       firstName: user.firstName ?? '',
       phone: user.phone ?? '',
-      roles: (user.roles ?? []).filter((r): r is Exclude<Role, 'ADMIN'> => r !== 'ADMIN'),
+      roles: (user.roles ?? []).filter((r): r is Exclude<Role, 'ADMIN' | 'SALES'> => r !== 'ADMIN' && r !== 'SALES'),
       driverLicenseNumber: user.driverLicenseNumber ?? '',
       notes: user.notes ?? '',
       active: user.active ?? true,
