@@ -41,7 +41,7 @@ export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceRespo
   return (
     <>
       <Dialog open onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex flex-wrap items-center gap-2">
               {t('billing:invoice.title', { id, period: formatPeriod(invoice.period) })}
