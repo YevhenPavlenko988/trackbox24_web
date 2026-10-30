@@ -7,11 +7,14 @@ import { z } from 'zod'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { LEGAL_DOCS } from '@/features/landing/legal/docs'
 import { isApiError, showApiError } from '@/lib/api/problem'
 import { login as loginRequest } from './api'
+import { getRememberedEmail, setRememberedEmail } from './rememberedEmail'
 import { useAuth } from './useAuth'
 
 const schema = z.object({
@@ -29,10 +32,12 @@ export function LoginPage() {
   const [searchParams] = useSearchParams()
   const [failed, setFailed] = useState(false)
   const [blocked, setBlocked] = useState<string>()
+  const [remembered] = useState(getRememberedEmail)
+  const [remember, setRemember] = useState(remembered !== '')
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: remembered, password: '' },
   })
   const { errors, isSubmitting } = form.formState
 
@@ -41,6 +46,7 @@ export function LoginPage() {
     setBlocked(undefined)
     try {
       const { accessToken } = await loginRequest(values)
+      setRememberedEmail(remember ? values.email.trim() : null)
       await login(accessToken)
       const from = (location.state as { from?: string } | null)?.from
       navigate(from ?? '/', { replace: true })
@@ -82,7 +88,7 @@ export function LoginPage() {
               )}
               <Field data-invalid={!!errors.email}>
                 <FieldLabel htmlFor="email">{t('auth:email')}</FieldLabel>
-                <Input id="email" type="email" autoComplete="email" aria-invalid={!!errors.email} {...form.register('email')} />
+                <Input id="email" type="email" autoComplete="username" autoFocus={!remembered} aria-invalid={!!errors.email} {...form.register('email')} />
                 {errors.email && <FieldError>{t('common:errors.email')}</FieldError>}
               </Field>
               <Field data-invalid={!!errors.password}>
@@ -91,11 +97,16 @@ export function LoginPage() {
                   id="password"
                   type="password"
                   autoComplete="current-password"
+                  autoFocus={!!remembered}
                   aria-invalid={!!errors.password}
                   {...form.register('password')}
                 />
                 {errors.password && <FieldError>{t('common:errors.required')}</FieldError>}
               </Field>
+              <Label htmlFor="remember" className="flex items-center gap-2 font-normal">
+                <Checkbox id="remember" checked={remember} onCheckedChange={(c) => setRemember(c === true)} />
+                {t('auth:remember')}
+              </Label>
               <Button type="submit" disabled={isSubmitting} className="w-full">
                 {t('auth:submit')}
               </Button>

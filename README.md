@@ -47,7 +47,8 @@ src/
   components/ui/        shadcn (генерується CLI, не правити руками)
   components/common/    DataTable (з вибором рядків), Pagination, LinkButton, ConfirmDialog, DetailsList
   components/layout/    AppShell (навігація за ролями, банер режиму компанії), PageHeader
-  features/auth/        токен, AuthProvider (roles[]), useAccess, режим компанії для адміна, логін, зміна пароля
+  features/auth/        токен, AuthProvider (roles[]), useAccess, режим компанії для адміна, логін («Запам'ятати мене» —
+                        лише email у localStorage, пароль — менеджер паролів браузера), зміна пароля
   features/landing/     лендінг для гостей: секції з презентації, скриншоти в public/landing/, форма «Запросити демо»
                         (POST /api/public/demo-requests → Telegram), контакти в contacts.ts (порожні = кнопки сховані);
                         legal/ — Умови (/terms), Політика конфіденційності (/privacy), Угода про обробку даних (/dpa), посилання у футері й на /login
