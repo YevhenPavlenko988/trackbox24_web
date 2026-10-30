@@ -9,16 +9,14 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { parseNumber } from '@/features/parcels/status'
 import { useMutationError } from '@/lib/api/problem'
-import type { CompanyOption, CrmDealRequest, CrmDealResponse, CrmDealSource } from '@/lib/api/types'
+import { CHANNELS, ChannelFields } from '@/features/channels/channel'
+import type { Channel, CompanyOption, CrmDealRequest, CrmDealResponse } from '@/lib/api/types'
 import { OptionsCheckboxes } from './OptionsCheckboxes'
 import { useCreateDeal, useUpdateDeal } from './queries'
 import { TeamSelect } from './TeamSelect'
-
-const SOURCES: CrmDealSource[] = ['SITE_FORM', 'REFERRAL', 'CALL', 'SOCIAL', 'OTHER']
 
 const schema = z.object({
   title: z.string().trim().min(1, 'required'),
@@ -27,7 +25,8 @@ const schema = z.object({
   email: z.union([z.literal(''), z.string().trim().email('email')]),
   jobTitle: z.string().trim(),
   ownerId: z.number().optional(),
-  source: z.enum(SOURCES),
+  channel: z.union([z.enum(CHANNELS as [Channel, ...Channel[]]), z.literal('')]),
+  channelDetails: z.string().trim().max(255),
   interestedOptions: z.array(z.enum(['PHOTOS', 'PUBLIC_TRACKING'])),
   expectedMonthlyEur: z.string().trim().refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number'),
   notes: z.string().trim(),
@@ -64,7 +63,8 @@ function DealForm({ deal, onClose }: { deal?: CrmDealResponse; onClose: () => vo
       email: '',
       jobTitle: '',
       ownerId: deal?.owner?.id,
-      source: deal?.source ?? 'OTHER',
+      channel: deal?.source ?? '',
+      channelDetails: deal?.sourceDetails ?? '',
       interestedOptions: deal?.interestedOptions ?? [],
       expectedMonthlyEur: deal?.expectedMonthlyEur != null ? String(deal.expectedMonthlyEur) : '',
       notes: deal?.notes ?? '',
@@ -79,7 +79,8 @@ function DealForm({ deal, onClose }: { deal?: CrmDealResponse; onClose: () => vo
       contactId: deal?.contact?.id,
       contact: !deal && v.fullName ? { fullName: v.fullName, phone: v.phone || undefined, email: v.email || undefined, jobTitle: v.jobTitle || undefined } : undefined,
       ownerId: v.ownerId,
-      source: v.source,
+      source: v.channel || undefined,
+      sourceDetails: v.channelDetails || undefined,
       interestedOptions: v.interestedOptions as CompanyOption[],
       expectedMonthlyEur: parseNumber(v.expectedMonthlyEur),
       notes: v.notes || undefined,
@@ -123,7 +124,7 @@ function DealForm({ deal, onClose }: { deal?: CrmDealResponse; onClose: () => vo
             </Field>
           </div>
         )}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4">
           <Controller
             control={form.control}
             name="ownerId"
@@ -134,28 +135,8 @@ function DealForm({ deal, onClose }: { deal?: CrmDealResponse; onClose: () => vo
               </Field>
             )}
           />
-          <Controller
-            control={form.control}
-            name="source"
-            render={({ field }) => (
-              <Field>
-                <FieldLabel htmlFor="deal-source">{t('crm:fields.source')}</FieldLabel>
-                <Select value={field.value} onValueChange={(v) => field.onChange(v)}>
-                  <SelectTrigger id="deal-source" className="w-full">
-                    <SelectValue>{t(`crm:source.${field.value}`)}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SOURCES.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {t(`crm:source.${s}`)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-            )}
-          />
         </div>
+        <ChannelFields form={form} idPrefix="deal-" />
         <Controller
           control={form.control}
           name="interestedOptions"

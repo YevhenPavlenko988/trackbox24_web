@@ -34,13 +34,6 @@
     "utm": "UTM",
     "createdAt": "Створено"
   },
-  "source": {
-    "SITE_FORM": "Заявка з сайту",
-    "REFERRAL": "Рекомендація",
-    "CALL": "Дзвінок",
-    "SOCIAL": "Соцмережі",
-    "OTHER": "Інше"
-  },
   "options": {
     "PHOTOS": "Фото посилок",
     "PUBLIC_TRACKING": "Публічне відстеження"

@@ -141,6 +141,7 @@ export function dealBody(d: CrmDealResponse, change: Partial<CrmDealRequest> = {
     contactId: d.contact?.id,
     ownerId: d.owner?.id,
     source: d.source,
+    sourceDetails: d.sourceDetails,
     interestedOptions: d.interestedOptions,
     expectedMonthlyEur: d.expectedMonthlyEur,
     notes: d.notes,
