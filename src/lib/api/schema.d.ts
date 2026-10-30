@@ -339,6 +339,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/telegram-bot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Увімкнути / вимкнути Telegram-бота відстеження
+         * @description ADMIN або SALES. Лише разом із публічним відстеженням (інакше 400); вимкнення відстеження вимикає й бота.
+         *     Вимкнено — бот не знаходить посилок компанії й не пише про них, на сторінці відстеження немає кнопки Telegram.
+         */
+        put: operations["setTelegramBotEnabled"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/public-tracking": {
         parameters: {
             query?: never;
@@ -3230,7 +3251,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            code?: "BASE" | "PHOTOS" | "PUBLIC_TRACKING";
+            code?: "BASE" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
             /**
              * @description Назва
              * @example Фото посилок
@@ -3318,7 +3339,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            interestedOptions?: ("PHOTOS" | "PUBLIC_TRACKING")[];
+            interestedOptions?: ("PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -3420,7 +3441,7 @@ export interface components {
             utmTerm?: string;
             utmContent?: string;
             /** @description Опції, що цікавлять */
-            interestedOptions?: ("PHOTOS" | "PUBLIC_TRACKING")[];
+            interestedOptions?: ("PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -3509,7 +3530,7 @@ export interface components {
              * @example BASE
              * @enum {string}
              */
-            code?: "BASE" | "PHOTOS" | "PUBLIC_TRACKING";
+            code?: "BASE" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
             /**
              * @description Назва
              * @example Базовий тариф
@@ -3551,7 +3572,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            option?: "PHOTOS" | "PUBLIC_TRACKING";
+            option?: "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
             /**
              * @description Назва
              * @example Фото посилок
@@ -3653,6 +3674,11 @@ export interface components {
              * @example true
              */
             publicTrackingEnabled?: boolean;
+            /**
+             * @description Telegram-бот відстеження (вмикає команда TrackBox24, лише разом із публічним відстеженням)
+             * @example false
+             */
+            telegramBotEnabled?: boolean;
             /**
              * @description Чи збережено резервний API-ключ НП компанії (сам ключ не повертається)
              * @example true
@@ -4591,7 +4617,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            options?: ("PHOTOS" | "PUBLIC_TRACKING")[];
+            options?: ("PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT")[];
         };
         Manager: {
             /**
@@ -4926,7 +4952,7 @@ export interface components {
              */
             outgoingWaybill?: string;
             /**
-             * @description Відкрити Telegram-бота, який писатиме про кожну зміну статусу цієї посилки; немає — бот вимкнений
+             * @description Відкрити Telegram-бота, який писатиме про кожну зміну статусу цієї посилки; немає — бот вимкнений або в компанії немає модуля
              * @example https://t.me/TrackBox24_track_bot?start=PT0123456789
              */
             telegramUrl?: string;
@@ -7318,7 +7344,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                code: "BASE" | "PHOTOS" | "PUBLIC_TRACKING";
+                code: "BASE" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
             };
             cookie?: never;
         };
@@ -8218,6 +8244,114 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/companies/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setTelegramBotEnabled: {
+        parameters: {
+            query: {
+                /**
+                 * @description true — увімкнути, false — вимкнути
+                 * @example true
+                 */
+                value: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/{id}/telegram-bot"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/{id}/telegram-bot"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/companies/{id}/telegram-bot"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/companies/{id}/telegram-bot"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

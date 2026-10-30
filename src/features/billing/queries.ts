@@ -41,7 +41,8 @@ function useBillingMutation<A, R>(fn: (arg: A) => Promise<R>) {
   })
 }
 
-export const usePrices = () => useQuery({ queryKey: billingKeys.prices, queryFn: listPrices })
+/** The tariff; a carrier's manager has no access to it, so pages they see pass {@code enabled: false}. */
+export const usePrices = ({ enabled = true }: { enabled?: boolean } = {}) => useQuery({ queryKey: billingKeys.prices, queryFn: listPrices, enabled })
 export const useCompanyBilling = (id: number) => useQuery({ queryKey: billingKeys.company(id), queryFn: () => getCompanyBilling(id) })
 export const useInvoices = (f: InvoiceFilters) =>
   useQuery({ queryKey: billingKeys.invoices(f), queryFn: () => listInvoices(f), placeholderData: keepPreviousData })

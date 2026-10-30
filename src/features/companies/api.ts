@@ -33,6 +33,10 @@ export function setCompanyActive(id: number, value: boolean): Promise<CompanyRes
 }
 
 /** Public tracking page for the company's clients; admin or sales. */
+export function setCompanyTelegramBot(id: number, value: boolean): Promise<CompanyResponse> {
+  return unwrap(api.PUT('/api/companies/{id}/telegram-bot', { params: { path: { id }, query: { value } } }))
+}
+
 export function setCompanyPublicTracking(id: number, value: boolean): Promise<CompanyResponse> {
   return unwrap(api.PUT('/api/companies/{id}/public-tracking', { params: { path: { id }, query: { value } } }))
 }
