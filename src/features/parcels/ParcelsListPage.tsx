@@ -79,6 +79,8 @@ export function ParcelsListPage() {
   const query = useParcels({
     // One status narrows inside the tab; otherwise the whole tab is asked for at once.
     status: status ? [status] : TAB_STATUSES[tab],
+    // moves have their own section
+    kind: 'PARCEL',
     query: urlQuery,
     clientId,
     representativeId,

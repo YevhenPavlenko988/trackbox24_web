@@ -37,7 +37,8 @@
   "options": {
     "PHOTOS": "Фото посилок",
     "PUBLIC_TRACKING": "Публічне відстеження",
-    "TELEGRAM_BOT": "Telegram-бот"
+    "TELEGRAM_BOT": "Telegram-бот",
+    "MOVES": "Переїзди"
   },
   "stageKind": {
     "OPEN": "У роботі",

@@ -4,7 +4,7 @@ import type { CompanyOption, CrmTaskStatus } from '@/lib/api/types'
 export const TASK_STATUSES: CrmTaskStatus[] = ['TODO', 'IN_PROGRESS', 'DONE']
 
 /** Paid options of a carrier company. */
-export const COMPANY_OPTIONS: CompanyOption[] = ['PHOTOS', 'PUBLIC_TRACKING', 'TELEGRAM_BOT']
+export const COMPANY_OPTIONS: CompanyOption[] = ['PHOTOS', 'PUBLIC_TRACKING', 'TELEGRAM_BOT', 'MOVES']
 
 /**
  * The options a change of one checkbox leaves: the Telegram bot needs the public tracking page, so ticking the bot

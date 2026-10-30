@@ -1,4 +1,4 @@
-import { Building2, Contact, Eye, Handshake, KeyRound, ListTodo, LogOut, Package, Receipt, Route, Trash2, Truck, Users, UsersRound, Warehouse, X, type LucideIcon } from 'lucide-react'
+import { Boxes, Building2, Contact, Eye, Handshake, KeyRound, ListTodo, LogOut, Package, Receipt, Route, Trash2, Truck, Users, UsersRound, Warehouse, X, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
@@ -21,11 +21,14 @@ import { useAccess, type Access } from '@/features/auth/access'
 import { ChangePasswordDialog } from '@/features/auth/ChangePasswordDialog'
 import { useCompanyView } from '@/features/auth/companyView'
 import { useAuth } from '@/features/auth/useAuth'
+import { useCurrentCompany } from '@/features/companies/queries'
 
-type NavItem = { to: string; labelKey: string; icon: LucideIcon; show: (a: Access) => boolean }
+/** {@code module}: shown only when the company has that paid module on. */
+type NavItem = { to: string; labelKey: string; icon: LucideIcon; show: (a: Access) => boolean; module?: 'moves' }
 
 const NAV: NavItem[] = [
   { to: '/parcels', labelKey: 'nav.parcels', icon: Package, show: (a) => a.hasCompanyAccess },
+  { to: '/moves', labelKey: 'nav.moves', icon: Boxes, show: (a) => a.hasCompanyAccess, module: 'moves' },
   { to: '/clients', labelKey: 'nav.clients', icon: UsersRound, show: (a) => a.hasCompanyAccess },
   { to: '/trips', labelKey: 'nav.trips', icon: Route, show: (a) => a.hasCompanyAccess },
   { to: '/warehouses', labelKey: 'nav.warehouses', icon: Warehouse, show: (a) => a.hasCompanyAccess },
@@ -49,7 +52,8 @@ export function AppShell() {
   const { pathname } = useLocation()
   const [changingPassword, setChangingPassword] = useState(false)
 
-  const items = NAV.filter((item) => item.show(access))
+  const company = useCurrentCompany(access.hasCompanyAccess)
+  const items = NAV.filter((item) => item.show(access) && (item.module !== 'moves' || company.data?.movesEnabled === true))
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email
 
   const exitCompanyMode = () => {

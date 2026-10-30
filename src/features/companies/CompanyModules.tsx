@@ -1,4 +1,4 @@
-import { Camera, Globe, Send, type LucideIcon } from 'lucide-react'
+import { Boxes, Camera, Globe, Send, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -10,7 +10,7 @@ import { usePrices } from '@/features/billing/queries'
 import { showApiError } from '@/lib/api/problem'
 import type { CompanyOption, CompanyResponse } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
-import { useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
+import { useSetCompanyMoves, useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
 
 type Mutation = { mutateAsync: (value: boolean) => Promise<unknown>; isPending: boolean }
 
@@ -18,6 +18,7 @@ const ICONS: Record<CompanyOption, { icon: LucideIcon; tint: string }> = {
   PHOTOS: { icon: Camera, tint: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
   PUBLIC_TRACKING: { icon: Globe, tint: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300' },
   TELEGRAM_BOT: { icon: Send, tint: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' },
+  MOVES: { icon: Boxes, tint: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300' },
 }
 
 /**
@@ -34,11 +35,13 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
     PHOTOS: useSetCompanyPhotos(id),
     PUBLIC_TRACKING: useSetCompanyPublicTracking(id),
     TELEGRAM_BOT: useSetCompanyTelegramBot(id),
+    MOVES: useSetCompanyMoves(id),
   }
   const on: Record<CompanyOption, boolean> = {
     PHOTOS: company.photosEnabled === true,
     PUBLIC_TRACKING: company.publicTrackingEnabled === true,
     TELEGRAM_BOT: company.telegramBotEnabled === true,
+    MOVES: company.movesEnabled === true,
   }
   const toggle = async (option: CompanyOption, value: boolean) => {
     try {
@@ -55,7 +58,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
         <CardTitle>{t('companies:modules.title')}</CardTitle>
         <CardDescription>{editable ? t('companies:modules.subtitle') : t('companies:modules.managerHint')}</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-3 md:grid-cols-3">
+      <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {(Object.keys(ICONS) as CompanyOption[]).map((option) => {
           const { icon: Icon, tint } = ICONS[option]
           const price = prices.find((p) => p.code === option)?.amountEur

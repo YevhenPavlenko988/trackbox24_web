@@ -10,7 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { ParcelResponse } from '@/lib/api/types'
 import { formatPhone, formatWeight } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
-import { destinationLine, labelsFor, type LabelData } from './labelText'
+import { destinationLine, labelsFor, parseSeatList, type LabelData } from './labelText'
 import { useParcel } from './queries'
 
 /** `a4` — the 100 mm labels for an office printer; `70x40` — the tape of a NIIMBOT B3S the driver carries. */
@@ -62,6 +62,52 @@ function OfficeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
           {destinationLine(p) && <div className="text-sm">{destinationLine(p)}</div>}
         </>
       )}
+    </div>
+  )
+}
+
+/** A move's item on A4/100 mm: its number out of all big, what it is, where it goes. */
+function MoveOfficeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
+  return (
+    <div className="label flex w-[100mm] flex-col gap-2 rounded border p-4 text-black">
+      <div className="flex items-baseline justify-between">
+        <span className="text-lg font-semibold">TrackBox24</span>
+        <span className="text-3xl font-bold tabular-nums">
+          {label.seat} / {label.total}
+        </span>
+      </div>
+      <div className="line-clamp-2 min-h-[3.5rem] text-2xl leading-tight font-bold">{label.description ?? '—'}</div>
+      <Barcode value={label.code} />
+      <div className="text-center font-mono text-xl tracking-widest">{label.code}</div>
+      <div className="text-sm">
+        <div className="font-semibold">{p.clientName ?? '—'}</div>
+        <div>{[p.deliveryCity, p.clientAddress].filter(Boolean).join(', ') || '—'}</div>
+      </div>
+    </div>
+  )
+}
+
+/** A move's item on the 70×40 tape: the number and the description on top, the short code below. */
+function MoveTapeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
+  return (
+    <div className="label label-70x40 flex flex-col justify-between overflow-hidden bg-white text-black" style={{ width: '70mm', height: '40mm', padding: '2mm 2.5mm' }}>
+      <div className="flex items-baseline justify-between leading-none" style={{ gap: '2mm' }}>
+        <span className="font-bold tabular-nums" style={{ fontSize: '6mm' }}>
+          {label.seat}/{label.total}
+        </span>
+        <span className="truncate" style={{ fontSize: '2.9mm' }}>
+          {p.deliveryCity ?? p.clientName ?? ''}
+        </span>
+      </div>
+      <div className="line-clamp-2 leading-tight font-semibold" style={{ fontSize: '3.6mm' }}>
+        {label.description ?? '—'}
+      </div>
+      <div className="flex items-center" style={{ gap: '2mm', height: '13mm' }}>
+        <Barcode value={label.code} height="13mm" className="min-w-0 flex-1" />
+        <div className="shrink-0 font-mono font-semibold" style={{ fontSize: '3.2mm' }}>
+          {label.code}
+        </div>
+      </div>
     </div>
   )
 }
@@ -119,8 +165,18 @@ export function LabelsPage() {
   if (query.isPending) return <Skeleton className="m-6 h-40" />
   if (query.isError || !query.data) return <NotFoundPage />
   const p = query.data
-  const labels = labelsFor(p)
-  const setSize = (s: Size) => setParams(s === 'a4' ? {} : { size: s }, { replace: true })
+  const move = p.kind === 'MOVE'
+  const labels = labelsFor(p, parseSeatList(params.get('seats')))
+  const setSize = (s: Size) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (s === 'a4') next.delete('size')
+        else next.set('size', s)
+        return next
+      },
+      { replace: true },
+    )
 
   return (
     <div className="p-6">
@@ -134,7 +190,7 @@ export function LabelsPage() {
         }
       `}</style>
       <div className="no-print mb-6 flex flex-wrap items-center gap-2">
-        <LinkButton variant="outline" to={`/parcels/${p.id}`}>
+        <LinkButton variant="outline" to={`/${move ? 'moves' : 'parcels'}/${p.id}`}>
           <ArrowLeft />
           {t('common:actions.back')}
         </LinkButton>
@@ -151,13 +207,15 @@ export function LabelsPage() {
           </Button>
         </div>
       </div>
-      {size === '70x40' && <p className="no-print mb-4 max-w-2xl text-sm text-muted-foreground">{t('parcels:labels.format70x40Hint')}</p>}
+      {size === '70x40' && !move && <p className="no-print mb-4 max-w-2xl text-sm text-muted-foreground">{t('parcels:labels.format70x40Hint')}</p>}
       <div className="flex flex-wrap gap-6">
         {labels.map((label) =>
           size === '70x40' ? (
             <div key={label.code} className="rounded border shadow-sm">
-              <TapeLabel p={p} label={label} />
+              {move ? <MoveTapeLabel p={p} label={label} /> : <TapeLabel p={p} label={label} />}
             </div>
+          ) : move ? (
+            <MoveOfficeLabel key={label.code} p={p} label={label} />
           ) : (
             <OfficeLabel key={label.code} p={p} label={label} />
           ),

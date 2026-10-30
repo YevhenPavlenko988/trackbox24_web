@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { clientKeys } from '@/features/clients/queries'
 import type { PageParams } from '@/lib/api/page'
-import type { NpShipmentRequest, ParcelCreateRequest, ParcelPaymentRequest, ParcelPhotoResponse, ParcelResponse, ParcelStatusChangeRequest, ParcelUpdateRequest } from '@/lib/api/types'
+import type { SeatCheckStage, NpShipmentRequest, ParcelCreateRequest, ParcelPaymentRequest, ParcelPhotoResponse, ParcelResponse, ParcelStatusChangeRequest, ParcelUpdateRequest } from '@/lib/api/types'
 import {
   changeParcelStatus,
   createNpWaybill,
@@ -19,6 +19,10 @@ import {
   setParcelPayment,
   updateParcel,
   addParcelPhotos,
+  addSeats,
+  checkSeats,
+  describeSeat,
+  finishSeatCheck,
   deleteParcelPhoto,
   listParcelPhotos,
   type ParcelListParams,
@@ -131,7 +135,7 @@ export function useParcelPhotos(id: number, enabled = true) {
 export function useAddParcelPhotos(id: number) {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (files: File[]) => addParcelPhotos(id, files),
+    mutationFn: ({ files, seatNumber }: { files: File[]; seatNumber?: number }) => addParcelPhotos(id, files, seatNumber),
     onSuccess: (added) => {
       queryClient.setQueryData<ParcelPhotoResponse[]>(parcelKeys.photos(id), (old) => [...(old ?? []), ...added])
       queryClient.invalidateQueries({ queryKey: parcelKeys.history(id) })
@@ -149,3 +153,28 @@ export function useDeleteParcelPhoto(id: number) {
     },
   })
 }
+
+// ---------------------------------------------------------------- seats (moves)
+
+/** A change to the seats changes the parcel and adds to its history. */
+function useSeatMutation<A, R>(id: number, fn: (arg: A) => Promise<R>) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: parcelKeys.detail(id) })
+      queryClient.invalidateQueries({ queryKey: ['parcels', 'list'] })
+    },
+  })
+}
+
+export const useDescribeSeat = (id: number) =>
+  useSeatMutation(id, ({ seatNumber, description }: { seatNumber: number; description: string }) => describeSeat(id, seatNumber, description))
+
+export const useAddSeats = (id: number) => useSeatMutation(id, (descriptions: string[]) => addSeats(id, descriptions))
+
+export const useSeatCheck = (id: number, stage: SeatCheckStage, warehouseId?: number, enabled = true) =>
+  useQuery({ queryKey: [...parcelKeys.detail(id), 'check', stage, warehouseId], queryFn: () => checkSeats(id, stage, warehouseId), enabled })
+
+export const useFinishSeatCheck = (id: number) =>
+  useSeatMutation(id, (body: { stage: SeatCheckStage; warehouseId?: number; comment?: string }) => finishSeatCheck(id, body))

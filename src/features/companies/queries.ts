@@ -13,6 +13,7 @@ import {
   setCompanyPhotos,
   setCompanyPublicTracking,
   setCompanyTelegramBot,
+  setCompanyMoves,
   syncNovaPoshta,
   updateCompany,
 } from './api'
@@ -39,8 +40,8 @@ export function useCompany(id: number | undefined) {
   })
 }
 
-export function useCurrentCompany() {
-  return useQuery({ queryKey: ['companies', 'current'] as const, queryFn: getCurrentCompany })
+export function useCurrentCompany(enabled = true) {
+  return useQuery({ queryKey: ['companies', 'current'] as const, queryFn: getCurrentCompany, enabled })
 }
 
 function useCompanyMutation<TVars>(mutationFn: (vars: TVars) => Promise<CompanyResponse>) {
@@ -70,6 +71,10 @@ export function useSetCompanyActive(id: number) {
 
 export function useSetCompanyPhotos(id: number) {
   return useCompanyMutation((value: boolean) => setCompanyPhotos(id, value))
+}
+
+export function useSetCompanyMoves(id: number) {
+  return useCompanyMutation((value: boolean) => setCompanyMoves(id, value))
 }
 
 export function useSetCompanyTelegramBot(id: number) {

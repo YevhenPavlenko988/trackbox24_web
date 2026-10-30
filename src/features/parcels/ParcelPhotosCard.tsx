@@ -37,7 +37,8 @@ export function ParcelPhotosCard({ parcel }: { parcel: ParcelResponse }) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const enabled = company.data?.photosEnabled === true
-  const list = photos.data ?? []
+  // a move's item photos live in its seats table; this card is the parcel's own
+  const list = (photos.data ?? []).filter((ph) => ph.seatNumber == null)
   const left = MAX_PHOTOS - list.length
   const canAdd = canEdit && enabled && left > 0
 
@@ -55,7 +56,7 @@ export function ParcelPhotosCard({ parcel }: { parcel: ParcelResponse }) {
       return
     }
     try {
-      await add.mutateAsync(files)
+      await add.mutateAsync({ files })
       toast.success(t('parcels:photos.added'))
     } catch (e) {
       showApiError(e)
