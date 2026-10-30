@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ExternalLink, Loader2, Search } from 'lucide-react'
+import { ExternalLink, Loader2, Search, Send } from 'lucide-react'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -181,6 +181,19 @@ function Result({ data }: { data: PublicTrackingResponse }) {
             />
           )}
         </dl>
+
+        {data.telegramUrl && (
+          <a
+            href={data.telegramUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-[#2AABEE] px-4 py-3 font-semibold text-white transition-colors hover:bg-[#229ED9] sm:inline-flex"
+          >
+            <Send className="size-5" />
+            {t('telegram')}
+          </a>
+        )}
+        {data.telegramUrl && <p className="mt-2 text-sm text-navy/55">{t('telegramHint')}</p>}
       </section>
 
       {history.length > 0 && (
