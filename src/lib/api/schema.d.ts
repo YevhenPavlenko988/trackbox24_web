@@ -4925,6 +4925,11 @@ export interface components {
              * @example 20450000012345
              */
             outgoingWaybill?: string;
+            /**
+             * @description Відкрити Telegram-бота, який писатиме про кожну зміну статусу цієї посилки; немає — бот вимкнений
+             * @example https://t.me/TrackBox24_track_bot?start=PT0123456789
+             */
+            telegramUrl?: string;
             /** @description Переходи посилки, від першого до останнього: лише зміни статусу */
             history?: components["schemas"]["Step"][];
         };
