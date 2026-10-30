@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { showApiError } from '@/lib/api/problem'
 import { formatDateTime, formatMoney } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
+import { ChannelBadge } from '@/features/channels/channel'
 import { stageSwatch } from './colors'
 import { ConvertDialog } from './ConvertDialog'
 import { DealActivity } from './DealActivity'
@@ -54,7 +55,6 @@ export function DealPage() {
         badges={
           <>
             <Badge className={stageSwatch(d.stageColor).badge}>{d.stage?.name}</Badge>
-            <Badge variant="outline">{t(`crm:source.${d.source}`)}</Badge>
           </>
         }
         actions={
@@ -95,6 +95,7 @@ export function DealPage() {
                   { label: t('crm:fields.phone'), value: d.contact?.phone },
                   { label: t('crm:fields.email'), value: d.contact?.email },
                   { label: t('crm:fields.owner'), value: d.owner?.name },
+                  { label: t('crm:fields.source'), value: d.source ? <ChannelBadge channel={d.source} details={d.sourceDetails} /> : undefined },
                   { label: t('crm:fields.interestedOptions'), value: d.interestedOptions?.length ? d.interestedOptions.map((o) => t(`crm:options.${o}`)).join(', ') : undefined },
                   { label: t('crm:fields.expectedMonthlyEur'), value: d.expectedMonthlyEur != null ? formatMoney(d.expectedMonthlyEur, 'EUR') : undefined },
                   { label: t('crm:deals.client'), value: d.company?.name },

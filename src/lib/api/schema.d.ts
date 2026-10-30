@@ -3302,11 +3302,16 @@ export interface components {
              */
             ownerId?: number;
             /**
-             * @description Звідки угода: SITE_FORM, REFERRAL, CALL, SOCIAL, OTHER; за замовчуванням OTHER
-             * @example REFERRAL
+             * @description Джерело — той самий список, що в клієнтів: TELEGRAM, VIBER, WHATSAPP, INSTAGRAM, FACEBOOK, TIKTOK, WEBSITE, PHONE_CALL, REFERRAL, OTHER; немає — не вказано
+             * @example INSTAGRAM
              * @enum {string}
              */
-            source?: "SITE_FORM" | "REFERRAL" | "CALL" | "SOCIAL" | "OTHER";
+            source?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
+            /**
+             * @description Уточнення джерела: нік, посилання на профіль чи групу, хто порадив
+             * @example https://instagram.com/karpaty.express
+             */
+            sourceDetails?: string;
             /**
              * @description Опції, що цікавлять: PHOTOS, PUBLIC_TRACKING
              * @example [
@@ -3395,11 +3400,16 @@ export interface components {
             /** @description Відповідальний */
             owner?: components["schemas"]["CrmRef"];
             /**
-             * @description Звідки угода
-             * @example SITE_FORM
+             * @description Джерело, як у клієнтів; заявка з сайту — WEBSITE
+             * @example INSTAGRAM
              * @enum {string}
              */
-            source?: "SITE_FORM" | "REFERRAL" | "CALL" | "SOCIAL" | "OTHER";
+            source?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
+            /**
+             * @description Уточнення джерела; посилання відкривати в новій вкладці
+             * @example https://instagram.com/karpaty.express
+             */
+            sourceDetails?: string;
             /**
              * @description UTM з сайту
              * @example google

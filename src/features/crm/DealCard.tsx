@@ -1,10 +1,10 @@
 import { CheckSquare, Euro, User } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
-import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import type { CrmDealResponse, CrmStageResponse } from '@/lib/api/types'
 import { formatMoney } from '@/lib/format'
+import { ChannelBadge } from '@/features/channels/channel'
 import { StageSelect } from './StageSelect'
 
 /** A deal on the pipeline board; the stage is changed right on the card. */
@@ -41,7 +41,7 @@ export function DealCard({ deal, stages }: { deal: CrmDealResponse; stages: CrmS
               {t('deals.openTasks', { count: deal.openTasks })}
             </span>
           )}
-          {deal.source === 'SITE_FORM' && <Badge variant="outline">{t('source.SITE_FORM')}</Badge>}
+          {deal.source && <ChannelBadge channel={deal.source} compact />}
         </div>
         <StageSelect deal={deal} stages={stages} size="sm" />
       </CardContent>

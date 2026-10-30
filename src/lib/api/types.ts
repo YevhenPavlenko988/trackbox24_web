@@ -79,7 +79,6 @@ export type CrmContactRequest = Schemas['CrmContactRequest']
 export type CrmContactResponse = Schemas['CrmContactResponse']
 export type CrmDealRequest = Schemas['CrmDealRequest']
 export type CrmDealResponse = Schemas['CrmDealResponse']
-export type CrmDealSource = NonNullable<CrmDealResponse['source']>
 export type CompanyOption = NonNullable<CrmDealResponse['interestedOptions']>[number]
 export type CrmStageChangeRequest = Schemas['CrmStageChangeRequest']
 export type CrmDealActivityResponse = Schemas['CrmDealActivityResponse']
