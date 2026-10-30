@@ -11,6 +11,7 @@ import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/componen
 import { Input } from '@/components/ui/input'
 import { useMutationError } from '@/lib/api/problem'
 import type { CompanyOption, CrmDealResponse } from '@/lib/api/types'
+import { COMPANY_OPTIONS } from './constants'
 import { OptionsCheckboxes } from './OptionsCheckboxes'
 import { useConvertDeal } from './queries'
 
@@ -22,7 +23,7 @@ const schema = z.object({
   email: z.string().trim().email('email'),
   password: z.string().min(8, 'min8'),
   phone: z.union([z.literal(''), z.string().trim().regex(/^\d{8,15}$/, 'phone')]),
-  options: z.array(z.enum(['PHOTOS', 'PUBLIC_TRACKING'])),
+  options: z.array(z.enum(COMPANY_OPTIONS as [CompanyOption, ...CompanyOption[]])),
 })
 
 type FormValues = z.infer<typeof schema>

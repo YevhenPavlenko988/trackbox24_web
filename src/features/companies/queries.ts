@@ -12,6 +12,7 @@ import {
   setCompanyNpSender,
   setCompanyPhotos,
   setCompanyPublicTracking,
+  setCompanyTelegramBot,
   syncNovaPoshta,
   updateCompany,
 } from './api'
@@ -69,6 +70,10 @@ export function useSetCompanyActive(id: number) {
 
 export function useSetCompanyPhotos(id: number) {
   return useCompanyMutation((value: boolean) => setCompanyPhotos(id, value))
+}
+
+export function useSetCompanyTelegramBot(id: number) {
+  return useCompanyMutation((value: boolean) => setCompanyTelegramBot(id, value))
 }
 
 export function useSetCompanyPublicTracking(id: number) {

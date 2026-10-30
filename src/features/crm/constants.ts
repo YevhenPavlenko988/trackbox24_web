@@ -4,4 +4,4 @@ import type { CompanyOption, CrmTaskStatus } from '@/lib/api/types'
 export const TASK_STATUSES: CrmTaskStatus[] = ['TODO', 'IN_PROGRESS', 'DONE']
 
 /** Paid options of a carrier company. */
-export const COMPANY_OPTIONS: CompanyOption[] = ['PHOTOS', 'PUBLIC_TRACKING']
+export const COMPANY_OPTIONS: CompanyOption[] = ['PHOTOS', 'PUBLIC_TRACKING', 'TELEGRAM_BOT']

@@ -14,6 +14,7 @@ import { parseNumber } from '@/features/parcels/status'
 import { useMutationError } from '@/lib/api/problem'
 import { CHANNELS, ChannelFields } from '@/features/channels/channel'
 import type { Channel, CompanyOption, CrmDealRequest, CrmDealResponse } from '@/lib/api/types'
+import { COMPANY_OPTIONS } from './constants'
 import { OptionsCheckboxes } from './OptionsCheckboxes'
 import { useCreateDeal, useUpdateDeal } from './queries'
 import { TeamSelect } from './TeamSelect'
@@ -27,7 +28,7 @@ const schema = z.object({
   ownerId: z.number().optional(),
   channel: z.union([z.enum(CHANNELS as [Channel, ...Channel[]]), z.literal('')]),
   channelDetails: z.string().trim().max(255),
-  interestedOptions: z.array(z.enum(['PHOTOS', 'PUBLIC_TRACKING'])),
+  interestedOptions: z.array(z.enum(COMPANY_OPTIONS as [CompanyOption, ...CompanyOption[]])),
   expectedMonthlyEur: z.string().trim().refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number'),
   notes: z.string().trim(),
 })
