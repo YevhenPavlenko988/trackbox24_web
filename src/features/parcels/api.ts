@@ -8,6 +8,7 @@ import type {
   NpShipmentRequest,
   ParcelCreateRequest,
   ParcelHistoryResponse,
+  ParcelKind,
   ParcelPaymentRequest,
   ParcelPhotoResponse,
   ParcelResponse,
@@ -15,6 +16,8 @@ import type {
   ParcelStatusChangeRequest,
   ParcelUpdateRequest,
   PaymentStatus,
+  SeatCheckResponse,
+  SeatCheckStage,
 } from '@/lib/api/types'
 
 export type ParcelListParams = PageParams & {
@@ -27,6 +30,8 @@ export type ParcelListParams = PageParams & {
   warehouseId?: number
   deliveryCity?: string
   channel?: Channel
+  /** PARCEL — only parcels, MOVE — only moves; absent — both. */
+  kind?: ParcelKind
   query?: string
 }
 
@@ -43,6 +48,7 @@ export async function listParcels(params: ParcelListParams): Promise<Page<Parcel
           warehouseId: params.warehouseId,
           deliveryCity: params.deliveryCity || undefined,
           channel: params.channel,
+          kind: params.kind,
           query: params.query || undefined,
           page: params.page,
           size: params.size,
@@ -139,12 +145,13 @@ export function listParcelPhotos(id: number): Promise<ParcelPhotoResponse[]> {
  * Files go up as they are (HEIC from an iPhone included): the backend fixes the orientation, shrinks to 2048 px and
  * stores WebP. One request for the whole pick — the backend keeps all of them or none.
  */
-export function addParcelPhotos(id: number, files: File[]): Promise<ParcelPhotoResponse[]> {
+/** @param seatNumber a move's item the photos show; absent — the whole parcel */
+export function addParcelPhotos(id: number, files: File[], seatNumber?: number): Promise<ParcelPhotoResponse[]> {
   const body = new FormData()
   for (const f of files) body.append('file', f)
   return unwrap(
     api.POST('/api/parcels/{id}/photos', {
-      params: { path: { id } },
+      params: { path: { id }, query: { seatNumber } },
       body: body as unknown as { file: string[] },
       bodySerializer: (b) => b as unknown as FormData,
     }),
@@ -153,4 +160,33 @@ export function addParcelPhotos(id: number, files: File[]): Promise<ParcelPhotoR
 
 export function deleteParcelPhoto(id: number, photoId: number): Promise<unknown> {
   return unwrap(api.DELETE('/api/parcels/{id}/photos/{photoId}', { params: { path: { id, photoId } } }))
+}
+
+// ---------------------------------------------------------------- seats (moves)
+
+export function describeSeat(id: number, seatNumber: number, description: string): Promise<ParcelResponse> {
+  return unwrap(api.PUT('/api/parcels/{id}/seats/{seatNumber}', { params: { path: { id, seatNumber } }, body: { description } }))
+}
+
+export function addSeats(id: number, descriptions: string[]): Promise<ParcelResponse> {
+  return unwrap(api.POST('/api/parcels/{id}/seats', { params: { path: { id } }, body: { descriptions } }))
+}
+
+export function checkSeats(id: number, stage: SeatCheckStage, warehouseId?: number): Promise<SeatCheckResponse> {
+  return unwrap(api.GET('/api/parcels/{id}/seats/check', { params: { path: { id }, query: { stage, warehouseId } } }))
+}
+
+export function finishSeatCheck(id: number, body: { stage: SeatCheckStage; warehouseId?: number; comment?: string }): Promise<SeatCheckResponse> {
+  return unwrap(api.POST('/api/parcels/{id}/seats/check', { params: { path: { id } }, body }))
+}
+
+/** Downloads the register of the items (XLSX) with the session token. */
+export async function downloadSeatRegister(id: number, filename: string): Promise<void> {
+  const blob = await unwrap(api.GET('/api/parcels/{id}/seats/register.xlsx', { params: { path: { id } }, parseAs: 'blob' }))
+  const url = URL.createObjectURL(blob as Blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
 }

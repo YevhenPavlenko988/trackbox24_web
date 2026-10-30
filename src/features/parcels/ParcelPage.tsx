@@ -23,6 +23,7 @@ import { ParcelEditDialog } from './ParcelEditDialog'
 import { isNpDeliveryPaid, NpPaymentCard } from './NpPaymentCard'
 import { NpShipmentCard } from './NpShipmentCard'
 import { ChannelBadge } from '@/features/channels/channel'
+import { MoveSeatsCard } from '@/features/moves/MoveSeatsCard'
 import { NpStateBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
 import { ParcelPhotosCard } from './ParcelPhotosCard'
@@ -35,7 +36,7 @@ import { StatusChangeDialog } from './StatusChangeDialog'
 export function ParcelPage() {
   const { id } = useParams()
   const parcelId = Number(id)
-  const { t } = useTranslation(['parcels', 'common', 'clients', 'trips', 'warehouses'])
+  const { t } = useTranslation(['parcels', 'common', 'clients', 'trips', 'warehouses', 'moves'])
   const { canEdit, canSeeMoney } = useAccess()
   const query = useParcel(parcelId)
   const history = useParcelHistory(parcelId)
@@ -64,6 +65,7 @@ export function ParcelPage() {
   const hasSeatWarehouse = !!p.seats?.some((s) => s.warehouseName)
   // Backend rule: a parcel can be deleted while it is not in a car and not delivered.
   const deletable = canEdit && isParcelDeletable(p)
+  const move = p.kind === 'MOVE'
 
   const onRefresh = async () => {
     try {
@@ -94,9 +96,9 @@ export function ParcelPage() {
 
   return (
     <>
-      <LinkButton variant="ghost" size="sm" className="mb-2" to="/parcels">
+      <LinkButton variant="ghost" size="sm" className="mb-2" to={move ? '/moves' : '/parcels'}>
         <ArrowLeft />
-        {t('parcels:title')}
+        {move ? t('moves:title') : t('parcels:title')}
       </LinkButton>
       <PageHeader
         title={
@@ -106,6 +108,7 @@ export function ParcelPage() {
         }
         badges={
           <>
+            {move && <Badge className="bg-violet-100 text-violet-900 dark:bg-violet-900/40 dark:text-violet-200">{t('moves:badge')}</Badge>}
             <ParcelStatusBadge status={p.status} />
             {p.status === 'IN_NOVA_POSHTA' && <NpStateBadge parcel={p} />}
             {p.warehouseName && <span className="text-sm text-muted-foreground">{p.warehouseName}</span>}
@@ -181,7 +184,7 @@ export function ParcelPage() {
           try {
             await remove.mutateAsync(p.id!)
             toast.success(t('common:common.saved'))
-            navigate('/parcels')
+            navigate(move ? '/moves' : '/parcels')
           } catch (e) {
             showApiError(e)
           }
@@ -189,6 +192,9 @@ export function ParcelPage() {
       />
 
       <div className="grid gap-4 lg:grid-cols-2">
+        {move ? (
+          <MoveSeatsCard parcel={p} />
+        ) : (
         <Card>
           <CardHeader>
             <CardTitle>{t('parcels:sections.seats')}</CardTitle>
@@ -231,6 +237,7 @@ export function ParcelPage() {
             )}
           </CardContent>
         </Card>
+        )}
 
         <Card>
           <CardHeader>
@@ -325,7 +332,7 @@ export function ParcelPage() {
 
         {p.npTtn && <NpPaymentCard parcel={p} />}
 
-        <NpShipmentCard parcel={p} />
+        {!move && <NpShipmentCard parcel={p} />}
 
         {p.npTtn && (
           <Card>

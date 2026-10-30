@@ -1,14 +1,32 @@
 import type { ParcelResponse } from '@/lib/api/types'
 
-export type LabelData = { code: string; seat?: number; total: number }
+export type LabelData = { code: string; seat?: number; total: number; description?: string }
 
-/** One label per seat; a parcel without seats yet gets one for its own barcode. */
-export function labelsFor(p: ParcelResponse): LabelData[] {
-  const total = p.seatsAmount ?? p.seats?.length ?? 1
+/**
+ * One label per seat; a parcel without seats yet gets one for its own barcode.
+ * @param only seat numbers to print (a move's items added later); absent — all
+ */
+export function labelsFor(p: ParcelResponse, only?: Set<number>): LabelData[] {
+  const total = p.seats?.length || p.seatsAmount || 1
   if (p.seats?.length) {
-    return p.seats.filter((s) => s.barcode).map((s) => ({ code: s.barcode!, seat: s.seatNumber, total }))
+    return p.seats
+      .filter((s) => s.barcode && (!only || only.has(s.seatNumber!)))
+      .map((s) => ({ code: s.barcode!, seat: s.seatNumber, total, description: s.description }))
   }
   return p.barcode ? [{ code: p.barcode, total }] : []
+}
+
+/** "3,5,7-9" → {3, 5, 7, 8, 9}; empty or unreadable → undefined (all seats). */
+export function parseSeatList(value: string | null): Set<number> | undefined {
+  if (!value) return undefined
+  const seats = new Set<number>()
+  for (const part of value.split(',')) {
+    const [from, to] = part.split('-').map((n) => Number(n.trim()))
+    if (!Number.isInteger(from) || from < 1) continue
+    const last = Number.isInteger(to) && to >= from ? Math.min(to, from + 500) : from
+    for (let n = from; n <= last; n++) seats.add(n)
+  }
+  return seats.size ? seats : undefined
 }
 
 /** "20451558819168" → "20 4515 5881 9168", the way Nova Poshta prints its numbers. */
