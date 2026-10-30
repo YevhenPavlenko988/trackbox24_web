@@ -4710,6 +4710,12 @@ export interface components {
              * @example manager123
              */
             password: string;
+            /**
+             * @description Хто входить: WEB (сесія 12 год) або MOBILE (мобільний застосунок, сесія 30 днів); без — WEB
+             * @example MOBILE
+             * @enum {string}
+             */
+            client?: "WEB" | "MOBILE";
         };
         PageMetadata: {
             /** Format: int64 */
