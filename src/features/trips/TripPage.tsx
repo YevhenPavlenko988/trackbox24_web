@@ -83,7 +83,7 @@ export function TripPage() {
         {t('trips:title')}
       </LinkButton>
       <PageHeader
-        title={t('trips:one', { id: trip.id })}
+        title={t('trips:one', { number: trip.number ?? trip.id })}
         badges={<TripStatusBadge status={trip.status} />}
         description={`${t('trips:fields.plannedDepartureAt')}: ${formatDateTime(trip.plannedDepartureAt)}${trip.departedAt ? ` · ${t('trips:fields.departedAt')}: ${formatDateTime(trip.departedAt)}` : ''}`}
         actions={

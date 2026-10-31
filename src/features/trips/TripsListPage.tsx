@@ -31,7 +31,7 @@ export function TripsListPage() {
   const data = query.data ?? emptyPage<TripResponse>()
 
   const columns: Column<TripResponse>[] = [
-    { key: 'id', header: '#', cell: (s) => <span className="font-medium">{s.id}</span>, className: 'w-16' },
+    { key: 'number', header: '№', cell: (s) => <span className="font-medium">{s.number ?? s.id}</span>, className: 'w-16' },
     { key: 'status', header: t('trips:fields.status'), cell: (s) => <TripStatusBadge status={s.status} /> },
     { key: 'departure', header: t('trips:fields.plannedDepartureAt'), cell: (s) => formatDateTime(s.plannedDepartureAt) },
     { key: 'route', header: t('trips:fields.route'), cell: (s) => routeText(s) },

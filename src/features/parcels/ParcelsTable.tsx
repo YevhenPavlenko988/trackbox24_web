@@ -89,14 +89,14 @@ export function ParcelsTable({
           {!hidePlan && p.plannedTripId != null && p.tripId == null && (
             <Badge variant="outline" className="gap-1 font-normal">
               <Route className="size-3" />
-              {t('trips:picker.inPlan', { id: p.plannedTripId })}
+              {t('trips:picker.inPlan', { number: p.plannedTripNumber ?? p.plannedTripId })}
             </Badge>
           )}
           {/* Actually loaded: «У машині» alone does not say whose car it is in. */}
           {!hidePlan && p.tripId != null && (
             <Badge variant="secondary" className="gap-1 font-normal">
               <Truck className="size-3" />
-              {t('trips:one', { id: p.tripId })}
+              {t('trips:one', { number: p.tripNumber ?? p.tripId })}
             </Badge>
           )}
           {extra?.(p)}

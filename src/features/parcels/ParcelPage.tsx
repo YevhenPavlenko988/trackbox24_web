@@ -87,10 +87,10 @@ export function ParcelPage() {
     }
   }
 
-  const tripLink = (tripId: number | undefined) =>
+  const tripLink = (tripId: number | undefined, number: number | undefined) =>
     tripId != null ? (
       <Link to={`/trips/${tripId}`} className="underline underline-offset-4">
-        {t('trips:one', { id: tripId })}
+        {t('trips:one', { number: number ?? tripId })}
       </Link>
     ) : undefined
 
@@ -275,8 +275,8 @@ export function ParcelPage() {
                 { label: t('parcels:fields.senderCity'), value: p.senderCity },
                 { label: t('parcels:fields.notes'), value: p.notes },
                 { label: t('parcels:fields.warehouse'), value: p.warehouseName },
-                { label: t('trips:fields.plannedTrip'), value: tripLink(p.plannedTripId) },
-                { label: t('trips:fields.trip'), value: tripLink(p.tripId) },
+                { label: t('trips:fields.plannedTrip'), value: tripLink(p.plannedTripId, p.plannedTripNumber) },
+                { label: t('trips:fields.trip'), value: tripLink(p.tripId, p.tripNumber) },
                 { label: t('common:common.createdAt'), value: formatDateTime(p.createdAt) },
               ]}
             />

@@ -11,7 +11,7 @@ export const canLoadInto = (trip: TripResponse) => trip.carId != null && trip.dr
 
 export function tripLabel(trip: TripResponse, unnamed: string): string {
   const parts = [trip.carPlateNumber, trip.driverName, formatDateTime(trip.plannedDepartureAt)].filter(Boolean)
-  return `#${trip.id}` + (parts.length ? ' · ' + parts.join(' · ') : ` · ${unnamed}`)
+  return `№${trip.number ?? trip.id}` + (parts.length ? ' · ' + parts.join(' · ') : ` · ${unnamed}`)
 }
 
 /** Picks a trip to load into: the ones still being prepared, with the car that will carry the parcel. */

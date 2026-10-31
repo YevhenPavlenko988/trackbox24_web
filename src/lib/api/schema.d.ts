@@ -2418,10 +2418,16 @@ export interface components {
         TripResponse: {
             /**
              * Format: int64
-             * @description ID рейсу
+             * @description ID рейсу (для запитів і посилань)
              * @example 6
              */
             id?: number;
+            /**
+             * Format: int32
+             * @description Номер рейсу для людей: 1, 2, 3 … у межах компанії. Показувати його, а не id
+             * @example 3
+             */
+            number?: number;
             /**
              * @description Статус: PLANNED → PREPARING (почали вантажити) → IN_PROGRESS (виїхав) → COMPLETED, або CANCELLED
              * @example PREPARING
@@ -3047,6 +3053,18 @@ export interface components {
              * @example 6
              */
             tripId?: number;
+            /**
+             * Format: int32
+             * @description Номер рейсу з плану для людей (у межах компанії)
+             * @example 3
+             */
+            plannedTripNumber?: number;
+            /**
+             * Format: int32
+             * @description Номер рейсу, у який завантажено, для людей (у межах компанії)
+             * @example 3
+             */
+            tripNumber?: number;
             /**
              * Format: date-time
              * @description Дата створення в системі
