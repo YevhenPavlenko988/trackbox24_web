@@ -18,6 +18,7 @@ import type {
   PaymentStatus,
   SeatCheckResponse,
   SeatCheckStage,
+  SeatsMoveRequest,
 } from '@/lib/api/types'
 
 export type ParcelListParams = PageParams & {
@@ -170,6 +171,11 @@ export function describeSeat(id: number, seatNumber: number, description: string
 
 export function addSeats(id: number, descriptions: string[]): Promise<ParcelResponse> {
   return unwrap(api.POST('/api/parcels/{id}/seats', { params: { path: { id } }, body: { descriptions } }))
+}
+
+/** Chosen seats onto a warehouse or handed over, without scanning. */
+export function moveSeats(id: number, body: SeatsMoveRequest): Promise<ParcelResponse> {
+  return unwrap(api.POST('/api/parcels/{id}/seats/move', { params: { path: { id } }, body }))
 }
 
 export function checkSeats(id: number, stage: SeatCheckStage, warehouseId?: number): Promise<SeatCheckResponse> {

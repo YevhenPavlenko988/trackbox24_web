@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { clientKeys } from '@/features/clients/queries'
 import type { PageParams } from '@/lib/api/page'
-import type { SeatCheckStage, NpShipmentRequest, ParcelCreateRequest, ParcelPaymentRequest, ParcelPhotoResponse, ParcelResponse, ParcelStatusChangeRequest, ParcelUpdateRequest } from '@/lib/api/types'
+import type { SeatCheckStage, SeatsMoveRequest, NpShipmentRequest, ParcelCreateRequest, ParcelPaymentRequest, ParcelPhotoResponse, ParcelResponse, ParcelStatusChangeRequest, ParcelUpdateRequest } from '@/lib/api/types'
 import {
   changeParcelStatus,
   createNpWaybill,
@@ -23,6 +23,7 @@ import {
   checkSeats,
   describeSeat,
   finishSeatCheck,
+  moveSeats,
   deleteParcelPhoto,
   listParcelPhotos,
   type ParcelListParams,
@@ -175,6 +176,8 @@ export const useAddSeats = (id: number) => useSeatMutation(id, (descriptions: st
 
 export const useSeatCheck = (id: number, stage: SeatCheckStage, warehouseId?: number, enabled = true) =>
   useQuery({ queryKey: [...parcelKeys.detail(id), 'check', stage, warehouseId], queryFn: () => checkSeats(id, stage, warehouseId), enabled })
+
+export const useMoveSeats = (id: number) => useSeatMutation(id, (body: SeatsMoveRequest) => moveSeats(id, body))
 
 export const useFinishSeatCheck = (id: number) =>
   useSeatMutation(id, (body: { stage: SeatCheckStage; warehouseId?: number; comment?: string }) => finishSeatCheck(id, body))

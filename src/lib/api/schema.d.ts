@@ -1054,6 +1054,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/parcels/{id}/seats/move": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Перемістити вибрані місця без сканування
+         * @description Кілька місць одразу (мультиселект): `WAREHOUSE` — на склад `warehouseId` за тими ж правилами, що й скан на складі;
+         *     `DELIVER` — видати отримувачу, лише водій або менеджер; якщо після цього лишаються невидані місця — потрібен `comment`.
+         *     Місця, які вже там, пропускаються; усе або нічого. В історії кожного місця — «Без сканування» і хто перемістив.
+         *     У вебі це доступно менеджеру, у мобі — водію й представнику.
+         */
+        post: operations["move"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parcels/{id}/seats/check": {
         parameters: {
             query?: never;
@@ -4604,6 +4627,34 @@ export interface components {
              *     ]
              */
             descriptions: string[];
+        };
+        SeatsMoveRequest: {
+            /**
+             * @description Номери місць
+             * @example [
+             *       3,
+             *       7,
+             *       12
+             *     ]
+             */
+            seatNumbers: number[];
+            /**
+             * @description WAREHOUSE — на склад, DELIVER — видати отримувачу
+             * @example WAREHOUSE
+             * @enum {string}
+             */
+            target: "WAREHOUSE" | "DELIVER";
+            /**
+             * Format: int64
+             * @description Склад для WAREHOUSE
+             * @example 2
+             */
+            warehouseId?: number;
+            /**
+             * @description Пояснення; обов'язкове, якщо після видачі лишаються невидані місця
+             * @example Етикетки зірвані, перевірено вручну
+             */
+            comment?: string;
         };
         SeatCheckFinishRequest: {
             /**
@@ -12617,6 +12668,112 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/parcels/{id}/seats"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    move: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeatsMoveRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/parcels/{id}/seats/move"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/parcels/{id}/seats/move"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/parcels/{id}/seats/move"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/parcels/{id}/seats/move"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

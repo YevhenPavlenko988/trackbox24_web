@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileSpreadsheet, ImagePlus, Loader2, Plus, Printer } from 'lucide-react'
+import { ClipboardCheck, FileSpreadsheet, HandHelping, ImagePlus, Loader2, Plus, Printer, Warehouse } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -6,6 +6,7 @@ import { LinkButton } from '@/components/common/LinkButton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAccess } from '@/features/auth/access'
@@ -18,10 +19,12 @@ import type { ParcelPhotoResponse, ParcelResponse, ParcelSeatResponse } from '@/
 import { formatDateTime } from '@/lib/format'
 import { AddItemsDialog } from './AddItemsDialog'
 import { SeatCheckDialog } from './SeatCheckDialog'
+import { SeatsMoveDialog, type SeatsMoveTarget } from './SeatsMoveDialog'
 
 /**
  * The items of a move: number, short code, what it is (edited in place), status, where it is, who scanned it last,
- * its photos. A filter for long lists; adding forgotten items, the scan check, the register and the labels.
+ * its photos. A filter for long lists; adding forgotten items, the scan check, the register and the labels. A manager
+ * ticks items to move them onto a warehouse or hand them over without scanning.
  */
 export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
   const { t } = useTranslation(['moves', 'parcels', 'common'])
@@ -33,6 +36,8 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
   const [adding, setAdding] = useState(false)
   const [checking, setChecking] = useState(false)
   const editable = canEdit && parcel.status !== 'DELIVERED_TO_CLIENT' && parcel.status !== 'CANCELLED'
+  const [rawSelected, setSelected] = useState<Set<number>>(new Set())
+  const [moving, setMoving] = useState<SeatsMoveTarget | undefined>()
 
   const photosBySeat = useMemo(() => {
     const map = new Map<number, ParcelPhotoResponse[]>()
@@ -53,6 +58,15 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
   const shown = q
     ? seats.filter((s) => String(s.seatNumber) === q || s.barcode?.toLowerCase().includes(q) || s.description?.toLowerCase().includes(q))
     : seats
+  // a filter hides rows, never acts on them: only what is shown stays chosen
+  const selected = new Set(shown.map((s) => s.seatNumber!).filter((n) => rawSelected.has(n)))
+  const allShown = shown.length > 0 && selected.size === shown.length
+  const toggle = (n: number, on: boolean) => {
+    const next = new Set(selected)
+    if (on) next.add(n)
+    else next.delete(n)
+    setSelected(next)
+  }
 
   const register = async () => {
     try {
@@ -96,12 +110,38 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
               <span className="tabular-nums">{count}</span>
             </span>
           ))}
+          {editable && selected.size > 0 && (
+            <div className="ml-auto flex flex-wrap items-center gap-2 rounded-md bg-muted px-3 py-1 text-sm">
+              <span>{t('moves:manual.chosen', { count: selected.size })}</span>
+              <Button size="sm" onClick={() => setMoving('WAREHOUSE')}>
+                <Warehouse />
+                {t('moves:manual.toWarehouse')}
+              </Button>
+              <Button size="sm" onClick={() => setMoving('DELIVER')}>
+                <HandHelping />
+                {t('moves:manual.deliver')}
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
+                {t('moves:manual.clear')}
+              </Button>
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
+              {editable && (
+                <TableHead className="w-8">
+                  <Checkbox
+                    checked={allShown}
+                    indeterminate={selected.size > 0 && !allShown}
+                    onCheckedChange={(on) => setSelected(on ? new Set(shown.map((s) => s.seatNumber!)) : new Set())}
+                    aria-label={t('moves:seats.selectAll')}
+                  />
+                </TableHead>
+              )}
               <TableHead className="w-12">№</TableHead>
               <TableHead>{t('parcels:fields.barcode')}</TableHead>
               <TableHead className="w-full">{t('moves:seats.description')}</TableHead>
@@ -112,7 +152,12 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
           </TableHeader>
           <TableBody>
             {shown.map((s) => (
-              <TableRow key={s.seatNumber}>
+              <TableRow key={s.seatNumber} data-state={selected.has(s.seatNumber!) ? 'selected' : undefined}>
+                {editable && (
+                  <TableCell>
+                    <Checkbox checked={selected.has(s.seatNumber!)} onCheckedChange={(on) => toggle(s.seatNumber!, on)} aria-label={t('moves:seats.select', { n: s.seatNumber })} />
+                  </TableCell>
+                )}
                 <TableCell className="font-semibold tabular-nums">{s.seatNumber}</TableCell>
                 <TableCell className="font-mono">{s.barcode}</TableCell>
                 <TableCell className="whitespace-normal">
@@ -137,7 +182,7 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
             ))}
             {shown.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={editable ? 7 : 6} className="text-center text-muted-foreground">
                   {t('moves:seats.nothingFound')}
                 </TableCell>
               </TableRow>
@@ -147,6 +192,15 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
       </CardContent>
       <AddItemsDialog parcel={parcel} open={adding} onOpenChange={setAdding} />
       {checking && <SeatCheckDialog parcel={parcel} onOpenChange={setChecking} />}
+      {moving && (
+        <SeatsMoveDialog
+          parcel={parcel}
+          seatNumbers={[...selected]}
+          target={moving}
+          onClose={() => setMoving(undefined)}
+          onMoved={() => setSelected(new Set())}
+        />
+      )}
     </Card>
   )
 }

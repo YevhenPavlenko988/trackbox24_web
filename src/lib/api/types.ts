@@ -65,6 +65,7 @@ export type ParcelSource = NonNullable<ParcelResponse['source']>
 export type ParcelKind = NonNullable<ParcelResponse['kind']>
 export type SeatCheckStage = NonNullable<Schemas['SeatCheckResponse']['stage']>
 export type SeatCheckResponse = Schemas['SeatCheckResponse']
+export type SeatsMoveRequest = Schemas['SeatsMoveRequest']
 export type HistorySource = NonNullable<ParcelHistoryResponse['source']>
 export type Currency = NonNullable<ParcelResponse['deliveryPriceCurrency']>
 export type PaymentStatus = NonNullable<ParcelResponse['paymentStatus']>
