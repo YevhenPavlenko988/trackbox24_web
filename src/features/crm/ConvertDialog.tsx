@@ -11,7 +11,7 @@ import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/componen
 import { Input } from '@/components/ui/input'
 import { useMutationError } from '@/lib/api/problem'
 import type { CompanyOption, CrmDealResponse } from '@/lib/api/types'
-import { COMPANY_OPTIONS } from './constants'
+import { COMPANY_OPTIONS, hasWorkModule } from './constants'
 import { OptionsCheckboxes } from './OptionsCheckboxes'
 import { useConvertDeal } from './queries'
 
@@ -23,7 +23,7 @@ const schema = z.object({
   email: z.string().trim().email('email'),
   password: z.string().min(8, 'min8'),
   phone: z.union([z.literal(''), z.string().trim().regex(/^\d{8,15}$/, 'phone')]),
-  options: z.array(z.enum(COMPANY_OPTIONS as [CompanyOption, ...CompanyOption[]])),
+  options: z.array(z.enum(COMPANY_OPTIONS as [CompanyOption, ...CompanyOption[]])).refine(hasWorkModule, 'workModule'),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -58,7 +58,8 @@ function ConvertForm({ deal, onClose }: { deal: CrmDealResponse; onClose: () => 
       email: deal.contact?.email ?? '',
       password: '',
       phone: (deal.contact?.phone ?? '').replace(/\D/g, ''),
-      options: deal.interestedOptions ?? [],
+      // parcels by default, unless the deal already names what the carrier works with
+      options: hasWorkModule(deal.interestedOptions ?? []) ? (deal.interestedOptions ?? []) : ['PARCELS', ...(deal.interestedOptions ?? [])],
     },
   })
   const { errors, isSubmitting } = form.formState
@@ -131,6 +132,7 @@ function ConvertForm({ deal, onClose }: { deal: CrmDealResponse; onClose: () => 
             <Field>
               <FieldLabel>{t('crm:convert.options')}</FieldLabel>
               <OptionsCheckboxes idPrefix="conv-option" value={field.value} onChange={field.onChange} />
+              <FieldErrorText error={errors.options} />
             </Field>
           )}
         />

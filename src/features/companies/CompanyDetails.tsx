@@ -58,6 +58,8 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
     ? [company.npSenderCityName, company.npSenderWarehouseName].filter(Boolean).join(' · ') + (company.npSenderPhone ? ` · ${formatPhone(company.npSenderPhone)}` : '')
     : undefined
 
+  // Nova Poshta serves ordinary parcels only: a company that only does moves has nothing to set up there
+  const np = company.parcelsEnabled !== false
   return (
     <div className="flex flex-col gap-6">
       <Card>
@@ -69,8 +71,12 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
               { label: t('companies:fields.phone'), value: formatPhone(company.phone) },
               { label: t('companies:fields.email'), value: company.email },
               { label: t('companies:fields.address'), value: company.address },
-              { label: t('companies:fields.npKey'), value: <NpKeyBadge configured={company.novaPoshtaKeyConfigured} /> },
-              { label: t('novaPoshta:sender.field'), value: senderValue },
+              ...(np
+                ? [
+                    { label: t('companies:fields.npKey'), value: <NpKeyBadge configured={company.novaPoshtaKeyConfigured} /> },
+                    { label: t('novaPoshta:sender.field'), value: senderValue },
+                  ]
+                : []),
               { label: t('companies:fields.notes'), value: company.notes },
               { label: t('common:common.createdAt'), value: formatDateTime(company.createdAt) },
             ]}
@@ -81,11 +87,13 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
                 <Pencil />
                 {t('common:actions.edit')}
               </Button>
-              <Button variant="outline" onClick={() => setKeyOpen(true)}>
-                <KeyRound />
-                {t('companies:actions.npKey')}
-              </Button>
-              {senderEditable && (
+              {np && (
+                <Button variant="outline" onClick={() => setKeyOpen(true)}>
+                  <KeyRound />
+                  {t('companies:actions.npKey')}
+                </Button>
+              )}
+              {np && senderEditable && (
                 <Button variant="outline" onClick={() => setSenderOpen(true)}>
                   <Truck />
                   {t('novaPoshta:sender.action')}

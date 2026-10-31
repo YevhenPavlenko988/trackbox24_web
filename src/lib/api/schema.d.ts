@@ -422,6 +422,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/parcels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Увімкнути / вимкнути модуль «Посилки»
+         * @description ADMIN або SALES. Вимкнено — компанія працює лише з переїздами: нові посилки (вручну, за ТТН, скануванням ТТН)
+         *     не створюються, імпорт вхідних ТТН з Нової Пошти не йде; наявні посилки лишаються й відстежуються.
+         *     Вимкнути можна лише з увімкненими «Переїздами» (інакше 400).
+         */
+        put: operations["setParcelsEnabled"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/nova-poshta": {
         parameters: {
             query?: never;
@@ -474,6 +496,7 @@ export interface paths {
          * Увімкнути / вимкнути модуль «Переїзди»
          * @description ADMIN або SALES. Увімкнено — компанія створює переїзди (`kind: MOVE`): багато місць з короткими кодами й описами,
          *     контроль сканування, фото місць, реєстр місць. Вимкнено — нових переїздів не створити, наявні лишаються.
+         *     Вимкнути можна лише з увімкненими «Посилками» (інакше 400).
          */
         put: operations["setMovesEnabled"];
         post?: never;
@@ -3376,7 +3399,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            code?: "BASE" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "MOVES";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
             /**
              * @description Назва
              * @example Фото посилок
@@ -3464,7 +3487,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            interestedOptions?: ("PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "MOVES")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -3566,7 +3589,7 @@ export interface components {
             utmTerm?: string;
             utmContent?: string;
             /** @description Опції, що цікавлять */
-            interestedOptions?: ("PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "MOVES")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -3655,7 +3678,7 @@ export interface components {
              * @example BASE
              * @enum {string}
              */
-            code?: "BASE" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "MOVES";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
             /**
              * @description Назва
              * @example Базовий тариф
@@ -3697,7 +3720,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            option?: "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "MOVES";
+            option?: "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
             /**
              * @description Назва
              * @example Фото посилок
@@ -3789,6 +3812,11 @@ export interface components {
              * @example true
              */
             active?: boolean;
+            /**
+             * @description Модуль «Посилки»: звичайні посилки, ТТН і імпорт з Нової Пошти. false — компанія працює лише з переїздами: пункт «Посилки» й кнопки створення посилок не показувати
+             * @example true
+             */
+            parcelsEnabled?: boolean;
             /**
              * @description Чи можна додавати фото посилок (вмикає адміністратор платформи). Якщо false — кнопку фото не показувати
              * @example true
@@ -4818,7 +4846,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            options?: ("PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "MOVES")[];
+            options?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT")[];
         };
         Manager: {
             /**
@@ -7652,7 +7680,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                code: "BASE" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "MOVES";
+                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
             };
             cookie?: never;
         };
@@ -8876,6 +8904,114 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/companies/{id}/photos"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setParcelsEnabled: {
+        parameters: {
+            query: {
+                /**
+                 * @description true — увімкнути, false — вимкнути
+                 * @example true
+                 */
+                value: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/companies/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/companies/{id}/parcels"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

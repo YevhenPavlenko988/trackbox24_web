@@ -1,4 +1,4 @@
-import { Boxes, Camera, Globe, Send, type LucideIcon } from 'lucide-react'
+import { Boxes, Camera, Globe, Package, Send, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -10,15 +10,16 @@ import { usePrices } from '@/features/billing/queries'
 import { showApiError } from '@/lib/api/problem'
 import type { CompanyOption, CompanyResponse } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
-import { useSetCompanyMoves, useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
+import { useSetCompanyMoves, useSetCompanyParcels, useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
 
 type Mutation = { mutateAsync: (value: boolean) => Promise<unknown>; isPending: boolean }
 
 const ICONS: Record<CompanyOption, { icon: LucideIcon; tint: string }> = {
+  PARCELS: { icon: Package, tint: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300' },
+  MOVES: { icon: Boxes, tint: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300' },
   PHOTOS: { icon: Camera, tint: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
   PUBLIC_TRACKING: { icon: Globe, tint: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300' },
   TELEGRAM_BOT: { icon: Send, tint: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' },
-  MOVES: { icon: Boxes, tint: 'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300' },
 }
 
 /**
@@ -32,12 +33,14 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
   const prices = usePrices({ enabled: editable }).data ?? []
   const id = company.id!
   const mutations: Record<CompanyOption, Mutation> = {
+    PARCELS: useSetCompanyParcels(id),
     PHOTOS: useSetCompanyPhotos(id),
     PUBLIC_TRACKING: useSetCompanyPublicTracking(id),
     TELEGRAM_BOT: useSetCompanyTelegramBot(id),
     MOVES: useSetCompanyMoves(id),
   }
   const on: Record<CompanyOption, boolean> = {
+    PARCELS: company.parcelsEnabled !== false,
     PHOTOS: company.photosEnabled === true,
     PUBLIC_TRACKING: company.publicTrackingEnabled === true,
     TELEGRAM_BOT: company.telegramBotEnabled === true,
@@ -58,12 +61,14 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
         <CardTitle>{t('companies:modules.title')}</CardTitle>
         <CardDescription>{editable ? t('companies:modules.subtitle') : t('companies:modules.managerHint')}</CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <CardContent className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {(Object.keys(ICONS) as CompanyOption[]).map((option) => {
           const { icon: Icon, tint } = ICONS[option]
           const price = prices.find((p) => p.code === option)?.amountEur
           // the bot shows what the public page shows: without the page it cannot be switched on
           const blocked = option === 'TELEGRAM_BOT' && !on.PUBLIC_TRACKING
+          // parcels or moves: the last of the two stays on
+          const last = (option === 'PARCELS' && !on.MOVES) || (option === 'MOVES' && !on.PARCELS)
           return (
             <div
               key={option}
@@ -76,7 +81,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
                 {editable ? (
                   <Switch
                     checked={on[option]}
-                    disabled={mutations[option].isPending || (blocked && !on[option])}
+                    disabled={mutations[option].isPending || (blocked && !on[option]) || (last && on[option])}
                     onCheckedChange={(c) => toggle(option, c)}
                     aria-label={t(`companies:modules.${option}.name`)}
                   />
@@ -97,7 +102,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
                 {editable && price != null && <span className="font-medium tabular-nums">{t('companies:modules.perMonth', { price: formatEur(price) })}</span>}
                 {editable && (
                   <span className={cn('text-xs', on[option] ? 'font-medium text-emerald-700 dark:text-emerald-300' : 'text-muted-foreground')}>
-                    {blocked && !on[option] ? t('companies:modules.needsTracking') : t(on[option] ? 'companies:modules.on' : 'companies:modules.off')}
+                    {blocked && !on[option] ? t('companies:modules.needsTracking') : last && on[option] ? t('companies:modules.lastWork') : t(on[option] ? 'companies:modules.on' : 'companies:modules.off')}
                   </span>
                 )}
               </div>
