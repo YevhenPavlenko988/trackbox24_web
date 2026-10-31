@@ -3,7 +3,7 @@ import { createBrowserRouter } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { MobileOnlyPage, NotFoundPage } from './ErrorPages'
-import { RedirectIfAuthenticated, RequireAuth, RequireCompanyAccess, RequirePlatform, RootPage } from './guards'
+import { RedirectIfAuthenticated, RequireAuth, RequireCompanyAccess, RequireParcelsModule, RequirePlatform, RootPage } from './guards'
 
 type PageModule = Record<string, unknown>
 
@@ -53,8 +53,13 @@ export const router = createBrowserRouter([
           {
             element: <RequireCompanyAccess />,
             children: [
-              { path: 'parcels', lazy: page(() => import('@/features/parcels/ParcelsListPage'), 'ParcelsListPage') },
-              { path: 'parcels/new', lazy: page(() => import('@/features/parcels/ParcelCreatePage'), 'ParcelCreatePage') },
+              {
+                element: <RequireParcelsModule />,
+                children: [
+                  { path: 'parcels', lazy: page(() => import('@/features/parcels/ParcelsListPage'), 'ParcelsListPage') },
+                  { path: 'parcels/new', lazy: page(() => import('@/features/parcels/ParcelCreatePage'), 'ParcelCreatePage') },
+                ],
+              },
               { path: 'parcels/:id', lazy: page(() => import('@/features/parcels/ParcelPage'), 'ParcelPage') },
               { path: 'moves', lazy: page(() => import('@/features/moves/MovesListPage'), 'MovesListPage') },
               { path: 'moves/new', lazy: page(() => import('@/features/moves/MoveCreatePage'), 'MoveCreatePage') },

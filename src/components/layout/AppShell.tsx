@@ -24,10 +24,10 @@ import { useAuth } from '@/features/auth/useAuth'
 import { useCurrentCompany } from '@/features/companies/queries'
 
 /** {@code module}: shown only when the company has that paid module on. */
-type NavItem = { to: string; labelKey: string; icon: LucideIcon; show: (a: Access) => boolean; module?: 'moves' }
+type NavItem = { to: string; labelKey: string; icon: LucideIcon; show: (a: Access) => boolean; module?: 'parcels' | 'moves' }
 
 const NAV: NavItem[] = [
-  { to: '/parcels', labelKey: 'nav.parcels', icon: Package, show: (a) => a.hasCompanyAccess },
+  { to: '/parcels', labelKey: 'nav.parcels', icon: Package, show: (a) => a.hasCompanyAccess, module: 'parcels' },
   { to: '/moves', labelKey: 'nav.moves', icon: Boxes, show: (a) => a.hasCompanyAccess, module: 'moves' },
   { to: '/clients', labelKey: 'nav.clients', icon: UsersRound, show: (a) => a.hasCompanyAccess },
   { to: '/trips', labelKey: 'nav.trips', icon: Route, show: (a) => a.hasCompanyAccess },
@@ -53,7 +53,9 @@ export function AppShell() {
   const [changingPassword, setChangingPassword] = useState(false)
 
   const company = useCurrentCompany(access.hasCompanyAccess)
-  const items = NAV.filter((item) => item.show(access) && (item.module !== 'moves' || company.data?.movesEnabled === true))
+  const moduleOn = (module: NavItem['module']) =>
+    module === 'moves' ? company.data?.movesEnabled === true : module === 'parcels' ? company.data?.parcelsEnabled !== false : true
+  const items = NAV.filter((item) => item.show(access) && moduleOn(item.module))
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email
 
   const exitCompanyMode = () => {

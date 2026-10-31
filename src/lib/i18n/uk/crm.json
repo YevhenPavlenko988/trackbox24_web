@@ -35,10 +35,11 @@
     "createdAt": "Створено"
   },
   "options": {
+    "PARCELS": "Посилки",
+    "MOVES": "Переїзди",
     "PHOTOS": "Фото посилок",
     "PUBLIC_TRACKING": "Публічне відстеження",
-    "TELEGRAM_BOT": "Telegram-бот",
-    "MOVES": "Переїзди"
+    "TELEGRAM_BOT": "Telegram-бот"
   },
   "stageKind": {
     "OPEN": "У роботі",

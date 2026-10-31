@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAccess, type Access } from '@/features/auth/access'
 import { useAuth } from '@/features/auth/useAuth'
+import { useCurrentCompany } from '@/features/companies/queries'
 import { ForbiddenPage, MobileOnlyPage } from './ErrorPages'
 
 export function RequireAuth() {
@@ -16,6 +17,13 @@ export function RequireCompanyAccess() {
   const access = useAccess()
   if (access.hasCompanyAccess) return <Outlet />
   return access.mobileOnly ? <MobileOnlyPage /> : <ForbiddenPage />
+}
+
+/** The parcel list and the new-parcel form: a company that only does moves lands on its moves instead. */
+export function RequireParcelsModule() {
+  const company = useCurrentCompany()
+  if (company.data?.parcelsEnabled === false) return <Navigate to="/moves" replace />
+  return <Outlet />
 }
 
 export function RequireAdmin() {
