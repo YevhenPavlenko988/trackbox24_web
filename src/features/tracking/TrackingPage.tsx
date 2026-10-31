@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { ExternalLink, Loader2, Search, Send } from 'lucide-react'
+import { ExternalLink, Loader2, Search, Send, Truck } from 'lucide-react'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -142,6 +142,13 @@ function Result({ data }: { data: PublicTrackingResponse }) {
           </span>
           {data.statusChangedAt && <span className="text-sm text-navy/60">{t('since', { date: formatDateTime(data.statusChangedAt) })}</span>}
         </div>
+        {/* a route's cargo: where it is now and where it goes next */}
+        {data.routeNote && (
+          <p className="mt-3 flex items-center gap-2 font-medium">
+            <Truck className="size-5 shrink-0 text-brand" />
+            {data.routeNote}
+          </p>
+        )}
 
         <dl className="mt-5 grid gap-x-6 gap-y-3 sm:grid-cols-2">
           {data.barcode && <Item label={t('barcode')} value={<span className="font-mono">{data.barcode}</span>} />}

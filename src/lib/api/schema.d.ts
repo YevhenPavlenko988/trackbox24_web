@@ -5575,6 +5575,12 @@ export interface components {
              * @example https://t.me/TrackBox24_track_bot?start=PT0123456789
              */
             telegramUrl?: string;
+            /**
+             * @description Для вантажу маршруту (рейс із плечима): де він зараз і куди далі — «Склад Львів, далі — Варшава»,
+             *     «Зараз: Київ → Львів, далі — Варшава». Немає — посилка не в маршруті або ще не вирушила
+             * @example Склад Львів, далі — Варшава
+             */
+            routeNote?: string;
             /** @description Переходи посилки, від першого до останнього: лише зміни статусу */
             history?: components["schemas"]["Step"][];
         };
