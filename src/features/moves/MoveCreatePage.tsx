@@ -26,11 +26,10 @@ import { itemLines } from './items'
 const MAX_SEATS = 500
 
 const schema = z.object({
-  clientId: z.number().optional(),
+  clientId: z.number({ message: 'required' }),
+  senderClientId: z.number().optional(),
   description: z.string().trim().max(500),
   senderCity: z.string().trim().max(255),
-  senderName: z.string().trim().max(255),
-  senderPhone: z.string().trim().max(20),
   deliveryCity: z.string().trim().max(255),
   notes: z.string().trim(),
   items: z.string(),
@@ -53,8 +52,6 @@ export function MoveCreatePage() {
     defaultValues: {
       description: '',
       senderCity: '',
-      senderName: '',
-      senderPhone: '',
       deliveryCity: '',
       notes: '',
       items: '',
@@ -78,10 +75,10 @@ export function MoveCreatePage() {
       const created = await create.mutateAsync({
         kind: 'MOVE',
         clientId: v.clientId,
+        // the sender's name, phone and city come from their client card
+        senderClientId: v.senderClientId,
         description: orUndefined(v.description),
         senderCity: orUndefined(v.senderCity),
-        senderName: orUndefined(v.senderName),
-        senderPhone: orUndefined(v.senderPhone)?.replace(/\D/g, ''),
         deliveryCity: orUndefined(v.deliveryCity),
         notes: orUndefined(v.notes),
         seatDescriptions: mode === 'list' ? lines : undefined,
@@ -112,33 +109,35 @@ export function MoveCreatePage() {
                 <FieldLabel htmlFor="move-name">{t('moves:fields.name')}</FieldLabel>
                 <Input id="move-name" placeholder={t('moves:fields.namePlaceholder')} {...form.register('description')} />
               </Field>
-              <Controller
-                control={form.control}
-                name="clientId"
-                render={({ field }) => (
-                  <Field>
-                    <FieldLabel htmlFor="move-client">{t('moves:fields.customer')}</FieldLabel>
-                    <ClientPicker id="move-client" value={field.value} onChange={(id) => field.onChange(id)} allowCreate />
-                  </Field>
-                )}
-              />
               <div className="grid gap-4 sm:grid-cols-2">
+                <Controller
+                  control={form.control}
+                  name="senderClientId"
+                  render={({ field }) => (
+                    <Field>
+                      <FieldLabel htmlFor="move-sender">{t('moves:fields.sender')}</FieldLabel>
+                      <ClientPicker id="move-sender" value={field.value} onChange={(id) => field.onChange(id)} allowCreate />
+                    </Field>
+                  )}
+                />
                 <Field>
                   <FieldLabel htmlFor="move-from">{t('moves:fields.fromCity')}</FieldLabel>
-                  <Input id="move-from" {...form.register('senderCity')} />
+                  <Input id="move-from" placeholder={t('moves:fields.fromCityHint')} {...form.register('senderCity')} />
                 </Field>
+                <Controller
+                  control={form.control}
+                  name="clientId"
+                  render={({ field }) => (
+                    <Field data-invalid={!!errors.clientId}>
+                      <FieldLabel htmlFor="move-client">{t('moves:fields.recipient')}</FieldLabel>
+                      <ClientPicker id="move-client" value={field.value} onChange={(id) => field.onChange(id)} allowCreate />
+                      <FieldErrorText error={errors.clientId} />
+                    </Field>
+                  )}
+                />
                 <Field>
                   <FieldLabel htmlFor="move-to">{t('moves:fields.toCity')}</FieldLabel>
-                  <Input id="move-to" {...form.register('deliveryCity')} />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="move-contact">{t('moves:fields.fromContact')}</FieldLabel>
-                  <Input id="move-contact" {...form.register('senderName')} />
-                </Field>
-                <Field data-invalid={!!errors.senderPhone}>
-                  <FieldLabel htmlFor="move-phone">{t('moves:fields.fromPhone')}</FieldLabel>
-                  <Input id="move-phone" inputMode="tel" placeholder="+380…" {...form.register('senderPhone')} />
-                  <FieldErrorText error={errors.senderPhone} />
+                  <Input id="move-to" placeholder={t('moves:fields.toCityHint')} {...form.register('deliveryCity')} />
                 </Field>
               </div>
               {isManager && <PriceFields form={form} idPrefix="move-" />}

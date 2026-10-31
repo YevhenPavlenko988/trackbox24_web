@@ -73,7 +73,7 @@ function moveRoute(p: ParcelResponse): string | undefined {
   return from || to ? `${from ?? '—'} → ${to ?? '—'}` : undefined
 }
 
-/** A move's item on A4/100 mm: its number out of all big, the route, the customer, what the item is. */
+/** A move's item on A4/100 mm: its number out of all big, the route, the recipient and their phone, what the item is. */
 function MoveOfficeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
   return (
     <div className="label flex w-[100mm] flex-col gap-2 rounded border p-4 text-black">
@@ -83,7 +83,12 @@ function MoveOfficeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) 
         </span>
         <span className="text-right text-base font-semibold">{moveRoute(p) ?? ''}</span>
       </div>
-      {p.clientName && <div className="text-base">{p.clientName}</div>}
+      {p.clientName && (
+        <div className="flex justify-between gap-3 text-base">
+          <span className="truncate">{p.clientName}</span>
+          {p.clientPhone && <span className="shrink-0 font-semibold tabular-nums">{formatPhone(p.clientPhone)}</span>}
+        </div>
+      )}
       <div className="line-clamp-2 min-h-[3.5rem] text-2xl leading-tight font-bold">{label.description ?? '—'}</div>
       <Barcode value={label.code} />
       <div className="text-center font-mono text-xl tracking-widest">{label.code}</div>
@@ -91,7 +96,7 @@ function MoveOfficeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) 
   )
 }
 
-/** A move's item on the 70×40 tape: the number and the route on top, the customer, what it is, the short code below. */
+/** A move's item on the 70×40 tape: the number and the route on top, the recipient and phone, what it is, the code below. */
 function MoveTapeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
   return (
     <div className="label label-70x40 flex flex-col justify-between overflow-hidden bg-white text-black" style={{ width: '70mm', height: '40mm', padding: '2mm 2.5mm' }}>
@@ -104,8 +109,9 @@ function MoveTapeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
         </span>
       </div>
       {p.clientName && (
-        <div className="truncate leading-tight" style={{ fontSize: '2.9mm' }}>
-          {p.clientName}
+        <div className="flex justify-between leading-tight" style={{ fontSize: '2.9mm', gap: '2mm' }}>
+          <span className="truncate">{p.clientName}</span>
+          {p.clientPhone && <span className="shrink-0 font-semibold tabular-nums">{formatPhone(p.clientPhone)}</span>}
         </div>
       )}
       <div className="line-clamp-2 leading-tight font-semibold" style={{ fontSize: '3.4mm' }}>

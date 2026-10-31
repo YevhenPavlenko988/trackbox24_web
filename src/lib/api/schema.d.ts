@@ -2553,6 +2553,12 @@ export interface components {
              */
             clientId?: number;
             /**
+             * Format: int64
+             * @description ID клієнта-відправника (переїзд: віддає один, отримує інший); ПІБ, телефон і місто відправника беруться з нього, якщо не вказані
+             * @example 9
+             */
+            senderClientId?: number;
+            /**
              * @description Опис вмісту
              * @example Взуття
              */
@@ -2877,6 +2883,12 @@ export interface components {
              * @example Львів
              */
             senderCity?: string;
+            /**
+             * Format: int64
+             * @description Клієнт-відправник (переїзд), якщо відправника обрано з клієнтів
+             * @example 9
+             */
+            senderClientId?: number;
             /**
              * @description Примітки
              * @example Крихке
@@ -4503,6 +4515,12 @@ export interface components {
              * @example 7
              */
             clientId?: number;
+            /**
+             * Format: int64
+             * @description ID клієнта-відправника (переїзд: віддає один, отримує інший); ПІБ, телефон і місто відправника беруться з нього, якщо не вказані
+             * @example 9
+             */
+            senderClientId?: number;
             /**
              * @description Опис вмісту
              * @example Взуття
