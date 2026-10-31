@@ -1,12 +1,13 @@
 import { carDisplayName } from '@/features/cars/api'
 import { clientDisplayName } from '@/features/clients/api'
+import { tripNo } from '@/features/trips/status'
 import { userDisplayName } from '@/features/users/api'
 import { api } from '@/lib/api/client'
 import { normalizePage, type Page, type PageParams } from '@/lib/api/page'
 import { unwrap } from '@/lib/api/problem'
-import type { CarResponse, ClientResponse, DeletedItem, ParcelResponse, TripResponse, UserResponse, WarehouseResponse } from '@/lib/api/types'
+import type { CarResponse, ClientResponse, DeletedItem, ParcelResponse, RouteResponse, TripResponse, UserResponse, WarehouseResponse } from '@/lib/api/types'
 
-export const TRASH_ENTITIES = ['parcels', 'trips', 'clients', 'cars', 'warehouses', 'users'] as const
+export const TRASH_ENTITIES = ['parcels', 'trips', 'routes', 'clients', 'cars', 'warehouses', 'users'] as const
 export type TrashEntity = (typeof TRASH_ENTITIES)[number]
 
 /** A trash row flattened for the table; `title` is what a human calls the record, `to` where it lives when restored. */
@@ -30,9 +31,16 @@ export async function listDeleted(entity: TrashEntity, params: PageParams): Prom
     case 'trips':
       return rows(normalizePage(await unwrap(api.GET('/api/trips/deleted', { params: query(params) }))), (t: TripResponse) => ({
         id: t.id!,
-        title: `#${t.id}`,
+        title: `№${tripNo(t)}`,
         subtitle: [t.origin, t.destination].filter(Boolean).join(' → ') || undefined,
         to: `/trips/${t.id}`,
+      }))
+    case 'routes':
+      return rows(normalizePage(await unwrap(api.GET('/api/routes/deleted', { params: query(params) }))), (r: RouteResponse) => ({
+        id: r.id!,
+        title: `№${r.number}`,
+        subtitle: [r.origin, r.destination].filter(Boolean).join(' → ') || undefined,
+        to: `/routes/${r.id}`,
       }))
     case 'clients':
       return rows(normalizePage(await unwrap(api.GET('/api/clients/deleted', { params: query(params) }))), (c: ClientResponse) => ({
@@ -69,6 +77,8 @@ export function restoreDeleted(entity: TrashEntity, id: number): Promise<unknown
       return unwrap(api.POST('/api/parcels/{id}/restore', path))
     case 'trips':
       return unwrap(api.POST('/api/trips/{id}/restore', path))
+    case 'routes':
+      return unwrap(api.POST('/api/routes/{id}/restore', path))
     case 'clients':
       return unwrap(api.POST('/api/clients/{id}/restore', path))
     case 'cars':
@@ -87,6 +97,8 @@ export function deleteEntity(entity: TrashEntity, id: number): Promise<unknown> 
       return unwrap(api.DELETE('/api/parcels/{id}', path))
     case 'trips':
       return unwrap(api.DELETE('/api/trips/{id}', path))
+    case 'routes':
+      return unwrap(api.DELETE('/api/routes/{id}', path))
     case 'clients':
       return unwrap(api.DELETE('/api/clients/{id}', path))
     case 'cars':

@@ -41,11 +41,16 @@ export function TripDialog({
   open,
   onOpenChange,
   trip,
+  defaults,
+  title,
   onSubmit,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   trip?: TripResponse
+  /** A new trip prefilled (the next leg of a route takes the car and driver of the one before). */
+  defaults?: Partial<TripRequest>
+  title?: string
   onSubmit: (body: TripRequest) => Promise<unknown>
 }) {
   const { t } = useTranslation('trips')
@@ -53,29 +58,39 @@ export function TripDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{trip ? t('editTitle') : t('createTitle')}</DialogTitle>
+          <DialogTitle>{title ?? (trip ? t('editTitle') : t('createTitle'))}</DialogTitle>
         </DialogHeader>
-        {open && <TripForm trip={trip} onSubmit={onSubmit} onClose={() => onOpenChange(false)} />}
+        {open && <TripForm trip={trip} defaults={defaults} onSubmit={onSubmit} onClose={() => onOpenChange(false)} />}
       </DialogContent>
     </Dialog>
   )
 }
 
-function TripForm({ trip, onSubmit, onClose }: { trip?: TripResponse; onSubmit: (body: TripRequest) => Promise<unknown>; onClose: () => void }) {
+function TripForm({
+  trip,
+  defaults,
+  onSubmit,
+  onClose,
+}: {
+  trip?: TripResponse
+  defaults?: Partial<TripRequest>
+  onSubmit: (body: TripRequest) => Promise<unknown>
+  onClose: () => void
+}) {
   const { t } = useTranslation(['trips', 'common'])
   // Car and driver are frozen once loading has started (backend rejects changes in PREPARING).
   const carDriverLocked = trip?.status === 'PREPARING'
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      carId: trip?.carId,
-      driverId: trip?.driverId,
+      carId: trip?.carId ?? defaults?.carId,
+      driverId: trip?.driverId ?? defaults?.driverId,
       // Sent on every save: a missing coDriverId means "no second driver" to the backend.
-      coDriverId: trip?.coDriverId,
-      plannedDepartureAt: toDateTimeLocal(trip?.plannedDepartureAt),
+      coDriverId: trip?.coDriverId ?? defaults?.coDriverId,
+      plannedDepartureAt: toDateTimeLocal(trip?.plannedDepartureAt ?? defaults?.plannedDepartureAt),
       plannedArrivalAt: toDateTimeLocal(trip?.plannedArrivalAt),
-      origin: trip?.origin ?? '',
-      destination: trip?.destination ?? '',
+      origin: trip?.origin ?? defaults?.origin ?? '',
+      destination: trip?.destination ?? defaults?.destination ?? '',
       notes: trip?.notes ?? '',
     },
   })

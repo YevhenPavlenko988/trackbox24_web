@@ -42,3 +42,14 @@ export function routeText(s: { origin?: string; destination?: string }): string 
 export function isTripDeletable(trip: Pick<TripResponse, 'status' | 'loadedCount'>): boolean {
   return (trip.status === 'PLANNED' && !trip.loadedCount) || trip.status === 'CANCELLED'
 }
+
+/** How people name a trip: «14», or «14.2» for the second leg of route 14. */
+export function tripNo(t: { number?: number; id?: number; legNumber?: number }): string {
+  const n = t.number ?? t.id
+  return t.legNumber != null ? `${n}.${t.legNumber}` : String(n)
+}
+
+/** A parcel's trip by number and leg: «14» or «14.2». */
+export function legNo(number: number | undefined, leg: number | undefined): string {
+  return leg != null ? `${number}.${leg}` : String(number)
+}

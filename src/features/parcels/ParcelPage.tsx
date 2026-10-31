@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { legNo } from '@/features/trips/status'
 import { NpNumber } from '@/components/common/NpNumber'
 import { DetailsList } from '@/components/common/DetailsList'
 import { LinkButton } from '@/components/common/LinkButton'
@@ -90,7 +91,7 @@ export function ParcelPage() {
   const tripLink = (tripId: number | undefined, number: number | undefined) =>
     tripId != null ? (
       <Link to={`/trips/${tripId}`} className="underline underline-offset-4">
-        {t('trips:one', { number: number ?? tripId })}
+        {t('trips:one', { number: legNo(number ?? tripId, p.tripLegNumber) })}
       </Link>
     ) : undefined
 
