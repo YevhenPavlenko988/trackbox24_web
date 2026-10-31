@@ -66,28 +66,32 @@ function OfficeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
   )
 }
 
-/** A move's item on A4/100 mm: its number out of all big, what it is, where it goes. */
+/** «Київ → Варшава»: where a move is collected and where it goes. */
+function moveRoute(p: ParcelResponse): string | undefined {
+  const from = p.senderCity
+  const to = p.deliveryCity ?? p.clientCity
+  return from || to ? `${from ?? '—'} → ${to ?? '—'}` : undefined
+}
+
+/** A move's item on A4/100 mm: its number out of all big, the route, the customer, what the item is. */
 function MoveOfficeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
   return (
     <div className="label flex w-[100mm] flex-col gap-2 rounded border p-4 text-black">
-      <div className="flex items-baseline justify-between">
-        <span className="text-lg font-semibold">TrackBox24</span>
+      <div className="flex items-baseline justify-between gap-3">
         <span className="text-3xl font-bold tabular-nums">
           {label.seat} / {label.total}
         </span>
+        <span className="text-right text-base font-semibold">{moveRoute(p) ?? ''}</span>
       </div>
+      {p.clientName && <div className="text-base">{p.clientName}</div>}
       <div className="line-clamp-2 min-h-[3.5rem] text-2xl leading-tight font-bold">{label.description ?? '—'}</div>
       <Barcode value={label.code} />
       <div className="text-center font-mono text-xl tracking-widest">{label.code}</div>
-      <div className="text-sm">
-        <div className="font-semibold">{p.clientName ?? '—'}</div>
-        <div>{[p.deliveryCity, p.clientAddress].filter(Boolean).join(', ') || '—'}</div>
-      </div>
     </div>
   )
 }
 
-/** A move's item on the 70×40 tape: the number and the description on top, the short code below. */
+/** A move's item on the 70×40 tape: the number and the route on top, the customer, what it is, the short code below. */
 function MoveTapeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
   return (
     <div className="label label-70x40 flex flex-col justify-between overflow-hidden bg-white text-black" style={{ width: '70mm', height: '40mm', padding: '2mm 2.5mm' }}>
@@ -95,15 +99,20 @@ function MoveTapeLabel({ p, label }: { p: ParcelResponse; label: LabelData }) {
         <span className="font-bold tabular-nums" style={{ fontSize: '6mm' }}>
           {label.seat}/{label.total}
         </span>
-        <span className="truncate" style={{ fontSize: '2.9mm' }}>
-          {p.deliveryCity ?? p.clientName ?? ''}
+        <span className="truncate font-semibold" style={{ fontSize: '2.9mm' }}>
+          {moveRoute(p) ?? ''}
         </span>
       </div>
-      <div className="line-clamp-2 leading-tight font-semibold" style={{ fontSize: '3.6mm' }}>
+      {p.clientName && (
+        <div className="truncate leading-tight" style={{ fontSize: '2.9mm' }}>
+          {p.clientName}
+        </div>
+      )}
+      <div className="line-clamp-2 leading-tight font-semibold" style={{ fontSize: '3.4mm' }}>
         {label.description ?? '—'}
       </div>
-      <div className="flex items-center" style={{ gap: '2mm', height: '13mm' }}>
-        <Barcode value={label.code} height="13mm" className="min-w-0 flex-1" />
+      <div className="flex items-center" style={{ gap: '2mm', height: '11mm' }}>
+        <Barcode value={label.code} height="11mm" className="min-w-0 flex-1" />
         <div className="shrink-0 font-mono font-semibold" style={{ fontSize: '3.2mm' }}>
           {label.code}
         </div>
