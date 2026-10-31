@@ -87,7 +87,7 @@ export function ParcelPickerDialog({
                     {p.deliveryCity || p.clientCity}
                   </span>
                 )}
-                {p.plannedTripId != null && p.plannedTripId !== tripId && <Badge variant="outline">{t('trips:picker.inPlan', { id: p.plannedTripId })}</Badge>}
+                {p.plannedTripId != null && p.plannedTripId !== tripId && <Badge variant="outline">{t('trips:picker.inPlan', { number: p.plannedTripNumber ?? p.plannedTripId })}</Badge>}
               </Label>
             ))
           )}
