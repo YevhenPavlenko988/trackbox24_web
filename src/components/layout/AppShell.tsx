@@ -1,4 +1,4 @@
-import { Boxes, Building2, Contact, Eye, Handshake, KeyRound, ListTodo, LogOut, Package, Receipt, Route, Trash2, Truck, Users, UsersRound, Warehouse, X, type LucideIcon } from 'lucide-react'
+import { Boxes, Building2, Contact, Eye, Handshake, KeyRound, ListTodo, LogOut, Package, Receipt, Route, Trash2, Truck, Users, UsersRound, Warehouse, Waypoints, X, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
@@ -31,6 +31,7 @@ const NAV: NavItem[] = [
   { to: '/moves', labelKey: 'nav.moves', icon: Boxes, show: (a) => a.hasCompanyAccess, module: 'moves' },
   { to: '/clients', labelKey: 'nav.clients', icon: UsersRound, show: (a) => a.hasCompanyAccess },
   { to: '/trips', labelKey: 'nav.trips', icon: Route, show: (a) => a.hasCompanyAccess },
+  { to: '/routes', labelKey: 'nav.routes', icon: Waypoints, show: (a) => a.hasCompanyAccess },
   { to: '/warehouses', labelKey: 'nav.warehouses', icon: Warehouse, show: (a) => a.hasCompanyAccess },
   { to: '/users', labelKey: 'nav.users', icon: Users, show: (a) => a.hasCompanyAccess },
   { to: '/cars', labelKey: 'nav.cars', icon: Truck, show: (a) => a.hasCompanyAccess },

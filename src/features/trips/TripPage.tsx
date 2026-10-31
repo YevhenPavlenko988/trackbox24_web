@@ -1,7 +1,7 @@
 import { ArrowLeft, FileSpreadsheet, Flag, PackageOpen, Pencil, Play, Plus, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DetailsList } from '@/components/common/DetailsList'
@@ -29,7 +29,7 @@ import {
   useUnplanTripParcel,
   useUpdateTrip,
 } from './queries'
-import { acceptsLoading, canDepart, isOutsidePlan, isTripDeletable, seatProgress, splitTripParcels } from './status'
+import { acceptsLoading, canDepart, isOutsidePlan, isTripDeletable, seatProgress, splitTripParcels, tripNo } from './status'
 import { CancelTripDialog, CompleteDialog, DepartDialog } from './TripActionDialogs'
 import { TripDialog } from './TripDialog'
 import { TripHistory } from './TripHistory'
@@ -39,7 +39,7 @@ import { TripStatusBadge } from './TripStatusBadge'
 export function TripPage() {
   const { id } = useParams()
   const tripId = Number(id)
-  const { t } = useTranslation(['trips', 'common'])
+  const { t } = useTranslation(['trips', 'routes', 'common'])
   const { canEdit } = useAccess()
   const query = useTrip(tripId)
   const parcels = useTripParcels(tripId)
@@ -83,7 +83,7 @@ export function TripPage() {
         {t('trips:title')}
       </LinkButton>
       <PageHeader
-        title={t('trips:one', { number: trip.number ?? trip.id })}
+        title={t('trips:one', { number: tripNo(trip) })}
         badges={<TripStatusBadge status={trip.status} />}
         description={`${t('trips:fields.plannedDepartureAt')}: ${formatDateTime(trip.plannedDepartureAt)}${trip.departedAt ? ` · ${t('trips:fields.departedAt')}: ${formatDateTime(trip.departedAt)}` : ''}`}
         actions={
@@ -170,6 +170,18 @@ export function TripPage() {
           <CardContent>
             <DetailsList
               items={[
+                ...(trip.routeId != null
+                  ? [
+                      {
+                        label: t('routes:fields.route'),
+                        value: (
+                          <Link to={`/routes/${trip.routeId}`} className="underline underline-offset-4">
+                            {t('routes:one', { number: trip.number })}
+                          </Link>
+                        ),
+                      },
+                    ]
+                  : []),
                 { label: t('trips:fields.car'), value: trip.carPlateNumber },
                 { label: t('trips:fields.driver'), value: trip.driverName },
                 { label: t('trips:fields.coDriver'), value: trip.coDriverName },

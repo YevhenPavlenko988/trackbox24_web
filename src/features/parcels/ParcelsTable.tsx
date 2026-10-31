@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { DataTable, type Column, type Selection } from '@/components/common/DataTable'
+import { legNo } from '@/features/trips/status'
 import { NpNumber } from '@/components/common/NpNumber'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -89,14 +90,14 @@ export function ParcelsTable({
           {!hidePlan && p.plannedTripId != null && p.tripId == null && (
             <Badge variant="outline" className="gap-1 font-normal">
               <Route className="size-3" />
-              {t('trips:picker.inPlan', { number: p.plannedTripNumber ?? p.plannedTripId })}
+              {t('trips:picker.inPlan', { number: legNo(p.plannedTripNumber ?? p.plannedTripId, p.tripLegNumber) })}
             </Badge>
           )}
           {/* Actually loaded: «У машині» alone does not say whose car it is in. */}
           {!hidePlan && p.tripId != null && (
             <Badge variant="secondary" className="gap-1 font-normal">
               <Truck className="size-3" />
-              {t('trips:one', { number: p.tripNumber ?? p.tripId })}
+              {t('trips:one', { number: legNo(p.tripNumber ?? p.tripId, p.tripLegNumber) })}
             </Badge>
           )}
           {extra?.(p)}

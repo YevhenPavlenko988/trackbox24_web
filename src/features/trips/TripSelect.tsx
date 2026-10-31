@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { formatDateTime } from '@/lib/format'
+import { tripNo } from './status'
 import type { TripResponse } from '@/lib/api/types'
 import { useTrips } from './queries'
 
@@ -11,7 +12,7 @@ export const canLoadInto = (trip: TripResponse) => trip.carId != null && trip.dr
 
 export function tripLabel(trip: TripResponse, unnamed: string): string {
   const parts = [trip.carPlateNumber, trip.driverName, formatDateTime(trip.plannedDepartureAt)].filter(Boolean)
-  return `№${trip.number ?? trip.id}` + (parts.length ? ' · ' + parts.join(' · ') : ` · ${unnamed}`)
+  return `№${tripNo(trip)}` + (parts.length ? ' · ' + parts.join(' · ') : ` · ${unnamed}`)
 }
 
 /** Picks a trip to load into: the ones still being prepared, with the car that will carry the parcel. */
