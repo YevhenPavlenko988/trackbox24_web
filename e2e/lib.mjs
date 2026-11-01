@@ -71,13 +71,16 @@ async function cancelLeftoverTrips(manager) {
 export async function createRunner(name) {
   const shotsDir = new URL(`./shots/${name}/`, import.meta.url).pathname
   mkdirSync(shotsDir, { recursive: true })
-  const browser = await chromium.launch()
+  // E2E_CHANNEL=chrome uses the installed Google Chrome when Playwright's own browser is not downloaded
+  const browser = await chromium.launch(process.env.E2E_CHANNEL ? { channel: process.env.E2E_CHANNEL } : {})
   const page = await browser.newPage({ viewport: { width: 1400, height: 900 } })
   const results = []
   const errors = []
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message))
   page.on('console', (m) => {
-    if (m.type() === 'error' && !/status of 4\d\d/.test(m.text())) errors.push('console: ' + m.text())
+    // E2E_NO_PHOTO_STORAGE: a local backend without photo storage answers 503 to every photo list
+    const ignored = process.env.E2E_NO_PHOTO_STORAGE ? /status of (4\d\d|503)/ : /status of 4\d\d/
+    if (m.type() === 'error' && !ignored.test(m.text())) errors.push('console: ' + m.text())
   })
 
   const runner = {
@@ -109,7 +112,7 @@ export async function createRunner(name) {
     },
     async finish(crash) {
       if (crash) {
-        results.push('CRASH ' + crash.message.split('\n')[0])
+        results.push('CRASH ' + crash.message.split('\n').slice(0, 3).join(' / '))
         await runner.shot('99-crash').catch(() => {})
       }
       await browser.close()

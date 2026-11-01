@@ -14,7 +14,8 @@ export async function run() {
     await page.waitForSelector('table tbody tr')
     await shot('01-companies-list')
     const nav = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
-    ok('admin nav shows only companies', nav.length === 1 && nav[0].includes('Компанії'), nav.join(','))
+    // The admin's own pages: the CRM (deals, tasks, invoices), companies and the team; nothing of a carrier's.
+    ok('admin nav shows only admin pages', ['Угоди', 'Задачі', 'Рахунки', 'Компанії', 'Команда'].every((n) => nav.includes(n)) && !nav.includes('Посилки'), nav.join(','))
 
     await page.getByRole('button', { name: 'Додати' }).click()
     await dialog().waitFor()
@@ -93,7 +94,7 @@ export async function run() {
     const modeBody = await page.textContent('body')
     ok('company mode banner shown', modeBody.includes('Перегляд компанії «Тест Логістик»'))
     const navMode = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
-    ok('company mode nav has company pages + trash + companies', navMode.length === 9 && navMode.includes('Кошик'), navMode.join(','))
+    ok('company mode nav has company pages + trash + companies', navMode.length === 10 && navMode.includes('Кошик') && navMode.includes('Компанії'), navMode.join(','))
     ok('company mode hides add button', (await page.getByRole('link', { name: 'Додати' }).count()) === 0)
     ok('company mode hides row selection', (await page.locator('table thead').getByRole('checkbox').count()) === 0)
     await shot('04-admin-company-mode')
@@ -109,8 +110,9 @@ export async function run() {
 
     // ===== MANAGER =====
     await r.login(MANAGER)
+    await page.waitForSelector('[data-slot=sidebar-menu-button]:has-text("Кошик")')
     const navM = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
-    ok('manager nav has 8 items incl. trash', navM.length === 8 && navM.includes('Кошик'), navM.join(','))
+    ok('manager nav has 9 items incl. trash and routes', navM.length === 9 && navM.includes('Кошик') && navM.includes('Маршрути'), navM.join(','))
 
     // Filtered by role: earlier runs leave over a hundred users, and the seeded ones fall onto page 2.
     await page.goto(BASE + '/users?role=REPRESENTATIVE&size=100')

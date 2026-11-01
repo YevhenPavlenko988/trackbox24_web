@@ -69,7 +69,15 @@ function LoaderForm({ loader, onDone, onCancel }: { loader?: LoaderResponse; onD
     }
   })
   return (
-    <form onSubmit={submit} noValidate>
+    // opened from inside the work's form: React bubbles a submit through portals, so it must stop here or the work
+    // saves too, before the new loader is ticked
+    <form
+      onSubmit={(e) => {
+        e.stopPropagation()
+        void submit(e)
+      }}
+      noValidate
+    >
       <FieldGroup>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={!!errors.firstName}>

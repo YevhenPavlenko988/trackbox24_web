@@ -40,7 +40,7 @@ export async function run() {
     await r.pickSelect('tr-driver', u)
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForURL(/\/trips\/\d+$/)
-    await page.waitForSelector('[data-slot=page-header]:has-text("Рейс #")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Рейс №")')
     return Number(page.url().split('/').pop())
   }
 
@@ -65,8 +65,10 @@ export async function run() {
     await page.fill('#tr-destination', 'Львів')
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForURL(/\/trips\/\d+$/)
-    await page.waitForSelector('[data-slot=page-header]:has-text("Рейс #")')
+    await page.waitForSelector('[data-slot=page-header]:has-text("Рейс №")')
     const trip1 = Number(page.url().split('/').pop())
+    // The UI names a trip by its number within the company, not by the database id.
+    const no1 = (await manager.get(`/api/trips/${trip1}`)).number
     ok('trip created as PLANNED', (await page.textContent('[data-slot=page-header]')).includes('Запланований'))
     ok('depart disabled without car/driver', await page.getByRole('button', { name: 'Виїхав' }).isDisabled())
     ok('start loading disabled without car/driver', await page.getByRole('button', { name: 'Почати завантаження' }).isDisabled())
@@ -107,11 +109,11 @@ export async function run() {
     // The general list has to say the parcel is already in a plan, or it looks free to plan elsewhere.
     await page.goto(BASE + `/parcels?tab=company&query=${p1.barcode}`)
     await page.waitForSelector(`table tbody tr:has-text("${p1.barcode}")`)
-    ok('planned parcel marked in the general list', (await page.locator(`table tbody tr:has-text("${p1.barcode}")`).textContent()).includes(`У плані рейсу #${trip1}`))
+    ok('planned parcel marked in the general list', (await page.locator(`table tbody tr:has-text("${p1.barcode}")`).textContent()).includes(`У плані рейсу №${no1}`))
     await shot('02b-planned-marked')
     await page.goto(BASE + `/trips/${trip1}`)
     await page.waitForSelector(`table tbody tr:has-text("${p2.barcode}")`)
-    ok('trip page does not repeat the plan badge', !(await page.textContent('body')).includes(`У плані рейсу #${trip1}`))
+    ok('trip page does not repeat the plan badge', !(await page.textContent('body')).includes(`У плані рейсу №${no1}`))
 
     await page.locator(`table tbody tr:has-text("${p2.barcode}")`).getByRole('button', { name: 'Прибрати з плану' }).click()
     await page.waitForSelector('text=План (1)')
@@ -132,13 +134,13 @@ export async function run() {
     ok('trip is PREPARING with loaded section', body1.includes('У машині / видано (2)') && body1.includes('План (1)'))
     ok('outside-plan badge shown', body1.includes('поза планом'))
     ok('seat progress shown', body1.includes('Завантажено місць: 2 з 2'))
-    ok('trip page does not repeat the trip badge', !body1.includes(`Рейс #${trip1}` + ' '))
+    ok('trip page does not repeat the trip badge', !body1.includes(`Рейс №${no1}` + ' '))
     await shot('03-trip-preparing')
 
     // «У машині» in the general list has to say which car, or a parcel looks loaded into nothing.
     await page.goto(BASE + `/parcels?tab=company&query=${p1.barcode}`)
     await page.waitForSelector(`table tbody tr:has-text("${p1.barcode}")`)
-    ok('loaded parcel names its trip in the general list', (await page.locator(`table tbody tr:has-text("${p1.barcode}")`).textContent()).includes(`Рейс #${trip1}`))
+    ok('loaded parcel names its trip in the general list', (await page.locator(`table tbody tr:has-text("${p1.barcode}")`).textContent()).includes(`Рейс №${no1}`))
     await shot('03b-loaded-trip-marked')
     await page.goto(BASE + `/trips/${trip1}`)
     await page.waitForSelector('[data-slot=page-header]:has-text("Завантаження")')
@@ -191,10 +193,11 @@ export async function run() {
     // parcel page links to trip
     await page.goto(BASE + `/parcels/${p3.id}`)
     await page.waitForSelector('[data-slot=page-header]:has-text("PT")')
-    ok('parcel page links to trip', (await page.textContent('body')).includes(`Рейс #${trip1}`))
+    ok('parcel page links to trip', (await page.textContent('body')).includes(`Рейс №${no1}`))
 
     // --- trip 2: plan from warehouse, load, depart, cancel to warehouse ---
     const trip2 = await createTrip()
+    const no2 = (await manager.get(`/api/trips/${trip2}`)).number
     await page.getByRole('button', { name: 'Запланувати посилки' }).click()
     await dialog().waitFor()
     await pickParcel(p1.barcode)
@@ -217,8 +220,8 @@ export async function run() {
     // list filter
     // Runs accumulate trips and this one's departure date is fixed, so it is not on the first page any more.
     await page.goto(BASE + '/trips?status=COMPLETED&size=100')
-    await page.waitForSelector(`table tbody tr:has-text("${trip1}")`)
-    ok('status filter lists completed trip', !(await page.textContent('body')).includes(`Рейс #${trip2}`))
+    await page.locator('table tbody tr').filter({ has: page.locator('td:first-child', { hasText: new RegExp(`^${no1}$`) }) }).waitFor()
+    ok('status filter lists completed trip', !(await page.textContent('body')).includes(`Рейс №${no2}`))
     await shot('08-trips-list')
     ok('trip counters column shown', (await page.locator('table tbody tr').first().textContent()).includes(' / '))
     await page.goto(BASE + '/trips?open=true')
@@ -237,9 +240,9 @@ export async function run() {
     await page.waitForURL('**/trips')
     ok('cancelled trip deleted (soft)', (await manager.get(`/api/trips/${trip2}`)).status === 404 || (await manager.get(`/api/trips/${trip2}`)).title === 'Not Found')
     await page.goto(BASE + '/trash?entity=trips')
-    await page.waitForSelector(`table tbody tr:has-text("#${trip2}")`)
+    await page.locator('table tbody tr').filter({ has: page.locator('td:first-child', { hasText: new RegExp(`^№${no2}$`) }) }).waitFor()
     await shot('09-trash-trips')
-    await page.locator(`table tbody tr:has-text("#${trip2}")`).getByRole('button', { name: 'Відновити' }).click()
+    await page.locator('table tbody tr').filter({ has: page.locator('td:first-child', { hasText: new RegExp(`^№${no2}$`) }) }).getByRole('button', { name: 'Відновити' }).click()
     await page.waitForTimeout(800)
     const restored = await manager.get(`/api/trips/${trip2}`)
     ok('trip restored from trash', restored.id === trip2 && restored.status === 'CANCELLED')
@@ -269,10 +272,10 @@ export async function run() {
     await page.waitForTimeout(400)
     ok('trip required for "in the car"', (await dialog().locator('[data-slot=field-error]').count()) >= 1)
     await page.click('#st-trip')
-    const bareItem = page.locator('[data-slot=select-item]', { hasText: `#${bareTrip.id}` }).first()
+    const bareItem = page.locator('[data-slot=select-item]', { hasText: `№${bareTrip.number} ·` }).first()
     await bareItem.waitFor({ state: 'visible' })
     ok('trip without car and driver cannot be picked', (await bareItem.getAttribute('data-disabled')) != null)
-    await page.locator('[data-slot=select-item]', { hasText: `#${trip3.id}` }).first().click()
+    await page.locator('[data-slot=select-item]', { hasText: `№${trip3.number} ·` }).first().click()
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForTimeout(2000)
     const p4After = await manager.get(`/api/parcels/${p4.id}`)
