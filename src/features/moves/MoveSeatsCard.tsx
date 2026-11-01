@@ -1,4 +1,4 @@
-import { ClipboardCheck, FileSpreadsheet, HandHelping, ImagePlus, Loader2, Plus, Printer, Trash2, Warehouse } from 'lucide-react'
+import { ClipboardCheck, FileSpreadsheet, HandHelping, ImagePlus, Loader2, Plus, Printer, Trash2, Truck, Warehouse } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -18,8 +18,10 @@ import { useAddParcelPhotos, useDeleteSeat, useDescribeSeat, useParcelPhotos } f
 import { showApiError } from '@/lib/api/problem'
 import type { ParcelPhotoResponse, ParcelResponse, ParcelSeatResponse } from '@/lib/api/types'
 import { formatDateTime } from '@/lib/format'
+import { tripNo } from '@/features/trips/status'
 import { AddItemsDialog } from './AddItemsDialog'
 import { SeatCheckDialog } from './SeatCheckDialog'
+import { canHandOver, canLoadByHand, canMoveToWarehouse } from './seatActions'
 import { SeatsMoveDialog, type SeatsMoveTarget } from './SeatsMoveDialog'
 
 /**
@@ -39,6 +41,13 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
   const editable = canEdit && parcel.status !== 'DELIVERED_TO_CLIENT' && parcel.status !== 'CANCELLED'
   const [rawSelected, setSelected] = useState<Set<number>>(new Set())
   const [moving, setMoving] = useState<SeatsMoveTarget | undefined>()
+  const { roles } = useAccess()
+  const actor = { isManager: roles.includes('MANAGER'), isRepresentative: roles.includes('REPRESENTATIVE'), isDriver: roles.includes('DRIVER') }
+  // the trip the move waits for (the next leg after a warehouse), as people name it
+  const plannedTrip =
+    parcel.plannedTripId != null && parcel.tripId == null
+      ? { id: parcel.plannedTripId, label: tripNo({ id: parcel.plannedTripId, number: parcel.plannedTripNumber, legNumber: parcel.tripLegNumber }) }
+      : undefined
   const [deleting, setDeleting] = useState<ParcelSeatResponse | undefined>()
   const deleteSeat = useDeleteSeat(parcelId)
   // As the backend: before loading only (every item still with us), and never the only one — that is deleting the move.
@@ -68,6 +77,13 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
     : seats
   // a filter hides rows, never acts on them: only what is shown stays chosen
   const selected = new Set(shown.map((s) => s.seatNumber!).filter((n) => rawSelected.has(n)))
+  const chosenSeats = seats.filter((s) => selected.has(s.seatNumber!))
+  const actions = {
+    toCar: chosenSeats.length > 0 && chosenSeats.every((s) => canLoadByHand(s.status, actor)),
+    toWarehouse: chosenSeats.length > 0 && chosenSeats.every((s) => canMoveToWarehouse(s.status, actor)),
+    toClient: chosenSeats.length > 0 && chosenSeats.every((s) => canHandOver(s.status, actor)),
+    allAtWarehouse: chosenSeats.length > 0 && chosenSeats.every((s) => s.status === 'AT_WAREHOUSE'),
+  }
   const allShown = shown.length > 0 && selected.size === shown.length
   const toggle = (n: number, on: boolean) => {
     const next = new Set(selected)
@@ -121,14 +137,26 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
           {editable && selected.size > 0 && (
             <div className="ml-auto flex flex-wrap items-center gap-2 rounded-md bg-muted px-3 py-1 text-sm">
               <span>{t('moves:manual.chosen', { count: selected.size })}</span>
-              <Button size="sm" onClick={() => setMoving('WAREHOUSE')}>
-                <Warehouse />
-                {t('moves:manual.toWarehouse')}
-              </Button>
-              <Button size="sm" onClick={() => setMoving('DELIVER')}>
-                <HandHelping />
-                {t('moves:manual.deliver')}
-              </Button>
+              {/* only what the backend allows for every chosen item and this user; from a warehouse — into the next car */}
+              {actions.toCar && (
+                <Button size="sm" onClick={() => setMoving('LOAD')}>
+                  <Truck />
+                  {plannedTrip ? t('moves:manual.toCarOf', { trip: plannedTrip.label }) : t('moves:manual.toCar')}
+                </Button>
+              )}
+              {actions.toWarehouse && (
+                <Button size="sm" onClick={() => setMoving('WAREHOUSE')}>
+                  <Warehouse />
+                  {actions.allAtWarehouse ? t('moves:manual.toOtherWarehouse') : t('moves:manual.toWarehouse')}
+                </Button>
+              )}
+              {actions.toClient && (
+                <Button size="sm" onClick={() => setMoving('DELIVER')}>
+                  <HandHelping />
+                  {t('moves:manual.deliver')}
+                </Button>
+              )}
+              {!actions.toCar && !actions.toWarehouse && !actions.toClient && <span className="text-muted-foreground">{t('moves:manual.none')}</span>}
               <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>
                 {t('moves:manual.clear')}
               </Button>
@@ -235,6 +263,7 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
       {moving && (
         <SeatsMoveDialog
           parcel={parcel}
+          plannedTripId={plannedTrip?.id}
           seatNumbers={[...selected]}
           target={moving}
           onClose={() => setMoving(undefined)}
