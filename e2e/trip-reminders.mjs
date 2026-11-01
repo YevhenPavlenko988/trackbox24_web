@@ -65,6 +65,25 @@ export async function run() {
     await page.waitForSelector('text=Переміщено місць: 1')
     const loaded = await manager.get(`/api/parcels/${move.id}`)
     ok('the item is in the car of leg 2', loaded.seats[0].status === 'IN_CAR' && loaded.tripId === second.id, loaded.seats[0].status)
+
+    // a trip on its own goes on with a next leg: it becomes leg 1 of a route, the cargo at the warehouse follows
+    const alone = await manager.post('/api/trips', leg('Mas Camarena', 'Склад'))
+    const solo = await manager.post('/api/parcels', { kind: 'MOVE', clientId: client.id, seatsAmount: 1 })
+    await driverApi.post('/api/scan/load', { code: solo.barcode, tripId: alone.id })
+    await manager.post('/api/scan/to-warehouse', { code: solo.barcode, warehouseId: warehouse.id })
+    await page.goto(BASE + `/trips/${alone.id}`)
+    await page.waitForSelector(`[data-slot=page-header]:has-text("Рейс №${alone.number}")`)
+    await page.getByRole('button', { name: 'Наступне плече' }).click()
+    await dialog().waitFor()
+    await shot('06-next-leg-dialog')
+    await page.fill('#tr-destination', 'Малага')
+    await dialog().locator('button[type=submit]').click()
+    await page.waitForURL(/\/routes\/\d+$/)
+    await page.waitForSelector(`text=${alone.number}.2`)
+    await shot('07-route-from-trip')
+    const solo2 = await manager.get(`/api/parcels/${solo.id}`)
+    const was = await manager.get(`/api/trips/${alone.id}`)
+    ok('the trip became leg 1 and the cargo is planned on leg 2', was.legNumber === 1 && solo2.tripLegNumber === 2 && solo2.plannedTripId != null, `${was.legNumber} ${solo2.tripLegNumber}`)
   } catch (e) {
     return await r.finish(e)
   }

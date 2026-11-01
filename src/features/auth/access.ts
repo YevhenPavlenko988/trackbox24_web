@@ -30,6 +30,8 @@ export type Access = {
   canEdit: boolean
   /** Moves, their loaders, bill, trips and routes: a manager, or a moves representative. */
   canEditMoves: boolean
+  /** The company has the moves module: legs of a route (the next leg after a trip) belong to it. */
+  movesEnabled: boolean
   canSeeMoney: boolean
   canManageUsers: boolean
 }
@@ -46,7 +48,7 @@ export function useAccess(): Access {
   const pureFieldRole = (has('REPRESENTATIVE') || has('DRIVER')) && !isManager && !isViewer && !isAdmin
   // a representative of a company with moves works on the web too; whether it has moves comes with the company
   const representative = pureFieldRole && has('REPRESENTATIVE')
-  const ownCompany = useCurrentCompany(representative)
+  const ownCompany = useCurrentCompany(representative || isManager)
   const movesRepresentative = representative && ownCompany.data?.movesEnabled === true
   const accessPending = representative && ownCompany.isPending
   const fullAccess = isManager || isViewer || companyMode
@@ -70,6 +72,7 @@ export function useAccess(): Access {
     fullAccess,
     canEdit: isManager,
     canEditMoves: isManager || movesRepresentative,
+    movesEnabled: ownCompany.data?.movesEnabled === true,
     canSeeMoney: !(has('REPRESENTATIVE') && !isManager && !isViewer && !has('DRIVER') && !isAdmin),
     canManageUsers: isManager || isAdmin,
   }

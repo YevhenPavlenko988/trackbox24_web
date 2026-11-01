@@ -3,7 +3,7 @@ import { parcelKeys } from '@/features/parcels/queries'
 import { tripKeys } from '@/features/trips/queries'
 import type { PageParams } from '@/lib/api/page'
 import type { RouteRequest, TripRequest } from '@/lib/api/types'
-import { addRouteLeg, createRoute, getRoute, getRouteParcels, listRoutes, planRouteParcels, unplanRouteParcel } from './api'
+import { addRouteLeg, nextLegAfterTrip, createRoute, getRoute, getRouteParcels, listRoutes, planRouteParcels, unplanRouteParcel } from './api'
 
 export const routeKeys = {
   all: ['routes'] as const,
@@ -37,6 +37,11 @@ export function useRouteParcels(id: number) {
 export function useCreateRoute() {
   const invalidate = useInvalidateRoutes()
   return useMutation({ mutationFn: (body: RouteRequest) => createRoute(body), onSuccess: invalidate })
+}
+
+export function useNextLegAfterTrip(tripId: number) {
+  const invalidate = useInvalidateRoutes()
+  return useMutation({ mutationFn: (body: TripRequest) => nextLegAfterTrip(tripId, body), onSuccess: invalidate })
 }
 
 export function useAddRouteLeg(id: number) {
