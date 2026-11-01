@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import { useCompany, useCurrentCompany } from '@/features/companies/queries'
+import { useAccess } from '@/features/auth/access'
 import { useMutationError } from '@/lib/api/problem'
 import type { Role, UserResponse } from '@/lib/api/types'
 import { COMPANY_ROLES, userDisplayName } from './api'
@@ -20,6 +22,19 @@ import { useCreateUser, useResetUserPassword, useUpdateUser } from './queries'
 import { normalizePhone, PHONE_REGEX } from '@/features/clients/schema'
 
 const PHONE = PHONE_REGEX
+/**
+ * A representative's phone is how Nova Poshta finds their incoming waybills: required while the company takes parcels,
+ * not for one that only does moves.
+ */
+function useRepresentativePhoneNeeded(companyId?: number): boolean {
+  // inside a company (a manager, or an admin who opened it) its own data; the admin's company list — by id
+  const { hasCompanyAccess } = useAccess()
+  const own = useCurrentCompany(hasCompanyAccess)
+  const other = useCompany(hasCompanyAccess ? undefined : companyId)
+  const company = hasCompanyAccess ? own.data : other.data
+  return company?.parcelsEnabled !== false
+}
+
 const rolesSchema = z.array(z.enum(['MANAGER', 'REPRESENTATIVE', 'DRIVER', 'VIEWER'])).min(1, 'rolesRequired')
 
 function RolesField({ value, onChange, error }: { value: Role[]; onChange: (roles: Role[]) => void; error?: { message?: string } }) {
@@ -55,7 +70,6 @@ const createSchema = z
     notes: z.string().trim(),
   })
   .superRefine((v, ctx) => {
-    if (v.roles.includes('REPRESENTATIVE') && !v.phone) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'required' })
     if (v.phone && !PHONE.test(normalizePhone(v.phone))) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phone' })
   })
 
@@ -95,8 +109,13 @@ function CreateForm({ companyId, onClose }: { companyId?: number; onClose: () =>
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
   const roles = form.watch('roles')
+  const phoneNeeded = useRepresentativePhoneNeeded(companyId)
 
   const submit = form.handleSubmit(async (v) => {
+    if (phoneNeeded && v.roles.includes('REPRESENTATIVE') && !v.phone) {
+      form.setError('phone', { message: 'required' })
+      return
+    }
     try {
       await create.mutateAsync({
         companyId,
@@ -147,7 +166,7 @@ function CreateForm({ companyId, onClose }: { companyId?: number; onClose: () =>
         <Field data-invalid={!!errors.phone}>
           <FieldLabel htmlFor="u-phone">{t('users:fields.phone')}</FieldLabel>
           <Input id="u-phone" inputMode="tel" placeholder="380671234567" aria-invalid={!!errors.phone} {...form.register('phone')} />
-          {roles.includes('REPRESENTATIVE') && <FieldDescription>{t('users:hints.phoneRepresentative')}</FieldDescription>}
+          {phoneNeeded && roles.includes('REPRESENTATIVE') && <FieldDescription>{t('users:hints.phoneRepresentative')}</FieldDescription>}
           <FieldErrorText error={errors.phone} />
         </Field>
         {roles.includes('DRIVER') && (
@@ -186,7 +205,6 @@ const editSchema = z
     active: z.boolean(),
   })
   .superRefine((v, ctx) => {
-    if (v.roles.includes('REPRESENTATIVE') && !v.phone) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'required' })
     if (v.phone && !PHONE.test(normalizePhone(v.phone))) ctx.addIssue({ code: 'custom', path: ['phone'], message: 'phone' })
   })
 
@@ -234,8 +252,13 @@ function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }
   const onError = useMutationError(form)
   const roles = form.watch('roles')
   const rolesChanged = JSON.stringify([...roles].sort()) !== JSON.stringify([...(user.roles ?? [])].sort())
+  const phoneNeeded = useRepresentativePhoneNeeded(user.companyId)
 
   const submit = form.handleSubmit(async (v) => {
+    if (phoneNeeded && v.roles.includes('REPRESENTATIVE') && !v.phone) {
+      form.setError('phone', { message: 'required' })
+      return
+    }
     try {
       await update.mutateAsync({
         lastName: v.lastName,
