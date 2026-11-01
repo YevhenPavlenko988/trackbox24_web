@@ -148,7 +148,8 @@
     "paidTotal": "Оплачено",
     "due": "До сплати",
     "payout": "Вантажникам: належить {{owed}}, виплачено {{paid}}",
-    "daysTimes": "{{days}} дн × {{rate}}"
+    "daysTimes": "{{days}} дн × {{rate}}",
+    "currency": "Валюта розрахунку"
   },
   "invoice": {
     "title": "Рахунок",

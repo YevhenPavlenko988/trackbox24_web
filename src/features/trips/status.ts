@@ -16,7 +16,8 @@ export function splitTripParcels(tripId: number, parcels: ParcelResponse[]) {
   return { planned, loaded }
 }
 
-export const isOutsidePlan = (tripId: number, p: ParcelResponse) => p.tripId === tripId && p.plannedTripId !== tripId
+/** Loaded without being in the trip's plan; a move is made and loaded on the spot, so it never is. */
+export const isOutsidePlan = (tripId: number, p: ParcelResponse) => p.kind !== 'MOVE' && p.tripId === tripId && p.plannedTripId !== tripId
 
 /** Seats of the parcels in the trip: `loaded` = ever loaded (still in the car or already delivered). */
 export function seatProgress(parcels: ParcelResponse[]): { loaded: number; delivered: number; total: number } {

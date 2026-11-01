@@ -14,7 +14,7 @@ import { parseNumber } from '@/features/parcels/status'
 import { showApiError } from '@/lib/api/problem'
 import type { MoveBillResponse, MoveBillWork, MoveBillWorkLoader, ParcelResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
-import { useDeletePayment, useDeleteStorage, useDeleteWork, useMoveBill, useSetFact } from './billApi'
+import { useDeletePayment, useDeleteStorage, useDeleteWork, useMoveBill, useSetBillCurrency, useSetFact } from './billApi'
 import { ClientPaymentDialog, StorageDialog, WorkDialog } from './MoveBillDialogs'
 
 /**
@@ -25,6 +25,7 @@ export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
   const { t } = useTranslation(['moves', 'common'])
   const { canEdit } = useAccess()
   const id = parcel.id!
+  const setCurrency = useSetBillCurrency(id)
   const query = useMoveBill(id)
   const deleteWork = useDeleteWork(id)
   const deleteStorage = useDeleteStorage(id)
@@ -53,6 +54,20 @@ export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
         <div className="flex flex-wrap gap-2">
           {canEdit && (
             <>
+              {/* the currency of the whole move: transport, rates, storage and payments */}
+              <div className="flex rounded-md border p-0.5" role="group" aria-label={t('moves:bill.currency')}>
+                {(['EUR', 'UAH'] as const).map((c) => (
+                  <Button
+                    key={c}
+                    size="sm"
+                    variant={bill.currency === c ? 'default' : 'ghost'}
+                    className="h-7 px-3"
+                    onClick={() => bill.currency !== c && run(() => setCurrency.mutateAsync(c))}
+                  >
+                    {c === 'EUR' ? '€' : 'грн'}
+                  </Button>
+                ))}
+              </div>
               <Button variant="outline" size="sm" onClick={() => setWork('new')}>
                 <Plus />
                 {t('moves:bill.addWork')}
