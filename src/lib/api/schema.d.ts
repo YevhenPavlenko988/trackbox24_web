@@ -2965,6 +2965,12 @@ export interface components {
             deliveredCount?: number;
             /** @description Наші оплати по рейсу за валютами й способами оплати (у картці рейсу й при завершенні; представнику не видно) */
             payments?: components["schemas"]["TripPayments"];
+            /**
+             * @description Нагадування в картці рейсу: DEPART — усе з плану в машині, пора «Виїхав»; COMPLETE — машина порожня після вивантаження чи видачі, пора «Завершити». Лише в картці рейсу; у списках — null.
+             * @example DEPART
+             * @enum {string}
+             */
+            reminder?: "DEPART" | "COMPLETE";
         };
         ParcelUpdateRequest: {
             /**

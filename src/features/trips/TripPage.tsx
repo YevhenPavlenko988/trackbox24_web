@@ -8,6 +8,7 @@ import { DetailsList } from '@/components/common/DetailsList'
 import { LinkButton } from '@/components/common/LinkButton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
+import { Alert, AlertAction, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -117,7 +118,7 @@ export function TripPage() {
                   {!canDepart(trip) && <TooltipContent>{t('trips:actions.departHint')}</TooltipContent>}
                 </Tooltip>
               )}
-              {canEdit && trip.status === 'IN_PROGRESS' && (
+              {canEdit && (trip.status === 'IN_PROGRESS' || trip.reminder === 'COMPLETE') && (
                 <Button onClick={() => setCompleting(true)}>
                   <Flag />
                   {t('trips:actions.complete')}
@@ -146,6 +147,21 @@ export function TripPage() {
           </>
         }
       />
+      {/* What the trip waits for, so a leg does not hang in «Завантаження» once its cargo went on. */}
+      {canEdit && canEditMoves && trip.reminder && (
+        <Alert className="mb-4 border-primary/40">
+          {trip.reminder === 'DEPART' ? <Play /> : <Flag />}
+          <AlertTitle>{t(`trips:reminder.${trip.reminder}.title`)}</AlertTitle>
+          <AlertDescription>
+            {t(`trips:reminder.${trip.reminder}.${trip.reminder === 'COMPLETE' && trip.status === 'PREPARING' ? 'textNotDeparted' : 'text'}`)}
+          </AlertDescription>
+          <AlertAction>
+            <Button size="sm" onClick={() => (trip.reminder === 'DEPART' ? setDeparting(true) : setCompleting(true))}>
+              {trip.reminder === 'DEPART' ? t('trips:actions.depart') : t('trips:actions.complete')}
+            </Button>
+          </AlertAction>
+        </Alert>
+      )}
       <ConfirmDialog
         open={deleting}
         onOpenChange={setDeleting}
