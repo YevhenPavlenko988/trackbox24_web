@@ -1,7 +1,8 @@
-import { ClipboardCheck, FileSpreadsheet, HandHelping, ImagePlus, Loader2, Plus, Printer, Warehouse } from 'lucide-react'
+import { ClipboardCheck, FileSpreadsheet, HandHelping, ImagePlus, Loader2, Plus, Printer, Trash2, Warehouse } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { LinkButton } from '@/components/common/LinkButton'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,7 @@ import { useAccess } from '@/features/auth/access'
 import { downloadSeatRegister } from '@/features/parcels/api'
 import { MAX_PHOTOS } from '@/features/parcels/ParcelPhotosCard'
 import { ParcelStatusBadge } from '@/features/parcels/ParcelStatusBadge'
-import { useAddParcelPhotos, useDescribeSeat, useParcelPhotos } from '@/features/parcels/queries'
+import { useAddParcelPhotos, useDeleteSeat, useDescribeSeat, useParcelPhotos } from '@/features/parcels/queries'
 import { showApiError } from '@/lib/api/problem'
 import type { ParcelPhotoResponse, ParcelResponse, ParcelSeatResponse } from '@/lib/api/types'
 import { formatDateTime } from '@/lib/format'
@@ -38,6 +39,13 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
   const editable = canEdit && parcel.status !== 'DELIVERED_TO_CLIENT' && parcel.status !== 'CANCELLED'
   const [rawSelected, setSelected] = useState<Set<number>>(new Set())
   const [moving, setMoving] = useState<SeatsMoveTarget | undefined>()
+  const [deleting, setDeleting] = useState<ParcelSeatResponse | undefined>()
+  const deleteSeat = useDeleteSeat(parcelId)
+  // As the backend: before loading only (every item still with us), and never the only one — that is deleting the move.
+  const deletable =
+    editable &&
+    seats.length > 1 &&
+    seats.every((s) => s.status === parcel.status && ['RECEIVED_BY_REPRESENTATIVE', 'ACCEPTED_BY_DRIVER', 'AT_WAREHOUSE'].includes(s.status!))
 
   const photosBySeat = useMemo(() => {
     const map = new Map<number, ParcelPhotoResponse[]>()
@@ -148,6 +156,7 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
               <TableHead>{t('parcels:fields.status')}</TableHead>
               <TableHead>{t('parcels:fields.statusChangedAt')}</TableHead>
               <TableHead>{t('moves:seats.photos')}</TableHead>
+              {deletable && <TableHead className="w-10" />}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -178,11 +187,18 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
                 <TableCell>
                   <SeatPhotos parcelId={parcelId} seatNumber={s.seatNumber!} photos={photosBySeat.get(s.seatNumber!) ?? []} editable={canEdit} />
                 </TableCell>
+                {deletable && (
+                  <TableCell>
+                    <Button variant="ghost" size="icon-sm" onClick={() => setDeleting(s)} aria-label={t('moves:seats.delete', { n: s.seatNumber })}>
+                      <Trash2 />
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
             {shown.length === 0 && (
               <TableRow>
-                <TableCell colSpan={editable ? 7 : 6} className="text-center text-muted-foreground">
+                <TableCell colSpan={6 + (editable ? 1 : 0) + (deletable ? 1 : 0)} className="text-center text-muted-foreground">
                   {t('moves:seats.nothingFound')}
                 </TableCell>
               </TableRow>
@@ -191,6 +207,30 @@ export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
         </Table>
       </CardContent>
       <AddItemsDialog parcel={parcel} open={adding} onOpenChange={setAdding} />
+      <ConfirmDialog
+        open={deleting != null}
+        onOpenChange={(open) => !open && setDeleting(undefined)}
+        title={t('moves:seats.deleteTitle', { n: deleting?.seatNumber })}
+        description={
+          deleting?.description
+            ? t('moves:seats.deleteBody', { description: deleting.description })
+            : t('moves:seats.deleteBodyNoDescription')
+        }
+        confirmLabel={t('common:actions.delete')}
+        destructive
+        pending={deleteSeat.isPending}
+        onConfirm={async () => {
+          const n = deleting!.seatNumber!
+          try {
+            await deleteSeat.mutateAsync(n)
+            setSelected((prev) => new Set([...prev].filter((x) => x !== n)))
+            toast.success(t('moves:seats.deleted', { n }))
+            setDeleting(undefined)
+          } catch (e) {
+            showApiError(e)
+          }
+        }}
+      />
       {checking && <SeatCheckDialog parcel={parcel} onOpenChange={setChecking} />}
       {moving && (
         <SeatsMoveDialog
