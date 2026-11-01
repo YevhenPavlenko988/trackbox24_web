@@ -24,6 +24,7 @@ import { ParcelEditDialog } from './ParcelEditDialog'
 import { isNpDeliveryPaid, NpPaymentCard } from './NpPaymentCard'
 import { NpShipmentCard } from './NpShipmentCard'
 import { ChannelBadge } from '@/features/channels/channel'
+import { MoveBillCard } from '@/features/moves/MoveBillCard'
 import { MoveSeatsCard } from '@/features/moves/MoveSeatsCard'
 import { NpStateBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
@@ -194,7 +195,10 @@ export function ParcelPage() {
 
       <div className="grid gap-4 lg:grid-cols-2">
         {move ? (
-          <MoveSeatsCard parcel={p} />
+          <>
+            <MoveSeatsCard parcel={p} />
+            <MoveBillCard parcel={p} />
+          </>
         ) : (
         <Card>
           <CardHeader>
