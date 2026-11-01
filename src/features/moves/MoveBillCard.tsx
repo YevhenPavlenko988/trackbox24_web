@@ -143,7 +143,7 @@ export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
             {(bill.storages ?? []).map((s) => (
               <div key={s.id} className="flex items-center justify-between gap-3 border-b py-1.5 text-sm last:border-b-0">
                 <span>
-                  {s.warehouseName ?? '—'} · {t('moves:bill.daysTimes', { days: s.days, rate: money(s.rate) })}
+                  {s.warehouseName ?? t('moves:bill.noWarehouse')} · {t('moves:bill.daysTimes', { days: s.days, rate: money(s.rate) })}
                   {s.notes && <span className="text-muted-foreground"> · {s.notes}</span>}
                 </span>
                 <span className="flex items-center gap-2">

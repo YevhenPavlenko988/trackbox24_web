@@ -180,7 +180,7 @@ export async function run() {
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForTimeout(400)
     ok('"in the car" asks which trip', (await dialog().locator('[data-slot=field-error]').count()) >= 1)
-    await r.pickSelect('st-trip', `#${statusTrip.id}`)
+    await r.pickSelect('st-trip', `№${statusTrip.number} ·`)
     await page.click('[data-slot=dialog-content] button[type=submit]')
     await page.waitForTimeout(1500)
     ok('status changed to IN_CAR', (await page.locator('[data-slot=page-header]').textContent()).includes('У машині'))

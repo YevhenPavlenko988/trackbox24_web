@@ -135,7 +135,7 @@
     "amount": "Сума",
     "paidOn": "Дата",
     "plan": "план {{hours}} год",
-    "rates": "{{client}} / {{loader}} за год",
+    "rates": "Клієнту {{client}} · вантажнику {{loader}} за год",
     "hours": "Год факт",
     "paid": "Оплачено",
     "toClient": "Клієнту",
@@ -152,7 +152,8 @@
     "due": "До сплати",
     "payout": "Вантажникам: належить {{owed}}, виплачено {{paid}}",
     "daysTimes": "{{days}} дн × {{rate}}",
-    "currency": "Валюта розрахунку"
+    "currency": "Валюта розрахунку",
+    "noWarehouse": "Без складу"
   },
   "invoice": {
     "title": "Рахунок",

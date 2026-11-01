@@ -86,7 +86,7 @@ export function RouteCreatePage() {
           carId: v.sameCar ? v.carId : l.carId,
           driverId: v.sameCar ? v.driverId : l.driverId,
           plannedDepartureAt: fromDateTimeLocal(l.plannedDepartureAt),
-          origin: l.origin || (i === 0 ? v.origin : undefined) || undefined,
+          origin: l.origin || (i === 0 ? v.origin : v.legs[i - 1]?.destination) || undefined,
           destination: l.destination || (i === v.legs.length - 1 ? v.destination : undefined) || undefined,
         })),
       })
@@ -202,11 +202,20 @@ export function RouteCreatePage() {
                 <div className="grid gap-4 sm:grid-cols-3">
                   <Field>
                     <FieldLabel htmlFor={`leg-${i}-from`}>{t('routes:form.legFrom')}</FieldLabel>
-                    <Input id={`leg-${i}-from`} {...form.register(`legs.${i}.origin`)} />
+                    <Input
+                      id={`leg-${i}-from`}
+                      // the first leg starts where the route does, a later one where the one before ended
+                      placeholder={i === 0 ? form.watch('origin') : form.watch(`legs.${i - 1}.destination`)}
+                      {...form.register(`legs.${i}.origin`)}
+                    />
                   </Field>
                   <Field>
                     <FieldLabel htmlFor={`leg-${i}-to`}>{t('routes:form.legTo')}</FieldLabel>
-                    <Input id={`leg-${i}-to`} {...form.register(`legs.${i}.destination`)} />
+                    <Input
+                      id={`leg-${i}-to`}
+                      placeholder={i === legs.fields.length - 1 ? form.watch('destination') : undefined}
+                      {...form.register(`legs.${i}.destination`)}
+                    />
                   </Field>
                   <Field data-invalid={!!errors.legs?.[i]?.plannedDepartureAt}>
                     <FieldLabel htmlFor={`leg-${i}-departure`}>{t('trips:fields.plannedDepartureAt')}</FieldLabel>
