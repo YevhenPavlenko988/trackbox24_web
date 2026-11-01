@@ -27,9 +27,9 @@ export function canMoveToWarehouse(status: Status, u: SeatActor): boolean {
   }
 }
 
-/** Handed over by hand: a driver or a manager, of an item in the car or at a warehouse (picked up there). */
+/** Handed over by hand: a driver, a representative or a manager, of an item in the car or at a warehouse. */
 export function canHandOver(status: Status, u: SeatActor): boolean {
-  return (u.isDriver || u.isManager) && (status === 'IN_CAR' || status === 'AT_WAREHOUSE')
+  return (u.isDriver || u.isRepresentative || u.isManager) && (status === 'IN_CAR' || status === 'AT_WAREHOUSE')
 }
 
 /** Into a car by hand, as a typed loading scan: an item with us, by anyone who loads (a driver only into own trip). */
