@@ -23,7 +23,7 @@ import { ClientPaymentDialog, StorageDialog, WorkDialog } from './MoveBillDialog
  */
 export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
   const { t } = useTranslation(['moves', 'common'])
-  const { canEdit } = useAccess()
+  const { canEditMoves: canEdit } = useAccess()
   const id = parcel.id!
   const setCurrency = useSetBillCurrency(id)
   const query = useMoveBill(id)

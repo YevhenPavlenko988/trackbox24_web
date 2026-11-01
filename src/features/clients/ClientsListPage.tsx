@@ -21,7 +21,7 @@ import { useClients } from './queries'
 export function ClientsListPage() {
   const { t } = useTranslation(['clients', 'common'])
   const navigate = useNavigate()
-  const { canEdit } = useAccess()
+  const { canEdit, canEditMoves } = useAccess()
   const { page, size, get, set, setPage, setSize } = useListParams()
 
   const urlSearch = get('search') ?? ''
@@ -62,7 +62,7 @@ export function ClientsListPage() {
       <PageHeader
         title={t('clients:title')}
         actions={
-          canEdit && (
+          canEditMoves && (
             <LinkButton to="/clients/new">
               <Plus />
               {t('common:actions.add')}

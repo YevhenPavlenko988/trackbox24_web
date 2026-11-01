@@ -40,7 +40,7 @@ export function TripPage() {
   const { id } = useParams()
   const tripId = Number(id)
   const { t } = useTranslation(['trips', 'routes', 'common'])
-  const { canEdit } = useAccess()
+  const { canEdit, canEditMoves } = useAccess()
   const query = useTrip(tripId)
   const parcels = useTripParcels(tripId)
   const history = useTripHistory(tripId)
@@ -60,7 +60,7 @@ export function TripPage() {
   if (query.isPending) return <Skeleton className="h-60 w-full" />
   if (query.isError || !query.data) return <NotFoundPage />
   const trip = query.data
-  const editable = canEdit && acceptsLoading(trip.status)
+  const editable = canEditMoves && acceptsLoading(trip.status)
   const { planned, loaded } = splitTripParcels(tripId, parcels.data ?? [])
   const progress = seatProgress(loaded)
   const excludeIds = (parcels.data ?? []).map((p) => p.id!)
@@ -92,10 +92,10 @@ export function TripPage() {
               <FileSpreadsheet />
               {t('trips:actions.register')}
             </Button>
-            {canEdit && (
+            {canEditMoves && (
             <>
               {/* Loading usually starts with the first scan; this is for when the car is packed away from the scanner. */}
-              {trip.status === 'PLANNED' && (
+              {canEdit && trip.status === 'PLANNED' && (
                 <Tooltip>
                   <TooltipTrigger render={<span />}>
                     <Button variant="outline" disabled={!canDepart(trip)} onClick={() => run(() => startLoading.mutateAsync())}>
@@ -106,7 +106,7 @@ export function TripPage() {
                   {!canDepart(trip) && <TooltipContent>{t('trips:actions.startLoadingHint')}</TooltipContent>}
                 </Tooltip>
               )}
-              {acceptsLoading(trip.status) && (
+              {canEdit && acceptsLoading(trip.status) && (
                 <Tooltip>
                   <TooltipTrigger render={<span />}>
                     <Button disabled={!canDepart(trip)} onClick={() => setDeparting(true)}>
@@ -117,7 +117,7 @@ export function TripPage() {
                   {!canDepart(trip) && <TooltipContent>{t('trips:actions.departHint')}</TooltipContent>}
                 </Tooltip>
               )}
-              {trip.status === 'IN_PROGRESS' && (
+              {canEdit && trip.status === 'IN_PROGRESS' && (
                 <Button onClick={() => setCompleting(true)}>
                   <Flag />
                   {t('trips:actions.complete')}
@@ -129,7 +129,7 @@ export function TripPage() {
                   {t('trips:actions.edit')}
                 </Button>
               )}
-              {(acceptsLoading(trip.status) || trip.status === 'IN_PROGRESS') && (
+              {canEdit && (acceptsLoading(trip.status) || trip.status === 'IN_PROGRESS') && (
                 <Button variant="destructive" onClick={() => setCancelling(true)}>
                   <X />
                   {t('trips:actions.cancel')}

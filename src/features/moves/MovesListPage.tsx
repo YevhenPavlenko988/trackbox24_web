@@ -17,7 +17,7 @@ import { formatDateTime } from '@/lib/format'
 /** Moves of the company: one order with many items each, newest first. */
 export function MovesListPage() {
   const { t } = useTranslation(['moves', 'common'])
-  const { canEdit } = useAccess()
+  const { canEditMoves: canEdit } = useAccess()
   const navigate = useNavigate()
   const { page, size, setPage, setSize, get, set } = useListParams()
   const search = get('query') ?? ''

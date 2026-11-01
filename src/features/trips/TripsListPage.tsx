@@ -20,7 +20,7 @@ import { TripStatusBadge } from './TripStatusBadge'
 export function TripsListPage() {
   const { t } = useTranslation(['trips', 'common'])
   const navigate = useNavigate()
-  const { canEdit } = useAccess()
+  const { canEdit, canEditMoves } = useAccess()
   const { page, size, get, set, setPage, setSize } = useListParams()
   const status = get('status') as TripStatus | undefined
   const open = get('open') === 'true'
@@ -74,7 +74,7 @@ export function TripsListPage() {
       <PageHeader
         title={t('trips:title')}
         actions={
-          canEdit && (
+          canEditMoves && (
             <Button onClick={() => setCreating(true)}>
               <Plus />
               {t('common:actions.add')}

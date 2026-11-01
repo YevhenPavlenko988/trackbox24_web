@@ -22,7 +22,7 @@ const STAGES: SeatCheckStage[] = ['LOAD', 'WAREHOUSE', 'DELIVER']
  */
 export function SeatCheckDialog({ parcel, onOpenChange }: { parcel: ParcelResponse; onOpenChange: (o: boolean) => void }) {
   const { t } = useTranslation(['moves', 'parcels', 'common'])
-  const { canEdit } = useAccess()
+  const { canEditMoves: canEdit } = useAccess()
   const [stage, setStage] = useState<SeatCheckStage>(guessStage(parcel))
   const [warehouseId, setWarehouseId] = useState<number>()
   const [comment, setComment] = useState('')
