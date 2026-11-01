@@ -219,7 +219,11 @@ export interface paths {
          */
         put: operations["describe"];
         post?: never;
-        delete?: never;
+        /**
+         * Видалити місце
+         * @description Місце, внесене помилково, разом із його фото. Лише до завантаження; номери інших місць не змінюються. Єдине місце не видаляється.
+         */
+        delete: operations["deleteSeat"];
         options?: never;
         head?: never;
         patch?: never;
@@ -8446,6 +8450,100 @@ export interface operations {
                      *       "title": "Conflict",
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/parcels/{id}/seats/{seatNumber}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteSeat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                seatNumber: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/parcels/{id}/seats/{seatNumber}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/parcels/{id}/seats/{seatNumber}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/parcels/{id}/seats/{seatNumber}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
                      *       "instance": "/api/parcels/{id}/seats/{seatNumber}"
                      *     }
                      */

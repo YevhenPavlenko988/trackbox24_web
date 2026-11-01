@@ -169,6 +169,11 @@ export function describeSeat(id: number, seatNumber: number, description: string
   return unwrap(api.PUT('/api/parcels/{id}/seats/{seatNumber}', { params: { path: { id, seatNumber } }, body: { description } }))
 }
 
+/** A seat entered by mistake, with its photos; the others keep their numbers. */
+export function deleteSeat(id: number, seatNumber: number): Promise<ParcelResponse> {
+  return unwrap(api.DELETE('/api/parcels/{id}/seats/{seatNumber}', { params: { path: { id, seatNumber } } }))
+}
+
 export function addSeats(id: number, descriptions: string[]): Promise<ParcelResponse> {
   return unwrap(api.POST('/api/parcels/{id}/seats', { params: { path: { id } }, body: { descriptions } }))
 }

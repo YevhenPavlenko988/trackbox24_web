@@ -21,6 +21,7 @@ import {
   addParcelPhotos,
   addSeats,
   checkSeats,
+  deleteSeat,
   describeSeat,
   finishSeatCheck,
   moveSeats,
@@ -171,6 +172,8 @@ function useSeatMutation<A, R>(id: number, fn: (arg: A) => Promise<R>) {
 
 export const useDescribeSeat = (id: number) =>
   useSeatMutation(id, ({ seatNumber, description }: { seatNumber: number; description: string }) => describeSeat(id, seatNumber, description))
+
+export const useDeleteSeat = (id: number) => useSeatMutation(id, (seatNumber: number) => deleteSeat(id, seatNumber))
 
 export const useAddSeats = (id: number) => useSeatMutation(id, (descriptions: string[]) => addSeats(id, descriptions))
 

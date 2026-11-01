@@ -21,7 +21,7 @@ export async function run() {
   const recipient = await manager.post('/api/clients', { type: 'PRIVATE_PERSON', firstName: 'Ірина', lastName: 'Отримувач', phone: '38067' + u + '2', city: 'Варшава' })
   const move = await manager.post('/api/parcels', {
     kind: 'MOVE', clientId: recipient.id, senderClientId: sender.id, deliveryCity: 'Варшава',
-    seatDescriptions: ['Диван', 'Шафа'], deliveryPrice: 800, deliveryPriceCurrency: 'EUR',
+    seatDescriptions: ['Диван', 'Шафа', 'Зайве'], deliveryPrice: 800, deliveryPriceCurrency: 'EUR',
   })
   await manager.post('/api/loaders', { firstName: 'Костя', city: 'Варшава' })
 
@@ -42,6 +42,14 @@ export async function run() {
     await page.waitForSelector('text=Вантажники, склад, оплати')
     ok('sender came from the client card', (await text()).includes('Відправник Петро'))
     await shot('01-move-card')
+
+    // a seat entered by mistake goes; the others keep their numbers (labels may be printed already)
+    await page.getByRole('button', { name: 'Видалити місце 3' }).click()
+    await dialog().getByRole('button', { name: 'Видалити' }).click()
+    await page.waitForSelector('text=Місце №3 видалено')
+    const afterDelete = await manager.get(`/api/parcels/${move.id}`)
+    ok('a seat is deleted, the rest keep their numbers', afterDelete.seats.map((x) => x.seatNumber).join(',') === '1,2' && afterDelete.seatsAmount === 2)
+    ok('the deletion is in the history', (await manager.get(`/api/parcels/${move.id}/history`)).content.some((h) => h.comment?.includes('Видалено місце №3 «Зайве»')))
 
     // a work with a loader added on the spot
     await page.getByRole('button', { name: 'Робота' }).click()
