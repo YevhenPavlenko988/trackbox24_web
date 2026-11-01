@@ -5,9 +5,9 @@ import { userDisplayName } from '@/features/users/api'
 import { api } from '@/lib/api/client'
 import { normalizePage, type Page, type PageParams } from '@/lib/api/page'
 import { unwrap } from '@/lib/api/problem'
-import type { CarResponse, ClientResponse, DeletedItem, ParcelResponse, RouteResponse, TripResponse, UserResponse, WarehouseResponse } from '@/lib/api/types'
+import type { CarResponse, ClientResponse, DeletedItem, LoaderResponse, ParcelResponse, RouteResponse, TripResponse, UserResponse, WarehouseResponse } from '@/lib/api/types'
 
-export const TRASH_ENTITIES = ['parcels', 'trips', 'routes', 'clients', 'cars', 'warehouses', 'users'] as const
+export const TRASH_ENTITIES = ['parcels', 'trips', 'routes', 'clients', 'cars', 'warehouses', 'loaders', 'users'] as const
 export type TrashEntity = (typeof TRASH_ENTITIES)[number]
 
 /** A trash row flattened for the table; `title` is what a human calls the record, `to` where it lives when restored. */
@@ -61,6 +61,12 @@ export async function listDeleted(entity: TrashEntity, params: PageParams): Prom
         title: w.name ?? `#${w.id}`,
         subtitle: w.address,
       }))
+    case 'loaders':
+      return rows(normalizePage(await unwrap(api.GET('/api/loaders/deleted', { params: query(params) }))), (l: LoaderResponse) => ({
+        id: l.id!,
+        title: l.fullName ?? `#${l.id}`,
+        subtitle: l.phone,
+      }))
     case 'users':
       return rows(normalizePage(await unwrap(api.GET('/api/users/deleted', { params: query(params) }))), (u: UserResponse) => ({
         id: u.id!,
@@ -85,6 +91,8 @@ export function restoreDeleted(entity: TrashEntity, id: number): Promise<unknown
       return unwrap(api.POST('/api/cars/{id}/restore', path))
     case 'warehouses':
       return unwrap(api.POST('/api/warehouses/{id}/restore', path))
+    case 'loaders':
+      return unwrap(api.POST('/api/loaders/{id}/restore', path))
     case 'users':
       return unwrap(api.POST('/api/users/{id}/restore', path))
   }
@@ -105,6 +113,8 @@ export function deleteEntity(entity: TrashEntity, id: number): Promise<unknown> 
       return unwrap(api.DELETE('/api/cars/{id}', path))
     case 'warehouses':
       return unwrap(api.DELETE('/api/warehouses/{id}', path))
+    case 'loaders':
+      return unwrap(api.DELETE('/api/loaders/{id}', path))
     case 'users':
       return unwrap(api.DELETE('/api/users/{id}', path))
   }

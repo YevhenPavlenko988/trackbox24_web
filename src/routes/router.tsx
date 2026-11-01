@@ -45,7 +45,10 @@ export const router = createBrowserRouter([
       { path: 'mobile-only', element: <MobileOnlyPage /> },
       {
         element: <RequireCompanyAccess />,
-        children: [{ path: 'parcels/:id/labels', lazy: page(() => import('@/features/parcels/LabelsPage'), 'LabelsPage') }],
+        children: [
+          { path: 'parcels/:id/labels', lazy: page(() => import('@/features/parcels/LabelsPage'), 'LabelsPage') },
+          { path: 'moves/:id/invoice', lazy: page(() => import('@/features/moves/MoveInvoicePage'), 'MoveInvoicePage') },
+        ],
       },
       {
         element: <AppShell />,
@@ -72,6 +75,7 @@ export const router = createBrowserRouter([
               { path: 'company', lazy: page(() => import('@/features/companies/MyCompanyPage'), 'MyCompanyPage') },
               { path: 'trips', lazy: page(() => import('@/features/trips/TripsListPage'), 'TripsListPage') },
               { path: 'routes', lazy: page(() => import('@/features/routes/RoutesListPage'), 'RoutesListPage') },
+              { path: 'loaders', lazy: page(() => import('@/features/loaders/LoadersListPage'), 'LoadersListPage') },
               { path: 'routes/new', lazy: page(() => import('@/features/routes/RouteCreatePage'), 'RouteCreatePage') },
               { path: 'routes/:id', lazy: page(() => import('@/features/routes/RoutePage'), 'RoutePage') },
               { path: 'trips/:id', lazy: page(() => import('@/features/trips/TripPage'), 'TripPage') },
