@@ -48,6 +48,23 @@ export async function run() {
     ok('completed with the missed departure recorded', done.status === 'COMPLETED' && !!done.departedAt, done.status)
     ok('no reminder on a completed leg', !(await page.locator('[data-slot=alert]').count()))
     await shot('04-done')
+
+    // the move waits at the warehouse for leg 2: chosen items go into its car by hand
+    const second = route.legs[1]
+    await page.goto(BASE + `/moves/${move.id}`)
+    await page.waitForSelector('text=Місця (2)')
+    await page.getByRole('checkbox', { name: 'Вибрати місце 1' }).click()
+    const bar = page.locator('div:has(> span:text-is("Вибрано: 1"))')
+    await bar.waitFor()
+    const barText = await bar.innerText()
+    ok('an item at the warehouse: into the planned leg, another warehouse for a manager, hand-over', barText.includes(`У рейс №${second.number}.2`) && barText.includes('На інший склад') && barText.includes('Видати'), barText)
+    await shot('05-chosen-at-warehouse')
+    await bar.getByRole('button', { name: /У рейс/ }).click()
+    await dialog().waitFor()
+    await dialog().getByRole('button', { name: 'Перемістити' }).click()
+    await page.waitForSelector('text=Переміщено місць: 1')
+    const loaded = await manager.get(`/api/parcels/${move.id}`)
+    ok('the item is in the car of leg 2', loaded.seats[0].status === 'IN_CAR' && loaded.tripId === second.id, loaded.seats[0].status)
   } catch (e) {
     return await r.finish(e)
   }

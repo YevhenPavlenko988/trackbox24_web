@@ -5496,17 +5496,23 @@ export interface components {
              */
             seatNumbers: number[];
             /**
-             * @description WAREHOUSE — на склад, DELIVER — видати отримувачу
+             * @description WAREHOUSE — на склад, DELIVER — видати отримувачу, LOAD — завантажити в рейс tripId
              * @example WAREHOUSE
              * @enum {string}
              */
-            target: "WAREHOUSE" | "DELIVER";
+            target: "WAREHOUSE" | "DELIVER" | "LOAD";
             /**
              * Format: int64
              * @description Склад для WAREHOUSE
              * @example 2
              */
             warehouseId?: number;
+            /**
+             * Format: int64
+             * @description Рейс для LOAD: за тими ж правилами, що й скан завантаження
+             * @example 14
+             */
+            tripId?: number;
             /**
              * @description Пояснення; обов'язкове, якщо після видачі лишаються невидані місця
              * @example Етикетки зірвані, перевірено вручну
