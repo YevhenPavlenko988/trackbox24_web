@@ -685,7 +685,7 @@ export interface paths {
         put?: never;
         /**
          * Додати склад
-         * @description Тільки MANAGER.
+         * @description Менеджер, представник або водій — і на ходу, коли вантаж лишають на новому складі.
          */
         post: operations["create"];
         delete?: never;
@@ -1475,7 +1475,7 @@ export interface paths {
         };
         /**
          * Вантажники
-         * @description За прізвищем.
+         * @description За прізвищем; `city` — лише з цього міста.
          */
         get: operations["list_4"];
         put?: never;
@@ -3931,6 +3931,11 @@ export interface components {
              */
             phone?: string;
             /**
+             * @description Місто, де працює
+             * @example Київ
+             */
+            city?: string;
+            /**
              * @description Примітки
              * @example Є свій бус
              */
@@ -3963,6 +3968,11 @@ export interface components {
              * @example 380671234567
              */
             phone?: string;
+            /**
+             * @description Місто
+             * @example Київ
+             */
+            city?: string;
             /** @description Примітки */
             notes?: string;
         };
@@ -16370,6 +16380,11 @@ export interface operations {
     list_4: {
         parameters: {
             query?: {
+                /**
+                 * @description Місто
+                 * @example Київ
+                 */
+                city?: string;
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */

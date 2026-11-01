@@ -17,6 +17,7 @@ const schema = z.object({
   firstName: z.string().trim().min(1, 'required'),
   lastName: z.string().trim(),
   phone: z.union([z.literal(''), z.string().trim().regex(/^\d{8,15}$/, 'phone')]),
+  city: z.string().trim().max(100),
   notes: z.string().trim(),
 })
 
@@ -53,12 +54,12 @@ function LoaderForm({ loader, onDone, onCancel }: { loader?: LoaderResponse; onD
   const update = useUpdateLoader(loader?.id ?? 0)
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { firstName: loader?.firstName ?? '', lastName: loader?.lastName ?? '', phone: loader?.phone ?? '', notes: loader?.notes ?? '' },
+    defaultValues: { firstName: loader?.firstName ?? '', lastName: loader?.lastName ?? '', phone: loader?.phone ?? '', city: loader?.city ?? '', notes: loader?.notes ?? '' },
   })
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
   const submit = form.handleSubmit(async (v) => {
-    const body = { firstName: v.firstName, lastName: v.lastName || undefined, phone: v.phone || undefined, notes: v.notes || undefined }
+    const body = { firstName: v.firstName, lastName: v.lastName || undefined, phone: v.phone || undefined, city: v.city || undefined, notes: v.notes || undefined }
     try {
       const saved = loader ? await update.mutateAsync(body) : await create.mutateAsync(body)
       toast.success(t('common:common.saved'))
@@ -81,11 +82,17 @@ function LoaderForm({ loader, onDone, onCancel }: { loader?: LoaderResponse; onD
             <Input id="ld-last" {...form.register('lastName')} />
           </Field>
         </div>
-        <Field data-invalid={!!errors.phone}>
-          <FieldLabel htmlFor="ld-phone">{t('moves:loaders.phone')}</FieldLabel>
-          <Input id="ld-phone" inputMode="tel" placeholder="380…" {...form.register('phone')} />
-          <FieldErrorText error={errors.phone} />
-        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field data-invalid={!!errors.phone}>
+            <FieldLabel htmlFor="ld-phone">{t('moves:loaders.phone')}</FieldLabel>
+            <Input id="ld-phone" inputMode="tel" placeholder="380…" {...form.register('phone')} />
+            <FieldErrorText error={errors.phone} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="ld-city">{t('moves:loaders.city')}</FieldLabel>
+            <Input id="ld-city" {...form.register('city')} />
+          </Field>
+        </div>
         <Field>
           <FieldLabel htmlFor="ld-notes">{t('moves:loaders.notes')}</FieldLabel>
           <Textarea id="ld-notes" rows={2} {...form.register('notes')} />

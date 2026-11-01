@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
+import { loaderCities, sameCity } from '@/features/loaders/cities'
 import { LoaderDialog } from '@/features/loaders/LoaderDialog'
 import { useLoaders } from '@/features/loaders/queries'
 import { PAYMENT_METHODS } from '@/features/parcels/paymentMethod'
@@ -23,6 +24,14 @@ import { showApiError } from '@/lib/api/problem'
 import type { MoveBillWork, MoveWorkKind, PaymentMethod } from '@/lib/api/types'
 import { formatPhone, fromDateTimeLocal, toDateTimeLocal } from '@/lib/format'
 import { useAddPayment, useAddStorage, useAddWork, useUpdateWork } from './billApi'
+
+/** The ticked loaders first, then the others; a search keeps the ticked ones and filters the rest by name or phone. */
+function pickList<T extends { id?: number; fullName?: string; phone?: string }>(all: T[], ticked: number[], search: string): T[] {
+  const q = search.trim().toLowerCase()
+  const digits = q.replace(/\D/g, '')
+  const matches = (l: T) => !q || (l.fullName ?? '').toLowerCase().includes(q) || (digits.length > 0 && (l.phone ?? '').includes(digits))
+  return [...all.filter((l) => ticked.includes(l.id!)), ...all.filter((l) => !ticked.includes(l.id!) && matches(l))]
+}
 
 const amount = z
   .string()
@@ -48,6 +57,9 @@ export function WorkDialog({ parcelId, work, onClose }: { parcelId: number; work
   const update = useUpdateWork(parcelId)
   const loaders = useLoaders().data?.content ?? []
   const [addingLoader, setAddingLoader] = useState(false)
+  const [search, setSearch] = useState('')
+  const [city, setCity] = useState('')
+  const cities = loaderCities(loaders)
   const form = useForm<z.infer<typeof workSchema>>({
     resolver: zodResolver(workSchema),
     defaultValues: {
@@ -136,15 +148,37 @@ export function WorkDialog({ parcelId, work, onClose }: { parcelId: number; work
                       {t('moves:loaders.new')}
                     </Button>
                   </div>
+                  {/* a long directory: find by name or phone; the ticked ones stay on top */}
+                  <div className="flex flex-wrap gap-2">
+                    <Input className="min-w-40 flex-1" placeholder={t('moves:loaders.search')} value={search} onChange={(e) => setSearch(e.target.value)} aria-label={t('moves:loaders.search')} />
+                    {cities.length > 0 && (
+                      <select
+                        className="h-9 rounded-md border bg-background px-2 text-sm"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        aria-label={t('moves:loaders.city')}
+                      >
+                        <option value="">{t('moves:loaders.allCities')}</option>
+                        {cities.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
                   <div className="max-h-56 overflow-y-auto rounded-lg border">
                     {loaders.length === 0 && <p className="p-3 text-sm text-muted-foreground">{t('moves:loaders.empty')}</p>}
-                    {loaders.map((l) => (
+                    {pickList(loaders.filter((l) => field.value.includes(l.id!) || sameCity(l, city)), field.value, search).map((l) => (
                       <Label key={l.id} className="flex items-center gap-3 border-b px-3 py-2 font-normal last:border-b-0">
                         <Checkbox
                           checked={field.value.includes(l.id!)}
                           onCheckedChange={(c) => field.onChange(c ? [...field.value, l.id!] : field.value.filter((x) => x !== l.id))}
                         />
-                        <span className="flex-1">{l.fullName}</span>
+                        <span className="flex-1">
+                          {l.fullName}
+                          {l.city && <span className="text-muted-foreground"> · {l.city}</span>}
+                        </span>
                         {l.phone && <span className="text-sm text-muted-foreground">{formatPhone(l.phone)}</span>}
                       </Label>
                     ))}
