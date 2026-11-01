@@ -23,6 +23,9 @@ function useBillMutation<A>(id: number, fn: (arg: A) => Promise<MoveBillResponse
   })
 }
 
+export const useSetBillCurrency = (id: number) =>
+  useBillMutation(id, (value: 'EUR' | 'UAH') => unwrap(api.PUT('/api/parcels/{id}/bill/currency', { params: { path: { id }, query: { value } } })))
+
 export const useAddWork = (id: number) => useBillMutation(id, (body: MoveWorkRequest) => unwrap(api.POST('/api/parcels/{id}/works', { ...path(id), body })))
 
 export const useUpdateWork = (id: number) =>
