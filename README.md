@@ -48,6 +48,9 @@ src/
   components/common/    DataTable (з вибором рядків), Pagination, LinkButton, ConfirmDialog, DetailsList
   components/layout/    AppShell (навігація за ролями, банер режиму компанії), PageHeader
   features/auth/        токен, AuthProvider (roles[]), useAccess, режим компанії для адміна, логін («Запам'ятати мене» —
+  features/auth/        … представник компанії з модулем «Переїзди» працює й на вебі (useAccess: movesRepresentative, canEditMoves):
+                        переїзди з вантажниками, складом, оплатами й рахунком, рейси й маршрути (створити, змінити, план), клієнти
+                        й склади (додати), посилки лише бачить; без користувачів, машин, налаштувань компанії й кошика (fullAccess)
                         лише email у localStorage, пароль — менеджер паролів браузера), зміна пароля
   features/landing/     лендінг для гостей: секції з презентації, скриншоти в public/landing/, форма «Запросити демо»
                         (POST /api/public/demo-requests → Telegram), контакти в contacts.ts (порожні = кнопки сховані);

@@ -1,4 +1,5 @@
 import type { Role } from '@/lib/api/types'
+import { useCurrentCompany } from '@/features/companies/queries'
 import { useCompanyView } from './companyView'
 import { useAuth } from './useAuth'
 
@@ -18,9 +19,17 @@ export type Access = {
   companyName: string | undefined
   /** May open the company's operational pages at all. */
   hasCompanyAccess: boolean
-  /** Only REPRESENTATIVE/DRIVER roles: the web has nothing for them. */
+  /** Only REPRESENTATIVE/DRIVER roles: the web has nothing for them (a representative of a moves company aside). */
   mobileOnly: boolean
+  /** A representative of a company with moves: they run moves, trips and routes from the web too. */
+  movesRepresentative: boolean
+  /** The company's data is still loading to decide what a representative may do: guards wait. */
+  accessPending: boolean
+  /** The company's own pages a manager or viewer has (users, cars, settings, trash), not a moves representative. */
+  fullAccess: boolean
   canEdit: boolean
+  /** Moves, their loaders, bill, trips and routes: a manager, or a moves representative. */
+  canEditMoves: boolean
   canSeeMoney: boolean
   canManageUsers: boolean
 }
@@ -34,8 +43,14 @@ export function useAccess(): Access {
   const isManager = has('MANAGER')
   const isViewer = has('VIEWER')
   const companyMode = isAdmin && company != null
-  const hasCompanyAccess = isManager || isViewer || companyMode
   const pureFieldRole = (has('REPRESENTATIVE') || has('DRIVER')) && !isManager && !isViewer && !isAdmin
+  // a representative of a company with moves works on the web too; whether it has moves comes with the company
+  const representative = pureFieldRole && has('REPRESENTATIVE')
+  const ownCompany = useCurrentCompany(representative)
+  const movesRepresentative = representative && ownCompany.data?.movesEnabled === true
+  const accessPending = representative && ownCompany.isPending
+  const fullAccess = isManager || isViewer || companyMode
+  const hasCompanyAccess = fullAccess || movesRepresentative
 
   return {
     roles,
@@ -49,8 +64,12 @@ export function useAccess(): Access {
     companyId: companyMode ? company?.id : ownCompanyId,
     companyName: companyMode ? company?.name : undefined,
     hasCompanyAccess,
-    mobileOnly: pureFieldRole,
+    mobileOnly: pureFieldRole && !movesRepresentative && !accessPending,
+    movesRepresentative,
+    accessPending,
+    fullAccess,
     canEdit: isManager,
+    canEditMoves: isManager || movesRepresentative,
     canSeeMoney: !(has('REPRESENTATIVE') && !isManager && !isViewer && !has('DRIVER') && !isAdmin),
     canManageUsers: isManager || isAdmin,
   }

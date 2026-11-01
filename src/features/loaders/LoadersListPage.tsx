@@ -15,7 +15,7 @@ import { useLoaders } from './queries'
 /** The company's loaders to pick into moves' loading and unloading. */
 export function LoadersListPage() {
   const { t } = useTranslation(['moves', 'common'])
-  const { canEdit } = useAccess()
+  const { canEdit, canEditMoves } = useAccess()
   const query = useLoaders()
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<LoaderResponse | null>(null)
@@ -50,7 +50,7 @@ export function LoadersListPage() {
         title={t('moves:loaders.title')}
         description={t('moves:loaders.hint')}
         actions={
-          canEdit && (
+          canEditMoves && (
             <Button onClick={() => setCreating(true)}>
               <Plus />
               {t('common:actions.add')}
@@ -74,7 +74,7 @@ export function LoadersListPage() {
         columns={columns}
         rows={all.filter((l) => sameCity(l, city))}
         rowKey={(l) => l.id ?? 0}
-        onRowClick={canEdit ? (l) => setEditing(l) : undefined}
+        onRowClick={canEditMoves ? (l) => setEditing(l) : undefined}
         isLoading={query.isPending}
         emptyText={t('moves:loaders.empty')}
       />

@@ -31,7 +31,7 @@ export function RoutePage() {
   const { id } = useParams()
   const routeId = Number(id)
   const { t } = useTranslation(['routes', 'trips', 'common', 'trash'])
-  const { canEdit } = useAccess()
+  const { canEditMoves: canEdit, canEdit: isManagerEdit } = useAccess()
   const navigate = useNavigate()
   const query = useRoute(routeId)
   const parcels = useRouteParcels(routeId)
@@ -83,7 +83,7 @@ export function RoutePage() {
                   {t('routes:page.addLeg')}
                 </Button>
               )}
-              {untouched && (
+              {isManagerEdit && untouched && (
                 <Button variant="destructive" onClick={() => setDeleting(true)}>
                   <Trash2 />
                   {t('common:actions.delete')}

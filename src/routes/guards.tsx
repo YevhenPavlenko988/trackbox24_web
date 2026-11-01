@@ -15,6 +15,7 @@ export function RequireAuth() {
 /** Company operational pages: managers, viewers, or an admin browsing a company. */
 export function RequireCompanyAccess() {
   const access = useAccess()
+  if (access.accessPending) return null
   if (access.hasCompanyAccess) return <Outlet />
   return access.mobileOnly ? <MobileOnlyPage /> : <ForbiddenPage />
 }
@@ -46,6 +47,7 @@ export function RedirectIfAuthenticated() {
 export function homePathFor(access: Access): string {
   if (access.isAdmin && !access.companyMode) return '/companies'
   if (access.isSales) return '/crm/deals'
+  if (access.movesRepresentative) return '/moves'
   if (access.mobileOnly) return '/mobile-only'
   return '/parcels'
 }
@@ -65,5 +67,6 @@ export function RootPage() {
 
 export function HomeRedirect() {
   const access = useAccess()
+  if (access.accessPending) return null
   return <Navigate to={homePathFor(access)} replace />
 }

@@ -28,7 +28,7 @@ import { SeatsMoveDialog, type SeatsMoveTarget } from './SeatsMoveDialog'
  */
 export function MoveSeatsCard({ parcel }: { parcel: ParcelResponse }) {
   const { t } = useTranslation(['moves', 'parcels', 'common'])
-  const { canEdit } = useAccess()
+  const { canEditMoves: canEdit } = useAccess()
   const parcelId = parcel.id!
   const seats = useMemo(() => parcel.seats ?? [], [parcel.seats])
   const photos = useParcelPhotos(parcelId)

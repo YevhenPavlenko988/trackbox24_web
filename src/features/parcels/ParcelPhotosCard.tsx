@@ -25,7 +25,9 @@ const PURGE_DAYS = 14
  */
 export function ParcelPhotosCard({ parcel }: { parcel: ParcelResponse }) {
   const { t } = useTranslation(['parcels', 'common'])
-  const { canEdit } = useAccess()
+  const access = useAccess()
+  // a move's photos are a moves representative's to add too
+  const canEdit = access.canEdit || (parcel.kind === 'MOVE' && access.canEditMoves)
   const company = useCurrentCompany()
   const parcelId = parcel.id!
   const photos = useParcelPhotos(parcelId)

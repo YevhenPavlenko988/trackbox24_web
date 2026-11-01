@@ -17,7 +17,7 @@ import { WarehouseDialog } from './WarehouseDialog'
 
 export function WarehousesListPage() {
   const { t } = useTranslation(['warehouses', 'common'])
-  const { canEdit } = useAccess()
+  const { canEdit, canEditMoves } = useAccess()
   const { page, size, setPage, setSize } = useListParams()
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<WarehouseResponse | null>(null)
@@ -54,7 +54,7 @@ export function WarehousesListPage() {
       <PageHeader
         title={t('warehouses:title')}
         actions={
-          canEdit && (
+          canEditMoves && (
             <Button onClick={() => setCreating(true)}>
               <Plus />
               {t('common:actions.add')}

@@ -18,7 +18,7 @@ import { RouteStatusBadge } from './RouteStatusBadge'
 export function RoutesListPage() {
   const { t } = useTranslation(['routes', 'common'])
   const navigate = useNavigate()
-  const { canEdit } = useAccess()
+  const { canEditMoves: canEdit } = useAccess()
   const { page, size, setPage, setSize } = useListParams()
   const query = useRoutes({ page, size })
   const data = query.data ?? emptyPage<RouteResponse>()

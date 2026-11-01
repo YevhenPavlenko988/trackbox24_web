@@ -39,7 +39,7 @@ export function ParcelPage() {
   const { id } = useParams()
   const parcelId = Number(id)
   const { t } = useTranslation(['parcels', 'common', 'clients', 'trips', 'warehouses', 'moves'])
-  const { canEdit, canSeeMoney } = useAccess()
+  const { canEdit, canEditMoves, canSeeMoney } = useAccess()
   const query = useParcel(parcelId)
   const history = useParcelHistory(parcelId)
   const refresh = useRefreshParcelFromNp(parcelId)
@@ -149,7 +149,7 @@ export function ParcelPage() {
                 {t('parcels:actions.changeStatus')}
               </Button>
             )}
-            {canEdit && canEditParcel(p) && (
+            {(canEdit || (p.kind === 'MOVE' && canEditMoves)) && canEditParcel(p) && (
               <Button onClick={() => setEditing(true)}>
                 <Pencil />
                 {t('common:actions.edit')}
