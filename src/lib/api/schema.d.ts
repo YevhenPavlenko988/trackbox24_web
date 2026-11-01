@@ -879,6 +879,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/{id}/next-leg": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Наступне плече після рейсу
+         * @description Рейс сам по собі стає плечем 1 нового маршруту з тим самим номером (№36 → №36.1), і нове плече — №36.2;
+         *     плече маршруту — наступне плече цього маршруту. Вантаж рейсу відтепер їде маршрутом: після складу планується
+         *     на наступне плече. MANAGER, REPRESENTATIVE або DRIVER (свій рейс).
+         */
+        post: operations["nextLeg"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/{id}/depart": {
         parameters: {
             query?: never;
@@ -5037,6 +5059,81 @@ export interface components {
              */
             parcelIds: number[];
         };
+        RouteResponse: {
+            /**
+             * Format: int64
+             * @description ID маршруту
+             * @example 3
+             */
+            id?: number;
+            /**
+             * Format: int32
+             * @description Номер для людей (з нумерації рейсів компанії); плечі — 14.1, 14.2 …
+             * @example 14
+             */
+            number?: number;
+            /**
+             * @description Стан за плечима: PLANNED, IN_PROGRESS, COMPLETED, CANCELLED
+             * @example IN_PROGRESS
+             * @enum {string}
+             */
+            status?: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+            /**
+             * @description Назва стану
+             * @example В дорозі
+             */
+            statusLabel?: string;
+            /**
+             * @description Звідки
+             * @example Київ
+             */
+            origin?: string;
+            /**
+             * @description Куди
+             * @example Варшава
+             */
+            destination?: string;
+            /** @description Примітки */
+            notes?: string;
+            /** @description Плечі по порядку (у списку маршрутів — теж) */
+            legs?: components["schemas"]["TripResponse"][];
+            /**
+             * Format: int64
+             * @description Посилок і переїздів у маршруті
+             * @example 5
+             */
+            parcelCount?: number;
+            /**
+             * Format: int64
+             * @description З них у машині
+             * @example 2
+             */
+            inCarCount?: number;
+            /**
+             * Format: int64
+             * @description На складі (чекають наступного плеча)
+             * @example 1
+             */
+            atWarehouseCount?: number;
+            /**
+             * Format: int64
+             * @description Видано отримувачу
+             * @example 1
+             */
+            deliveredCount?: number;
+            /**
+             * Format: int64
+             * @description Ще не завантажені (у представника чи водія)
+             * @example 1
+             */
+            waitingCount?: number;
+            /**
+             * Format: date-time
+             * @description Створено
+             * @example 2026-10-31T08:00:00Z
+             */
+            createdAt?: string;
+        };
         TripDepartRequest: {
             /**
              * Format: int32
@@ -5211,81 +5308,6 @@ export interface components {
             notes?: string;
             /** @description Плечі по порядку, як рейси: машина, водій, звідки → куди, дати; можна жодного — додати потім */
             legs?: components["schemas"]["TripRequest"][];
-        };
-        RouteResponse: {
-            /**
-             * Format: int64
-             * @description ID маршруту
-             * @example 3
-             */
-            id?: number;
-            /**
-             * Format: int32
-             * @description Номер для людей (з нумерації рейсів компанії); плечі — 14.1, 14.2 …
-             * @example 14
-             */
-            number?: number;
-            /**
-             * @description Стан за плечима: PLANNED, IN_PROGRESS, COMPLETED, CANCELLED
-             * @example IN_PROGRESS
-             * @enum {string}
-             */
-            status?: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-            /**
-             * @description Назва стану
-             * @example В дорозі
-             */
-            statusLabel?: string;
-            /**
-             * @description Звідки
-             * @example Київ
-             */
-            origin?: string;
-            /**
-             * @description Куди
-             * @example Варшава
-             */
-            destination?: string;
-            /** @description Примітки */
-            notes?: string;
-            /** @description Плечі по порядку (у списку маршрутів — теж) */
-            legs?: components["schemas"]["TripResponse"][];
-            /**
-             * Format: int64
-             * @description Посилок і переїздів у маршруті
-             * @example 5
-             */
-            parcelCount?: number;
-            /**
-             * Format: int64
-             * @description З них у машині
-             * @example 2
-             */
-            inCarCount?: number;
-            /**
-             * Format: int64
-             * @description На складі (чекають наступного плеча)
-             * @example 1
-             */
-            atWarehouseCount?: number;
-            /**
-             * Format: int64
-             * @description Видано отримувачу
-             * @example 1
-             */
-            deliveredCount?: number;
-            /**
-             * Format: int64
-             * @description Ще не завантажені (у представника чи водія)
-             * @example 1
-             */
-            waitingCount?: number;
-            /**
-             * Format: date-time
-             * @description Створено
-             * @example 2026-10-31T08:00:00Z
-             */
-            createdAt?: string;
         };
         DemoRequest: {
             /**
@@ -13224,6 +13246,112 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/trips/{id}/parcels"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    nextLeg: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TripRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RouteResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{id}/next-leg"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{id}/next-leg"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{id}/next-leg"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/trips/{id}/next-leg"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

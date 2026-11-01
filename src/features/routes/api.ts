@@ -19,6 +19,11 @@ export function createRoute(body: RouteRequest): Promise<RouteResponse> {
   return unwrap(api.POST('/api/routes', { body }))
 }
 
+/** The next leg after a trip: a trip on its own becomes leg 1 of a new route with its number. */
+export function nextLegAfterTrip(tripId: number, body: TripRequest): Promise<RouteResponse> {
+  return unwrap(api.POST('/api/trips/{id}/next-leg', { params: { path: { id: tripId } }, body }))
+}
+
 export function addRouteLeg(id: number, body: TripRequest): Promise<RouteResponse> {
   return unwrap(api.POST('/api/routes/{id}/legs', { params: { path: { id } }, body }))
 }

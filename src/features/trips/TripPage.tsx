@@ -1,4 +1,4 @@
-import { ArrowLeft, FileSpreadsheet, Flag, PackageOpen, Pencil, Play, Plus, Trash2, X } from 'lucide-react'
+import { ArrowLeft, FileSpreadsheet, Flag, PackageOpen, Pencil, Play, Plus, Route, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -32,6 +32,7 @@ import {
 } from './queries'
 import { acceptsLoading, canDepart, isOutsidePlan, isTripDeletable, seatProgress, splitTripParcels, tripNo } from './status'
 import { CancelTripDialog, CompleteDialog, DepartDialog } from './TripActionDialogs'
+import { useNextLegAfterTrip } from '@/features/routes/queries'
 import { TripDialog } from './TripDialog'
 import { TripHistory } from './TripHistory'
 import { TripPaymentsSummary } from './TripPaymentsSummary'
@@ -41,7 +42,7 @@ export function TripPage() {
   const { id } = useParams()
   const tripId = Number(id)
   const { t } = useTranslation(['trips', 'routes', 'common'])
-  const { canEdit, canEditMoves } = useAccess()
+  const { canEdit, canEditMoves, movesEnabled } = useAccess()
   const query = useTrip(tripId)
   const parcels = useTripParcels(tripId)
   const history = useTripHistory(tripId)
@@ -56,6 +57,8 @@ export function TripPage() {
   const [picking, setPicking] = useState(false)
   const [departing, setDeparting] = useState(false)
   const [completing, setCompleting] = useState(false)
+  const [nextLeg, setNextLeg] = useState(false)
+  const addNextLeg = useNextLegAfterTrip(tripId)
   const [cancelling, setCancelling] = useState(false)
 
   if (query.isPending) return <Skeleton className="h-60 w-full" />
@@ -122,6 +125,13 @@ export function TripPage() {
                 <Button onClick={() => setCompleting(true)}>
                   <Flag />
                   {t('trips:actions.complete')}
+                </Button>
+              )}
+              {/* the way goes on with another car or after a warehouse: a trip on its own becomes leg 1 of a route */}
+              {movesEnabled && trip.status !== 'CANCELLED' && (
+                <Button variant="outline" onClick={() => setNextLeg(true)}>
+                  <Route />
+                  {t('trips:actions.nextLeg')}
                 </Button>
               )}
               {editable && (
@@ -299,6 +309,23 @@ export function TripPage() {
 
       <TripDialog open={editing} onOpenChange={setEditing} trip={trip} onSubmit={(body) => update.mutateAsync(body)} />
       <ParcelPickerDialog open={picking} onOpenChange={setPicking} tripId={tripId} excludeIds={excludeIds} pending={plan.isPending} onAdd={(ids) => run(() => plan.mutateAsync(ids))} />
+      <TripDialog
+        open={nextLeg}
+        onOpenChange={setNextLeg}
+        title={t('trips:nextLeg.title', { number: trip.number })}
+        defaults={{
+          carId: trip.carId,
+          driverId: trip.driverId,
+          coDriverId: trip.coDriverId,
+          origin: trip.destination,
+          plannedDepartureAt: trip.plannedArrivalAt ?? trip.plannedDepartureAt,
+        }}
+        onSubmit={async (body) => {
+          const route = await addNextLeg.mutateAsync(body)
+          toast.success(t('trips:nextLeg.done', { number: tripNo(route.legs?.at(-1) ?? trip) }))
+          navigate(`/routes/${route.id}`)
+        }}
+      />
       <DepartDialog trip={trip} open={departing} onOpenChange={setDeparting} />
       <CompleteDialog trip={trip} open={completing} onOpenChange={setCompleting} />
       <CancelTripDialog trip={trip} open={cancelling} onOpenChange={setCancelling} />
