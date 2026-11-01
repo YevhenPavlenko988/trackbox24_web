@@ -8,6 +8,7 @@ import { useAccess } from '@/features/auth/access'
 import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import type { LoaderResponse } from '@/lib/api/types'
 import { formatPhone } from '@/lib/format'
+import { loaderCities, sameCity } from './cities'
 import { LoaderDialog } from './LoaderDialog'
 import { useLoaders } from './queries'
 
@@ -18,10 +19,14 @@ export function LoadersListPage() {
   const query = useLoaders()
   const [creating, setCreating] = useState(false)
   const [editing, setEditing] = useState<LoaderResponse | null>(null)
+  const [city, setCity] = useState('')
+  const all = query.data?.content ?? []
+  const cities = loaderCities(all)
 
   const columns: Column<LoaderResponse>[] = [
     { key: 'name', header: t('moves:loaders.name'), cell: (l) => <span className="font-medium">{l.fullName}</span> },
     { key: 'phone', header: t('moves:loaders.phone'), cell: (l) => (l.phone ? formatPhone(l.phone) : '—') },
+    { key: 'city', header: t('moves:loaders.city'), cell: (l) => l.city ?? '—' },
     { key: 'notes', header: t('moves:loaders.notes'), className: 'whitespace-normal', cell: (l) => l.notes ?? '—' },
     ...(canEdit
       ? [
@@ -53,9 +58,21 @@ export function LoadersListPage() {
           )
         }
       />
+      {cities.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          <Button size="sm" variant={city ? 'outline' : 'default'} onClick={() => setCity('')}>
+            {t('moves:loaders.allCities')}
+          </Button>
+          {cities.map((c) => (
+            <Button key={c} size="sm" variant={city === c ? 'default' : 'outline'} onClick={() => setCity(c)}>
+              {c}
+            </Button>
+          ))}
+        </div>
+      )}
       <DataTable
         columns={columns}
-        rows={query.data?.content ?? []}
+        rows={all.filter((l) => sameCity(l, city))}
         rowKey={(l) => l.id ?? 0}
         onRowClick={canEdit ? (l) => setEditing(l) : undefined}
         isLoading={query.isPending}
