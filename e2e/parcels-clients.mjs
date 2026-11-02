@@ -143,7 +143,8 @@ export async function run() {
     await shot('04b-client-money')
 
     await page.goto(BASE + `/clients/${parcel.clientId}?tab=parcels`)
-    await page.waitForSelector('table tbody tr:has-text("PT")')
+    // the fixture client gathers moves (M…) from other runs too: any row of theirs will do
+    await page.waitForSelector('table tbody tr:has-text("PT"), table tbody tr:has-text("M")')
     ok('client parcels tab lists parcels', true)
 
     await page.goto(BASE + `/parcels/${parcel.id}`)

@@ -153,7 +153,9 @@ export async function run() {
     await page.getByRole('button', { name: 'Виїхав' }).click()
     await dialog().waitFor()
     await page.fill('#dp-odo', '120000')
-    await dialog().getByRole('button', { name: 'Виїхав' }).click()
+    // one planned parcel is still not in the car: the dialog says so and the button says what it does
+    ok('departure warns about the plan not loaded', (await dialog().textContent()).includes('Не все з плану в машині'))
+    await dialog().getByRole('button', { name: 'Виїхати без них' }).click()
     await page.waitForSelector('[data-slot=page-header]:has-text("У дорозі")')
     const body2 = await page.textContent('body')
     ok('departed: plan section gone', !body2.includes('План ('))
