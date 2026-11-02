@@ -134,6 +134,7 @@ function errorText(e: unknown, fallback: string): string {
 function Result({ data }: { data: PublicTrackingResponse }) {
   const { t } = useTranslation('tracking')
   const history = [...(data.history ?? [])].reverse()
+  const items = data.items ?? []
   return (
     <div className="mt-8 space-y-4">
       <section className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6">
@@ -191,29 +192,53 @@ function Result({ data }: { data: PublicTrackingResponse }) {
         </dl>
 
         {data.telegramUrl && (
-          <a
-            href={data.telegramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-[#2AABEE] px-4 py-3 font-semibold text-white transition-colors hover:bg-[#229ED9] sm:inline-flex"
-          >
-            <Send className="size-5" />
-            {t('telegram')}
-          </a>
-        )}
-        {data.telegramUrl && telegramWebUrl(data.telegramUrl) && (
-          // t.me only hands over to the app; without it (Telegram Web on a tablet) the browser says the address is invalid
-          <a
-            href={telegramWebUrl(data.telegramUrl)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-[#2AABEE] px-4 py-2.5 text-sm font-semibold text-[#229ED9] transition-colors hover:bg-[#2AABEE]/10 sm:ml-2 sm:inline-flex"
-          >
-            {t('telegramWeb')}
-          </a>
+          // one row: the app button, and beside it a quiet link for those with Telegram Web only (t.me hands over to the
+          // app; without it — a tablet with Telegram Web — the browser says the address is invalid)
+          <div className="mt-5 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:gap-5">
+            <a
+              href={data.telegramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 rounded-xl bg-[#2AABEE] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#229ED9]"
+            >
+              <Send className="size-5" />
+              {t('telegram')}
+            </a>
+            {telegramWebUrl(data.telegramUrl) && (
+              <a
+                href={telegramWebUrl(data.telegramUrl)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-center text-sm font-medium text-[#1F8BC2] underline underline-offset-4 hover:text-[#16729F] sm:text-left"
+              >
+                {t('telegramWeb')}
+              </a>
+            )}
+          </div>
         )}
         {data.telegramUrl && <p className="mt-2 text-sm text-navy/55">{t('telegramHint')}</p>}
       </section>
+
+      {items.length > 0 && (
+        // a move: where each item is, so the client does not have to ask about the sofa
+        <section className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6">
+          <h2 className="text-lg font-bold">{t('items', { count: items.length })}</h2>
+          <p className="mt-1 text-sm text-navy/55">
+            {itemSummary(items)}
+          </p>
+          <ul className="mt-4 divide-y divide-navy/10">
+            {items.map((it) => (
+              <li key={it.number} className="flex items-center gap-3 py-2.5">
+                <span className="w-16 shrink-0 font-mono text-sm text-navy/55">
+                  {it.number} / {items.length}
+                </span>
+                <span className="min-w-0 flex-1 break-words">{it.description || t('itemNoDescription')}</span>
+                <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold', it.status && PARCEL_STATUS_STYLES[it.status])}>{it.label}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {history.length > 0 && (
         <section className="rounded-2xl border border-navy/10 bg-white p-5 sm:p-6">
@@ -245,3 +270,9 @@ function Item({ label, value }: { label: string; value: ReactNode }) {
   )
 }
 
+/** «В дорозі: 7 · На складі: 2 · Видано: 1», in the order the statuses first appear. */
+function itemSummary(items: { label?: string }[]): string {
+  const counts = new Map<string, number>()
+  for (const it of items) counts.set(it.label ?? '', (counts.get(it.label ?? '') ?? 0) + 1)
+  return [...counts].map(([label, n]) => `${label}: ${n}`).join(' · ')
+}

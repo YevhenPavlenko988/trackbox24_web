@@ -6208,6 +6208,16 @@ export interface components {
             routeNote?: string;
             /** @description Переходи посилки, від першого до останнього: лише зміни статусу */
             history?: components["schemas"]["Step"][];
+            /** @description Речі переїзду (місця) по номеру: що це й де зараз; для звичайної посилки — порожньо */
+            items?: components["schemas"]["Item"][];
+        };
+        Item: {
+            /** Format: int32 */
+            number?: number;
+            description?: string;
+            /** @enum {string} */
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            label?: string;
         };
         Step: {
             /**
