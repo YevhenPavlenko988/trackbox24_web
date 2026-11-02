@@ -23,7 +23,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ParcelsTable } from './ParcelsTable'
 import { inNpStateGroup, isNpStateGroup, NP_STATE_GROUPS, type NpStateGroup } from './npStatus'
 import { useParcels, useSyncNovaPoshta } from './queries'
-import { isParcelTab, PARCEL_TABS, TAB_FILTER_STATUSES, TAB_STATUSES, tabForStatus, type ParcelTab } from './tabs'
+import { DEFAULT_PARCEL_TAB, isParcelTab, PARCEL_TABS, TAB_FILTER_STATUSES, TAB_STATUSES, tabForStatus, type ParcelTab } from './tabs'
 import { isParcelDeletable } from './status'
 import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { ChannelSelect, isChannel } from '@/features/channels/channel'
@@ -56,7 +56,7 @@ export function ParcelsListPage() {
 
   const status = get('status') as ParcelStatus | undefined
   // An old "?status=" link without a tab opens the tab that status belongs to.
-  const tab: ParcelTab = isParcelTab(get('tab')) ? (get('tab') as ParcelTab) : (tabForStatus(status) ?? 'np')
+  const tab: ParcelTab = isParcelTab(get('tab')) ? (get('tab') as ParcelTab) : (tabForStatus(status) ?? DEFAULT_PARCEL_TAB)
   const clientId = get('clientId') ? Number(get('clientId')) : undefined
   const representativeId = get('representativeId') ? Number(get('representativeId')) : undefined
   const warehouseId = get('warehouseId') ? Number(get('warehouseId')) : undefined
@@ -137,7 +137,7 @@ export function ParcelsListPage() {
         }
       />
 
-      <Tabs value={tab} onValueChange={(v) => set({ tab: String(v) === 'np' ? undefined : String(v), status: undefined, sort: undefined, npState: undefined })} className="mb-4">
+      <Tabs value={tab} onValueChange={(v) => set({ tab: String(v) === DEFAULT_PARCEL_TAB ? undefined : String(v), status: undefined, sort: undefined, npState: undefined })} className="mb-4">
         <TabsList>
           {PARCEL_TABS.map((value) => (
             <TabsTrigger key={value} value={value}>

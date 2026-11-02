@@ -1,6 +1,8 @@
 import type { ParcelStatus } from '@/lib/api/types'
 
-export const PARCEL_TABS = ['np', 'company', 'archive'] as const
+/** «Усі» comes first and is where the list opens; Nova Poshta and the archive are the narrower slices. */
+export const PARCEL_TABS = ['company', 'np', 'archive'] as const
+export const DEFAULT_PARCEL_TAB: ParcelTab = 'company'
 export type ParcelTab = (typeof PARCEL_TABS)[number]
 
 export function isParcelTab(v: string | undefined): v is ParcelTab {

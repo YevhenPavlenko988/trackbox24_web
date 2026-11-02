@@ -43,13 +43,15 @@ export async function run() {
     await page.waitForURL('**/parcels')
     ok('manager lands on /parcels', page.url().endsWith('/parcels'))
     await page.waitForSelector('[data-slot=tabs-list]')
-    ok('parcels list opens on the Nova Poshta tab', (await page.getByRole('tab', { name: 'У Новій Пошті' }).getAttribute('data-active')) !== null)
-    // The "Усі" tab is every parcel of the company and asks the backend for no status at all;
-    // the first tab only holds what is still at Nova Poshta.
+    ok('parcels list opens on the «Усі» tab', (await page.getByRole('tab', { name: 'Усі' }).getAttribute('data-active')) !== null)
+    // «Усі» is every parcel of the company and asks the backend for no status at all; «У Новій Пошті» only that status
+    const npRequest = page.waitForRequest((r) => r.url().includes('/api/parcels?') && r.url().includes('status=IN_NOVA_POSHTA'))
+    await page.getByRole('tab', { name: 'У Новій Пошті' }).click()
+    await npRequest
     const allRequest = page.waitForRequest((r) => r.url().includes('/api/parcels?') && !r.url().includes('status='))
     await page.getByRole('tab', { name: 'Усі' }).click()
     await allRequest
-    ok('"all" tab asks for parcels without listing statuses', true)
+    ok('"all" tab asks for parcels without listing statuses', page.url().endsWith('/parcels'))
     await page.waitForSelector('table tbody tr:has-text("PT")')
     ok('all tab lists parcels already collected', true)
     await shot('02-parcels-list')
@@ -64,7 +66,7 @@ export async function run() {
     ok('needsEnrichment chip hits API', apiCalls.some((c) => c.url.includes('needsEnrichment=true')))
     await page.getByRole('button', { name: 'Скинути' }).click()
     // Reset clears the filters but stays on the current tab.
-    await page.waitForURL(/\/parcels\?tab=company$/)
+    await page.waitForURL(/\/parcels$/)
 
     await page.fill('input[placeholder*="Штрих-код"]', 'Взуття')
     await page.waitForURL('**/parcels?*query=*')
