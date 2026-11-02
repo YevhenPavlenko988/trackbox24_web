@@ -1,4 +1,4 @@
-import { ArrowLeft, FileSpreadsheet, Flag, PackageOpen, Pencil, Play, Plus, Route, Trash2, X } from 'lucide-react'
+import { ArrowLeft, FileSpreadsheet, Flag, PackageOpen, Pencil, Play, Plus, Route, ScanLine, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams } from 'react-router'
@@ -161,16 +161,18 @@ export function TripPage() {
       {/* What the trip waits for, so a leg does not hang in «Завантаження» once its cargo went on. */}
       {canEdit && canEditMoves && trip.reminder && (
         <Alert className="mb-4 border-primary/40">
-          {trip.reminder === 'DEPART' ? <Play /> : <Flag />}
+          {trip.reminder === 'LOAD' ? <ScanLine /> : trip.reminder === 'DEPART' ? <Play /> : <Flag />}
           <AlertTitle>{t(`trips:reminder.${trip.reminder}.title`)}</AlertTitle>
           <AlertDescription>
             {t(`trips:reminder.${trip.reminder}.${trip.reminder === 'COMPLETE' && trip.status === 'PREPARING' ? 'textNotDeparted' : 'text'}`)}
           </AlertDescription>
-          <AlertAction>
-            <Button size="sm" onClick={() => (trip.reminder === 'DEPART' ? setDeparting(true) : setCompleting(true))}>
-              {trip.reminder === 'DEPART' ? t('trips:actions.depart') : t('trips:actions.complete')}
-            </Button>
-          </AlertAction>
+          {trip.reminder !== 'LOAD' && (
+            <AlertAction>
+              <Button size="sm" onClick={() => (trip.reminder === 'DEPART' ? setDeparting(true) : setCompleting(true))}>
+                {trip.reminder === 'DEPART' ? t('trips:actions.depart') : t('trips:actions.complete')}
+              </Button>
+            </AlertAction>
+          )}
         </Alert>
       )}
       <ConfirmDialog

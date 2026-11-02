@@ -3022,7 +3022,7 @@ export interface components {
              * @example DEPART
              * @enum {string}
              */
-            reminder?: "DEPART" | "COMPLETE";
+            reminder?: "LOAD" | "DEPART" | "COMPLETE";
             /** @description Переїзди рейсу (у плані чи в машині): що це за вантаж — для списку рейсів. Посилки сюди не входять. */
             moves?: components["schemas"]["Move"][];
         };

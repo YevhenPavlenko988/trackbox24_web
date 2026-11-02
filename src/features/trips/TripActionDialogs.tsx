@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { TriangleAlert } from 'lucide-react'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
@@ -53,6 +54,12 @@ export function DepartDialog({ trip, open, onOpenChange }: { trip: TripResponse;
         {open && (
           <form onSubmit={submit} noValidate>
             <FieldGroup>
+              {trip.reminder === 'LOAD' && (
+                <Alert className="border-amber-500/50 text-amber-900 dark:text-amber-200">
+                  <TriangleAlert />
+                  <AlertDescription>{t('trips:departDialog.notLoaded')}</AlertDescription>
+                </Alert>
+              )}
               <Field data-invalid={!!errors.startOdometerKm}>
                 <FieldLabel htmlFor="dp-odo">{t('trips:fields.startOdometerKm')}</FieldLabel>
                 <Input id="dp-odo" inputMode="numeric" aria-invalid={!!errors.startOdometerKm} {...form.register('startOdometerKm')} />
@@ -63,7 +70,7 @@ export function DepartDialog({ trip, open, onOpenChange }: { trip: TripResponse;
                   {t('common:actions.cancel')}
                 </Button>
                 <Button type="submit" disabled={isSubmitting}>
-                  {t('trips:actions.depart')}
+                  {t(trip.reminder === 'LOAD' ? 'trips:actions.departWithout' : 'trips:actions.depart')}
                 </Button>
               </div>
             </FieldGroup>
