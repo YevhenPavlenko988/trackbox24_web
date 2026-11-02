@@ -32,6 +32,12 @@ export async function run() {
     await page.waitForSelector('text=Усе завантажено')
     ok('everything loaded: the leg reminds to depart', (await page.locator('[data-slot=alert]').innerText()).includes('Виїхав'))
     await shot('01-depart')
+    await page.goto(BASE + '/trips?open=true')
+    await page.waitForSelector(`table tbody tr:has-text("${move.barcode}")`)
+    ok('the trips list says what a trip of moves carries', (await page.locator(`table tbody tr:has-text("${move.barcode}")`).innerText()).includes('2 м.'))
+    await shot('01b-trips-list')
+    await page.goto(BASE + `/trips/${first.id}`)
+    await page.waitForSelector('text=Усе завантажено')
 
     // unloaded at the warehouse without anyone pressing «Виїхав»
     for (const n of [1, 2]) await manager.post('/api/scan/to-warehouse', { code: `${move.barcode}-${n}`, warehouseId: warehouse.id })

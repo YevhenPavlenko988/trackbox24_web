@@ -2867,6 +2867,15 @@ export interface components {
              */
             parcels?: number;
         };
+        Move: {
+            /** Format: int64 */
+            id?: number;
+            barcode?: string;
+            clientName?: string;
+            description?: string;
+            /** Format: int32 */
+            seats?: number;
+        };
         TripPayments: {
             /** @description Отримані оплати: по валюті й способу оплати (method немає — спосіб не вказано) */
             received?: components["schemas"]["Line"][];
@@ -3014,6 +3023,8 @@ export interface components {
              * @enum {string}
              */
             reminder?: "DEPART" | "COMPLETE";
+            /** @description Переїзди рейсу (у плані чи в машині): що це за вантаж — для списку рейсів. Посилки сюди не входять. */
+            moves?: components["schemas"]["Move"][];
         };
         ParcelUpdateRequest: {
             /**
