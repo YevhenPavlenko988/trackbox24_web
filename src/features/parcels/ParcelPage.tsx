@@ -246,7 +246,7 @@ export function ParcelPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>{t('parcels:sections.details')}</CardTitle>
+            <CardTitle>{t(move ? 'parcels:sections.moveDetails' : 'parcels:sections.details')}</CardTitle>
           </CardHeader>
           <CardContent>
             <DetailsList
@@ -262,26 +262,35 @@ export function ParcelPage() {
                 { label: t('clients:fields.phone'), value: formatPhone(p.clientPhone) },
                 { label: t('parcels:fields.clientCity'), value: p.clientCity },
                 { label: t('parcels:fields.clientAddress'), value: p.clientAddress },
-                { label: t('parcels:fields.representative'), value: p.representativeName },
+                ...(move ? [] : [{ label: t('parcels:fields.representative'), value: p.representativeName }]),
                 { label: t('parcels:fields.source'), value: p.source ? t(`parcels:source.${p.source}`) : undefined },
                 { label: t('common:channelField.label'), value: p.channel ? <ChannelBadge channel={p.channel} details={p.channelDetails} /> : undefined },
                 { label: t('parcels:fields.description'), value: p.description },
                 { label: t('parcels:fields.seatsAmount'), value: p.seatsAmount },
-                { label: t('parcels:fields.weightKg'), value: formatWeight(p.weightKg) },
-                { label: t('parcels:fields.npVolumeWeight'), value: formatWeight(p.npVolumeWeight) },
-                {
-                  label: t('parcels:fields.dimensions'),
-                  value: p.lengthCm != null || p.widthCm != null || p.heightCm != null ? [p.lengthCm, p.widthCm, p.heightCm].map((v) => v ?? '?').join(' × ') : undefined,
-                },
+                // a move: no weights, sizes or declared value of a parcel; where each item is, the items card says
+                ...(move
+                  ? []
+                  : [
+                      { label: t('parcels:fields.weightKg'), value: formatWeight(p.weightKg) },
+                      { label: t('parcels:fields.npVolumeWeight'), value: formatWeight(p.npVolumeWeight) },
+                      {
+                        label: t('parcels:fields.dimensions'),
+                        value: p.lengthCm != null || p.widthCm != null || p.heightCm != null ? [p.lengthCm, p.widthCm, p.heightCm].map((v) => v ?? '?').join(' × ') : undefined,
+                      },
+                    ]),
                 { label: t('parcels:fields.deliveryCity'), value: p.deliveryCity },
-                { label: t('parcels:fields.declaredValue'), value: formatMoney(p.declaredValue) },
+                ...(move ? [] : [{ label: t('parcels:fields.declaredValue'), value: formatMoney(p.declaredValue) }]),
                 { label: t('parcels:fields.senderName'), value: p.senderName },
                 { label: t('parcels:fields.senderPhone'), value: formatPhone(p.senderPhone) },
                 { label: t('parcels:fields.senderCity'), value: p.senderCity },
                 { label: t('parcels:fields.notes'), value: p.notes },
-                { label: t('parcels:fields.warehouse'), value: p.warehouseName },
-                { label: t('trips:fields.plannedTrip'), value: tripLink(p.plannedTripId, p.plannedTripNumber) },
-                { label: t('trips:fields.trip'), value: tripLink(p.tripId, p.tripNumber) },
+                ...(move
+                  ? []
+                  : [
+                      { label: t('parcels:fields.warehouse'), value: p.warehouseName },
+                      { label: t('trips:fields.plannedTrip'), value: tripLink(p.plannedTripId, p.plannedTripNumber) },
+                      { label: t('trips:fields.trip'), value: tripLink(p.tripId, p.tripNumber) },
+                    ]),
                 { label: t('common:common.createdAt'), value: formatDateTime(p.createdAt) },
               ]}
             />
