@@ -80,8 +80,8 @@ function DealForm({ deal, onClose }: { deal?: CrmDealResponse; onClose: () => vo
   const onError = useMutationError(form)
 
   const submit = form.handleSubmit(async (v) => {
-    // an existing contact keeps a name; its notes and company stay as they are
-    if (contact?.id && !v.fullName) {
+    // a contact needs a name: an existing one keeps it, and a phone, email or job title alone is not lost unnoticed
+    if (!v.fullName && (contact?.id || v.phone || v.email || v.jobTitle)) {
       form.setError('fullName', { message: 'required' })
       return
     }
