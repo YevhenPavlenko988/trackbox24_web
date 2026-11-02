@@ -16,7 +16,7 @@ import { CHANNELS, ChannelFields } from '@/features/channels/channel'
 import type { Channel, CompanyOption, CrmDealRequest, CrmDealResponse } from '@/lib/api/types'
 import { COMPANY_OPTIONS } from './constants'
 import { OptionsCheckboxes } from './OptionsCheckboxes'
-import { useCreateDeal, useUpdateDeal } from './queries'
+import { useCreateDeal, useUpdateContact, useUpdateDeal } from './queries'
 import { TeamSelect } from './TeamSelect'
 
 const schema = z.object({
@@ -35,7 +35,10 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>
 
-/** New deal (with its contact) or edit of an existing one; the contact of an existing deal is edited on its page. */
+/**
+ * New deal (with its contact) or edit of an existing one, its contact included: a contact added later, or a phone
+ * that was not known at first, is filled in here.
+ */
 export function DealDialog({ open, onOpenChange, deal }: { open: boolean; onOpenChange: (o: boolean) => void; deal?: CrmDealResponse | null }) {
   const { t } = useTranslation('crm')
   return (
@@ -55,14 +58,16 @@ function DealForm({ deal, onClose }: { deal?: CrmDealResponse; onClose: () => vo
   const navigate = useNavigate()
   const create = useCreateDeal()
   const update = useUpdateDeal(deal?.id ?? 0)
+  const updateContact = useUpdateContact()
+  const contact = deal?.contact
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
       title: deal?.title ?? '',
-      fullName: '',
-      phone: '',
-      email: '',
-      jobTitle: '',
+      fullName: contact?.fullName ?? '',
+      phone: contact?.phone ?? '',
+      email: contact?.email ?? '',
+      jobTitle: contact?.jobTitle ?? '',
       ownerId: deal?.owner?.id,
       channel: deal?.source ?? '',
       channelDetails: deal?.sourceDetails ?? '',
@@ -75,10 +80,16 @@ function DealForm({ deal, onClose }: { deal?: CrmDealResponse; onClose: () => vo
   const onError = useMutationError(form)
 
   const submit = form.handleSubmit(async (v) => {
+    // an existing contact keeps a name; its notes and company stay as they are
+    if (contact?.id && !v.fullName) {
+      form.setError('fullName', { message: 'required' })
+      return
+    }
+    const person = { fullName: v.fullName, phone: v.phone || undefined, email: v.email || undefined, jobTitle: v.jobTitle || undefined }
     const body: CrmDealRequest = {
       title: v.title,
-      contactId: deal?.contact?.id,
-      contact: !deal && v.fullName ? { fullName: v.fullName, phone: v.phone || undefined, email: v.email || undefined, jobTitle: v.jobTitle || undefined } : undefined,
+      contactId: contact?.id,
+      contact: !contact?.id && v.fullName ? person : undefined,
       ownerId: v.ownerId,
       source: v.channel || undefined,
       sourceDetails: v.channelDetails || undefined,
@@ -87,6 +98,9 @@ function DealForm({ deal, onClose }: { deal?: CrmDealResponse; onClose: () => vo
       notes: v.notes || undefined,
     }
     try {
+      if (contact?.id) {
+        await updateContact.mutateAsync({ id: contact.id, body: { ...person, notes: contact.notes, companyId: contact.company?.id } })
+      }
       const saved = await (deal ? update.mutateAsync(body) : create.mutateAsync(body))
       toast.success(t('common:common.saved'))
       onClose()
@@ -104,27 +118,26 @@ function DealForm({ deal, onClose }: { deal?: CrmDealResponse; onClose: () => vo
           <Input id="deal-title" aria-invalid={!!errors.title} {...form.register('title')} />
           <FieldErrorText error={errors.title} />
         </Field>
-        {!deal && (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field>
-              <FieldLabel htmlFor="deal-name">{t('crm:fields.fullName')}</FieldLabel>
-              <Input id="deal-name" {...form.register('fullName')} />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="deal-job">{t('crm:fields.jobTitle')}</FieldLabel>
-              <Input id="deal-job" {...form.register('jobTitle')} />
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="deal-phone">{t('crm:fields.phone')}</FieldLabel>
-              <Input id="deal-phone" inputMode="tel" {...form.register('phone')} />
-            </Field>
-            <Field data-invalid={!!errors.email}>
-              <FieldLabel htmlFor="deal-email">{t('crm:fields.email')}</FieldLabel>
-              <Input id="deal-email" type="email" aria-invalid={!!errors.email} {...form.register('email')} />
-              <FieldErrorText error={errors.email} />
-            </Field>
-          </div>
-        )}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field data-invalid={!!errors.fullName}>
+            <FieldLabel htmlFor="deal-name">{t('crm:fields.fullName')}</FieldLabel>
+            <Input id="deal-name" aria-invalid={!!errors.fullName} {...form.register('fullName')} />
+            <FieldErrorText error={errors.fullName} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="deal-job">{t('crm:fields.jobTitle')}</FieldLabel>
+            <Input id="deal-job" {...form.register('jobTitle')} />
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="deal-phone">{t('crm:fields.phone')}</FieldLabel>
+            <Input id="deal-phone" inputMode="tel" {...form.register('phone')} />
+          </Field>
+          <Field data-invalid={!!errors.email}>
+            <FieldLabel htmlFor="deal-email">{t('crm:fields.email')}</FieldLabel>
+            <Input id="deal-email" type="email" aria-invalid={!!errors.email} {...form.register('email')} />
+            <FieldErrorText error={errors.email} />
+          </Field>
+        </div>
         <div className="grid gap-4">
           <Controller
             control={form.control}
