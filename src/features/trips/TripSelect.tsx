@@ -10,9 +10,11 @@ const NONE = '__none__'
 /** A trip can only be loaded into before it departs, and only once it has a car and a driver. */
 export const canLoadInto = (trip: TripResponse) => trip.carId != null && trip.driverId != null
 
+/** «№12 · Київ → Варшава · AA1234BB · Петренко · 05.11 08:00»: where it goes first, so the right trip is found by eye. */
 export function tripLabel(trip: TripResponse, unnamed: string): string {
+  const way = [trip.origin, trip.destination].filter(Boolean).join(' → ')
   const parts = [trip.carPlateNumber, trip.driverName, formatDateTime(trip.plannedDepartureAt)].filter(Boolean)
-  return `№${tripNo(trip)}` + (parts.length ? ' · ' + parts.join(' · ') : ` · ${unnamed}`)
+  return `№${tripNo(trip)}` + (way ? ` · ${way}` : '') + (parts.length ? ' · ' + parts.join(' · ') : ` · ${unnamed}`)
 }
 
 /** Picks a trip to load into: the ones still being prepared, with the car that will carry the parcel. */
