@@ -34,7 +34,22 @@ export function TripsListPage() {
     { key: 'number', header: '№', cell: (s) => <span className="font-medium">{tripNo(s)}</span>, className: 'w-16' },
     { key: 'status', header: t('trips:fields.status'), cell: (s) => <TripStatusBadge status={s.status} /> },
     { key: 'departure', header: t('trips:fields.plannedDepartureAt'), cell: (s) => formatDateTime(s.plannedDepartureAt) },
-    { key: 'route', header: t('trips:fields.route'), cell: (s) => routeText(s) },
+    {
+      key: 'route',
+      header: t('trips:fields.route'),
+      // a trip of moves says what it carries: code, whose, what, how many items (two at most, then «ще N»)
+      cell: (s) => (
+        <div className="flex flex-col gap-0.5">
+          <span>{routeText(s)}</span>
+          {(s.moves ?? []).slice(0, 2).map((m) => (
+            <span key={m.id} className="text-xs text-muted-foreground">
+              {[m.barcode, m.clientName, m.description, t('trips:list.seats', { count: m.seats })].filter(Boolean).join(' · ')}
+            </span>
+          ))}
+          {(s.moves ?? []).length > 2 && <span className="text-xs text-muted-foreground">{t('trips:list.moreMoves', { count: (s.moves ?? []).length - 2 })}</span>}
+        </div>
+      ),
+    },
     { key: 'car', header: t('trips:fields.car'), cell: (s) => s.carPlateNumber ?? '—' },
     {
       key: 'driver',
