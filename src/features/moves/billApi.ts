@@ -57,3 +57,14 @@ export const useUpdateStorage = (id: number) =>
 
 export const useDeleteStorage = (id: number) =>
   useBillMutation(id, (storageId: number) => unwrap(api.DELETE('/api/parcels/{id}/storages/{storageId}', { params: { path: { id, storageId } } })))
+
+/** The client's bill in Excel, the same one the mobile app sends; its sums are formulas a manager can correct. */
+export async function downloadInvoiceXlsx(id: number, filename: string): Promise<void> {
+  const blob = await unwrap(api.GET('/api/parcels/{id}/invoice.xlsx', { params: { path: { id } }, parseAs: 'blob' }))
+  const url = URL.createObjectURL(blob as Blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
