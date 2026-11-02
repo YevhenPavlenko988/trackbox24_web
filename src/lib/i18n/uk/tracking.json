@@ -23,5 +23,10 @@
   "login": "Увійти",
   "telegram": "Стежити в Telegram",
   "telegramWeb": "Немає застосунку? Відкрити в Telegram Web",
-  "telegramHint": "Бот надішле повідомлення, щойно статус посилки зміниться."
+  "telegramHint": "Бот надішле повідомлення, щойно статус посилки зміниться.",
+  "items_one": "Речі ({{count}})",
+  "items_few": "Речі ({{count}})",
+  "items_many": "Речі ({{count}})",
+  "items_other": "Речі ({{count}})",
+  "itemNoDescription": "Без опису"
 }

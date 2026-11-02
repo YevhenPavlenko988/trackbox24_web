@@ -182,6 +182,9 @@ export async function run() {
   await page.goto(BASE + `/track/${move.barcode}`)
   await page.waitForSelector('main section, [role=alert]')
   ok('public tracking finds the move by its M code', !(await page.locator('[role=alert]').count()))
+  await page.waitForSelector('text=Речі (2)')
+  const tracked = await page.locator('body').innerText()
+  ok('tracking lists the move\'s items with their status', tracked.includes('1 / 2') && tracked.includes('Диван') && tracked.includes('Шафа'))
   await shot('09-tracking')
 
   // the representative's web
