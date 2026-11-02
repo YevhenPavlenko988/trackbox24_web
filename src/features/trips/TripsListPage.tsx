@@ -13,7 +13,7 @@ import { emptyPage } from '@/lib/api/page'
 import type { TripResponse, TripStatus } from '@/lib/api/types'
 import { formatDateTime } from '@/lib/format'
 import { useCreateTrip, useTrips } from './queries'
-import { TRIP_STATUSES, isTripDeletable, routeText, tripNo } from './status'
+import { TRIP_STATUSES, groupLegs, isTripDeletable, routeText, tripNo } from './status'
 import { TripDialog } from './TripDialog'
 import { TripStatusBadge } from './TripStatusBadge'
 
@@ -29,9 +29,21 @@ export function TripsListPage() {
 
   const query = useTrips({ status: status ? [status] : undefined, open, page, size })
   const data = query.data ?? emptyPage<TripResponse>()
+  const rows = groupLegs(data.content)
 
   const columns: Column<TripResponse>[] = [
-    { key: 'number', header: '№', cell: (s) => <span className="font-medium">{tripNo(s)}</span>, className: 'w-16' },
+    {
+      key: 'number',
+      header: '№',
+      className: 'w-20 whitespace-nowrap',
+      // the legs of one trip stand together; the later ones under the first, indented
+      cell: (s) =>
+        (s.legNumber ?? 1) > 1 && rows.some((r) => r.routeId === s.routeId && r.id !== s.id && (r.legNumber ?? 0) < (s.legNumber ?? 0)) ? (
+          <span className="pl-3 font-medium text-muted-foreground">↳ {tripNo(s)}</span>
+        ) : (
+          <span className="font-medium">{tripNo(s)}</span>
+        ),
+    },
     { key: 'status', header: t('trips:fields.status'), cell: (s) => <TripStatusBadge status={s.status} /> },
     { key: 'departure', header: t('trips:fields.plannedDepartureAt'), cell: (s) => formatDateTime(s.plannedDepartureAt) },
     {
@@ -110,7 +122,7 @@ export function TripsListPage() {
           </Button>
         ))}
       </div>
-      <DataTable columns={columns} rows={data.content} rowKey={(s) => s.id ?? 0} onRowClick={(s) => navigate(`/trips/${s.id}`)} isLoading={query.isPending} />
+      <DataTable columns={columns} rows={rows} rowKey={(s) => s.id ?? 0} onRowClick={(s) => navigate(`/trips/${s.id}`)} isLoading={query.isPending} />
       <div className="mt-4">
         <Pagination page={data} onPageChange={setPage} onSizeChange={setSize} />
       </div>

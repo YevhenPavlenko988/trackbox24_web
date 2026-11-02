@@ -1,7 +1,7 @@
 import { ArrowLeft, FileSpreadsheet, Flag, PackageOpen, Pencil, Play, Plus, Route, Trash2, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useParams } from 'react-router'
+import { useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { DetailsList } from '@/components/common/DetailsList'
@@ -35,13 +35,14 @@ import { CancelTripDialog, CompleteDialog, DepartDialog } from './TripActionDial
 import { useNextLegAfterTrip } from '@/features/routes/queries'
 import { TripDialog } from './TripDialog'
 import { TripHistory } from './TripHistory'
+import { TripLegsCard } from './TripLegsCard'
 import { TripPaymentsSummary } from './TripPaymentsSummary'
 import { TripStatusBadge } from './TripStatusBadge'
 
 export function TripPage() {
   const { id } = useParams()
   const tripId = Number(id)
-  const { t } = useTranslation(['trips', 'routes', 'common'])
+  const { t } = useTranslation(['trips', 'common'])
   const { canEdit, canEditMoves, movesEnabled } = useAccess()
   const query = useTrip(tripId)
   const parcels = useTripParcels(tripId)
@@ -128,7 +129,7 @@ export function TripPage() {
                 </Button>
               )}
               {/* the way goes on with another car or after a warehouse: a trip on its own becomes leg 1 of a route */}
-              {movesEnabled && trip.status !== 'CANCELLED' && (
+              {movesEnabled && trip.routeId == null && trip.status !== 'CANCELLED' && (
                 <Button variant="outline" onClick={() => setNextLeg(true)}>
                   <Route />
                   {t('trips:actions.nextLeg')}
@@ -196,18 +197,6 @@ export function TripPage() {
           <CardContent>
             <DetailsList
               items={[
-                ...(trip.routeId != null
-                  ? [
-                      {
-                        label: t('routes:fields.route'),
-                        value: (
-                          <Link to={`/routes/${trip.routeId}`} className="underline underline-offset-4">
-                            {t('routes:one', { number: trip.number })}
-                          </Link>
-                        ),
-                      },
-                    ]
-                  : []),
                 { label: t('trips:fields.car'), value: trip.carPlateNumber },
                 { label: t('trips:fields.driver'), value: trip.driverName },
                 { label: t('trips:fields.coDriver'), value: trip.coDriverName },
@@ -224,6 +213,8 @@ export function TripPage() {
             />
           </CardContent>
         </Card>
+
+        {trip.routeId != null && <TripLegsCard routeId={trip.routeId} tripId={tripId} />}
 
         {trip.payments && (
           <Card>
@@ -323,7 +314,8 @@ export function TripPage() {
         onSubmit={async (body) => {
           const route = await addNextLeg.mutateAsync(body)
           toast.success(t('trips:nextLeg.done', { number: tripNo(route.legs?.at(-1) ?? trip) }))
-          navigate(`/routes/${route.id}`)
+          const added = route.legs?.at(-1)
+          if (added?.id) navigate(`/trips/${added.id}`)
         }}
       />
       <DepartDialog trip={trip} open={departing} onOpenChange={setDeparting} />

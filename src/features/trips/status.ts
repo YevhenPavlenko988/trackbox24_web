@@ -54,3 +54,22 @@ export function tripNo(t: { number?: number; id?: number; legNumber?: number }):
 export function legNo(number: number | undefined, leg: number | undefined): string {
   return leg != null ? `${number}.${leg}` : String(number)
 }
+
+/**
+ * The legs of one trip (№5.1, №5.2 …) together where the first of them stands in the list, in leg order, so a trip
+ * that goes on reads as one thing and not as unrelated rows.
+ */
+export function groupLegs(trips: TripResponse[]): TripResponse[] {
+  const out: TripResponse[] = []
+  const placed = new Set<number>()
+  for (const trip of trips) {
+    if (trip.routeId == null) {
+      out.push(trip)
+      continue
+    }
+    if (placed.has(trip.routeId)) continue
+    placed.add(trip.routeId)
+    out.push(...trips.filter((x) => x.routeId === trip.routeId).sort((a, b) => (a.legNumber ?? 0) - (b.legNumber ?? 0)))
+  }
+  return out
+}
