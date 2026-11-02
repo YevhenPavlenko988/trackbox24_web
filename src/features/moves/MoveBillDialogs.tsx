@@ -25,12 +25,15 @@ import type { MoveBillWork, MoveWorkKind, PaymentMethod } from '@/lib/api/types'
 import { formatPhone, fromDateTimeLocal, toDateTimeLocal } from '@/lib/format'
 import { useAddPayment, useAddStorage, useAddWork, useUpdateWork } from './billApi'
 
-/** The ticked loaders first, then the others; a search keeps the ticked ones and filters the rest by name or phone. */
-function pickList<T extends { id?: number; fullName?: string; phone?: string }>(all: T[], ticked: number[], search: string): T[] {
+/**
+ * The loaders ticked when the dialog opened (and a new one) first, then the others in their order: a tick does not move
+ * anyone, so the row under the finger stays put. A search filters the rest by name or phone, never hiding a ticked one.
+ */
+function pickList<T extends { id?: number; fullName?: string; phone?: string }>(all: T[], pinned: number[], ticked: number[], search: string): T[] {
   const q = search.trim().toLowerCase()
   const digits = q.replace(/\D/g, '')
   const matches = (l: T) => !q || (l.fullName ?? '').toLowerCase().includes(q) || (digits.length > 0 && (l.phone ?? '').includes(digits))
-  return [...all.filter((l) => ticked.includes(l.id!)), ...all.filter((l) => !ticked.includes(l.id!) && matches(l))]
+  return [...all.filter((l) => pinned.includes(l.id!)), ...all.filter((l) => !pinned.includes(l.id!) && (ticked.includes(l.id!) || matches(l)))]
 }
 
 const amount = z
@@ -59,6 +62,7 @@ export function WorkDialog({ parcelId, work, onClose }: { parcelId: number; work
   const [addingLoader, setAddingLoader] = useState(false)
   const [search, setSearch] = useState('')
   const [city, setCity] = useState('')
+  const [pinned, setPinned] = useState<number[]>(() => (work?.loaders ?? []).map((l) => l.loaderId!))
   const cities = loaderCities(loaders)
   const form = useForm<z.infer<typeof workSchema>>({
     resolver: zodResolver(workSchema),
@@ -169,7 +173,7 @@ export function WorkDialog({ parcelId, work, onClose }: { parcelId: number; work
                   </div>
                   <div className="max-h-56 overflow-y-auto rounded-lg border">
                     {loaders.length === 0 && <p className="p-3 text-sm text-muted-foreground">{t('moves:loaders.empty')}</p>}
-                    {pickList(loaders.filter((l) => field.value.includes(l.id!) || sameCity(l, city)), field.value, search).map((l) => (
+                    {pickList(loaders.filter((l) => field.value.includes(l.id!) || sameCity(l, city)), pinned, field.value, search).map((l) => (
                       <Label key={l.id} className="flex items-center gap-3 border-b px-3 py-2 font-normal last:border-b-0">
                         <Checkbox
                           checked={field.value.includes(l.id!)}
@@ -183,7 +187,11 @@ export function WorkDialog({ parcelId, work, onClose }: { parcelId: number; work
                       </Label>
                     ))}
                   </div>
-                  <LoaderDialog open={addingLoader} onOpenChange={setAddingLoader} onCreated={(l) => field.onChange([...field.value, l.id!])} />
+                  <LoaderDialog open={addingLoader} onOpenChange={setAddingLoader} onCreated={(l) => {
+                      field.onChange([...field.value, l.id!])
+                      setPinned((p) => [...p, l.id!])
+                    }}
+                  />
                 </Field>
               )}
             />
