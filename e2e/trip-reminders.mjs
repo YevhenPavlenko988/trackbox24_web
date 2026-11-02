@@ -84,7 +84,7 @@ export async function run() {
     await shot('06-next-leg-dialog')
     await page.fill('#tr-destination', 'Малага')
     await dialog().locator('button[type=submit]').click()
-    await page.waitForURL(/\/routes\/\d+$/)
+    await page.waitForURL((url) => /\/trips\/\d+$/.test(url.pathname) && !url.pathname.endsWith(`/${alone.id}`))
     await page.waitForSelector(`text=${alone.number}.2`)
     await shot('07-route-from-trip')
     const solo2 = await manager.get(`/api/parcels/${solo.id}`)

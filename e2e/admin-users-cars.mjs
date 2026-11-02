@@ -94,7 +94,7 @@ export async function run() {
     const modeBody = await page.textContent('body')
     ok('company mode banner shown', modeBody.includes('Перегляд компанії «Тест Логістик»'))
     const navMode = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
-    ok('company mode nav has company pages + trash + companies', navMode.length === 10 && navMode.includes('Кошик') && navMode.includes('Компанії'), navMode.join(','))
+    ok('company mode nav has company pages + trash + companies', navMode.includes('Рейси') && !navMode.includes('Маршрути') && navMode.includes('Кошик') && navMode.includes('Компанії'), navMode.join(','))
     ok('company mode hides add button', (await page.getByRole('link', { name: 'Додати' }).count()) === 0)
     ok('company mode hides row selection', (await page.locator('table thead').getByRole('checkbox').count()) === 0)
     await shot('04-admin-company-mode')
@@ -112,7 +112,7 @@ export async function run() {
     await r.login(MANAGER)
     await page.waitForSelector('[data-slot=sidebar-menu-button]:has-text("Кошик")')
     const navM = await page.locator('[data-slot=sidebar-menu-button]').allTextContents()
-    ok('manager nav has 9 items incl. trash and routes', navM.length === 9 && navM.includes('Кошик') && navM.includes('Маршрути'), navM.join(','))
+    ok('manager nav has trash and trips, no «Маршрути»', navM.includes('Кошик') && navM.includes('Рейси') && !navM.includes('Маршрути'), navM.join(','))
 
     // Filtered by role: earlier runs leave over a hundred users, and the seeded ones fall onto page 2.
     await page.goto(BASE + '/users?role=REPRESENTATIVE&size=100')

@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react'
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, Navigate } from 'react-router'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { MobileOnlyPage, NotFoundPage } from './ErrorPages'
@@ -74,9 +74,8 @@ export const router = createBrowserRouter([
               { path: 'cars', lazy: page(() => import('@/features/cars/CarsListPage'), 'CarsListPage') },
               { path: 'company', lazy: page(() => import('@/features/companies/MyCompanyPage'), 'MyCompanyPage') },
               { path: 'trips', lazy: page(() => import('@/features/trips/TripsListPage'), 'TripsListPage') },
-              { path: 'routes', lazy: page(() => import('@/features/routes/RoutesListPage'), 'RoutesListPage') },
+              { path: 'routes', element: <Navigate to="/trips" replace /> },
               { path: 'loaders', lazy: page(() => import('@/features/loaders/LoadersListPage'), 'LoadersListPage') },
-              { path: 'routes/new', lazy: page(() => import('@/features/routes/RouteCreatePage'), 'RouteCreatePage') },
               { path: 'routes/:id', lazy: page(() => import('@/features/routes/RoutePage'), 'RoutePage') },
               { path: 'trips/:id', lazy: page(() => import('@/features/trips/TripPage'), 'TripPage') },
               { path: 'warehouses', lazy: page(() => import('@/features/warehouses/WarehousesListPage'), 'WarehousesListPage') },
