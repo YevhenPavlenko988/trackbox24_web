@@ -1,4 +1,4 @@
-import { ArrowLeft, Printer } from 'lucide-react'
+import { ArrowLeft, FileSpreadsheet, Printer } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { LinkButton } from '@/components/common/LinkButton'
@@ -7,8 +7,9 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useCurrentCompany } from '@/features/companies/queries'
 import { useParcel } from '@/features/parcels/queries'
 import { NotFoundPage } from '@/routes/ErrorPages'
+import { showApiError } from '@/lib/api/problem'
 import { formatDate, formatMoney, formatPhone } from '@/lib/format'
-import { useMoveBill } from './billApi'
+import { downloadInvoiceXlsx, useMoveBill } from './billApi'
 
 /**
  * The client's bill of a move, for printing (or saving as PDF from the browser): who, from where to where, the services
@@ -37,7 +38,12 @@ export function MoveInvoicePage() {
   for (const w of b.works ?? []) {
     const hours = (w.loaders ?? []).reduce((s, l) => s + (l.hours ?? 0), 0)
     lines.push({
-      name: t('moves:invoice.loadersLine', { kind: w.kindLabel, count: w.loaders?.length ?? 0, hours: (w.loaders?.[0]?.hours ?? 0).toString() }),
+      // «× 3 год» only when everyone did the same hours; otherwise the total in «Кількість» says it
+      name: (() => {
+        const each = [...new Set((w.loaders ?? []).map((l) => l.hours ?? 0))]
+        const base = t('moves:invoice.loadersCount', { kind: w.kindLabel, count: w.loaders?.length ?? 0 })
+        return each.length === 1 ? `${base} × ${each[0]} год` : base
+      })(),
       qty: `${hours} год`,
       price: money(w.clientRate),
       sum: w.clientAmount,
@@ -69,6 +75,10 @@ export function MoveInvoicePage() {
         <Button onClick={() => window.print()}>
           <Printer />
           {t('moves:invoice.print')}
+        </Button>
+        <Button variant="outline" onClick={() => downloadInvoiceXlsx(parcelId, `Рахунок-${p.barcode}.xlsx`).catch(showApiError)}>
+          <FileSpreadsheet />
+          {t('moves:invoice.xlsx')}
         </Button>
       </div>
 

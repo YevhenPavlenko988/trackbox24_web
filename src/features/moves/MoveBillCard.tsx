@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import { LinkButton } from '@/components/common/LinkButton'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -117,8 +116,9 @@ export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('moves:bill.loaders')}</TableHead>
+                  <TableHead className="w-20">{t('moves:bill.planHours')}</TableHead>
                   <TableHead className="w-28">{t('moves:bill.hours')}</TableHead>
-                  <TableHead className="w-24">{t('moves:bill.paid')}</TableHead>
+                  <TableHead className="w-36">{t('moves:bill.payout_col')}</TableHead>
                   <TableHead className="text-right">{t('moves:bill.toClient')}</TableHead>
                   <TableHead className="text-right">{t('moves:bill.toLoader')}</TableHead>
                 </TableRow>
@@ -128,7 +128,7 @@ export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
                   <LoaderRow key={l.loaderId} parcelId={id} work={w} loader={l} editable={canEdit} money={money} />
                 ))}
                 <TableRow className="font-medium">
-                  <TableCell colSpan={3} />
+                  <TableCell colSpan={4} />
                   <TableCell className="text-right tabular-nums">{money(w.clientAmount)}</TableCell>
                   <TableCell className="text-right tabular-nums">{money(w.loaderAmount)}</TableCell>
                 </TableRow>
@@ -246,6 +246,8 @@ function LoaderRow({
           {loader.phone && <span className="text-xs text-muted-foreground">{formatPhone(loader.phone)}</span>}
         </div>
       </TableCell>
+      {/* the plan, read-only; the fact is entered next to it and replaces it in the sums */}
+      <TableCell className="tabular-nums text-muted-foreground">{work.plannedHours != null ? t('bill.hoursValue', { hours: work.plannedHours }) : '—'}</TableCell>
       <TableCell>
         {editable ? (
           <Input
@@ -262,7 +264,18 @@ function LoaderRow({
         )}
       </TableCell>
       <TableCell>
-        <Checkbox checked={!!loader.paid} disabled={!editable} onCheckedChange={(c) => save(hours, c === true)} aria-label={t('bill.paid')} />
+        {/* paid out to the loader: a labelled toggle, not a bare checkbox */}
+        <Button
+          type="button"
+          size="sm"
+          variant={loader.paid ? 'default' : 'outline'}
+          className={loader.paid ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'text-muted-foreground'}
+          disabled={!editable}
+          aria-pressed={!!loader.paid}
+          onClick={() => save(hours, !loader.paid)}
+        >
+          {loader.paid ? t('bill.paidOut') : t('bill.notPaidOut')}
+        </Button>
       </TableCell>
       <TableCell className="text-right tabular-nums">{money(loader.clientAmount)}</TableCell>
       <TableCell className="text-right tabular-nums">{money(loader.loaderAmount)}</TableCell>

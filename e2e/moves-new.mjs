@@ -70,14 +70,15 @@ export async function run() {
     ok('total = transport 800 + 3 h × 15 = 845', (await text()).includes('845'))
 
     // actual hours and paid
-    const hours = page.locator('input[aria-label="Год факт"]').first()
+    const hours = page.locator('input[aria-label="Факт, год"]').first()
     await hours.fill('4')
     await hours.blur()
     await page.waitForFunction(() => document.body.innerText.includes('860'))
     ok('actual 4 h replace the planned: 860', true)
-    await page.locator('[aria-label="Оплачено"]').first().click()
+    ok('the plan shows next to the fact, read-only', (await text()).includes('3 год'))
+    await page.getByRole('button', { name: 'Не виплачено' }).first().click()
     await page.waitForFunction(() => /виплачено 40/.test(document.body.innerText))
-    ok('the loader marked paid: 40 paid out', true)
+    ok('the loader marked paid: 40 paid out', (await page.getByRole('button', { name: 'Виплачено ✓' }).count()) === 1)
 
     // storage and a prepayment
     await page.getByRole('button', { name: 'Склад' }).click()
@@ -106,6 +107,8 @@ export async function run() {
     const invoice = await page.innerText('body')
     ok('invoice: client, services, due', invoice.includes('Отримувач Ірина') && invoice.includes('Зберігання') && invoice.includes('710'))
     await shot('04-invoice')
+    const [xlsx] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Завантажити Excel' }).click()])
+    ok('the bill downloads as an Excel file', xlsx.suggestedFilename().endsWith('.xlsx') && xlsx.suggestedFilename().includes(move.barcode), xlsx.suggestedFilename())
 
     // labels with the recipient's phone
     await page.goto(BASE + `/parcels/${move.id}/labels`)

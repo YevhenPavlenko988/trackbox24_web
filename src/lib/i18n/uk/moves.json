@@ -147,7 +147,7 @@
     "paidOn": "Дата",
     "plan": "план {{hours}} год",
     "rates": "Клієнту {{client}} · вантажнику {{loader}} за год",
-    "hours": "Год факт",
+    "hours": "Факт, год",
     "paid": "Оплачено",
     "toClient": "Клієнту",
     "toLoader": "Вантажнику",
@@ -164,7 +164,12 @@
     "payout": "Вантажникам: належить {{owed}}, виплачено {{paid}}",
     "daysTimes": "{{days}} дн × {{rate}}",
     "currency": "Валюта розрахунку",
-    "noWarehouse": "Без складу"
+    "noWarehouse": "Без складу",
+    "planHours": "План",
+    "hoursValue": "{{hours}} год",
+    "payout_col": "Вантажнику виплачено",
+    "paidOut": "Виплачено ✓",
+    "notPaidOut": "Не виплачено"
   },
   "invoice": {
     "title": "Рахунок",
@@ -178,6 +183,8 @@
     "print": "Друкувати",
     "loadersLine": "{{kind}}: {{count}} вантажн. × {{hours}} год",
     "storageLine": "Зберігання{{where}}: {{days}} дн",
-    "transportLine": "Перевезення {{route}}"
+    "transportLine": "Перевезення {{route}}",
+    "loadersCount": "{{kind}}: {{count}} вантажн.",
+    "xlsx": "Завантажити Excel"
   }
 }
