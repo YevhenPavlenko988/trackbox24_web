@@ -22,5 +22,6 @@
   "history": "Історія",
   "login": "Увійти",
   "telegram": "Стежити в Telegram",
+  "telegramWeb": "Немає застосунку? Відкрити в Telegram Web",
   "telegramHint": "Бот надішле повідомлення, щойно статус посилки зміниться."
 }

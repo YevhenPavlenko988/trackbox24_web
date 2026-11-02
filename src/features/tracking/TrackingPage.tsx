@@ -9,6 +9,7 @@ import { isApiError } from '@/lib/api/problem'
 import type { PublicTrackingResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { telegramWebUrl } from './telegram'
 import { normalizeTrackingCode, npTrackingUrl, TRACKING_CODE, trackParcel } from './api'
 
 /**
@@ -200,6 +201,17 @@ function Result({ data }: { data: PublicTrackingResponse }) {
             {t('telegram')}
           </a>
         )}
+        {data.telegramUrl && telegramWebUrl(data.telegramUrl) && (
+          // t.me only hands over to the app; without it (Telegram Web on a tablet) the browser says the address is invalid
+          <a
+            href={telegramWebUrl(data.telegramUrl)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-[#2AABEE] px-4 py-2.5 text-sm font-semibold text-[#229ED9] transition-colors hover:bg-[#2AABEE]/10 sm:ml-2 sm:inline-flex"
+          >
+            {t('telegramWeb')}
+          </a>
+        )}
         {data.telegramUrl && <p className="mt-2 text-sm text-navy/55">{t('telegramHint')}</p>}
       </section>
 
@@ -232,3 +244,4 @@ function Item({ label, value }: { label: string; value: ReactNode }) {
     </div>
   )
 }
+
