@@ -138,7 +138,7 @@ export function ParcelsTable({
           {
             key: 'npState',
             header: t('parcels:fields.npState'),
-            className: 'min-w-32 max-w-40 whitespace-normal',
+            className: 'min-w-36 max-w-48 whitespace-normal',
             cell: (p: ParcelResponse) => {
               // The incoming waybill if there is one, otherwise our own outgoing one (return parcels).
               const source = npStateOf(p) ? p : p.npShipment && npStateOf(p.npShipment) ? p.npShipment : undefined
@@ -174,11 +174,11 @@ export function ParcelsTable({
             cell: (p: ParcelResponse) =>
               p.clientName || p.deliveryCity ? (
                 <div className="flex flex-col">
-                  <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
                     {p.channel && <ChannelBadge channel={p.channel} compact />}
                     {p.clientName ?? <span className="text-muted-foreground">{t('parcels:list.noClient')}</span>}
                   </span>
-                  {p.clientPhone && <span className="text-xs text-muted-foreground">{formatPhone(p.clientPhone)}</span>}
+                  {p.clientPhone && <span className="text-xs whitespace-nowrap text-muted-foreground">{formatPhone(p.clientPhone)}</span>}
                   {p.deliveryCity && <span className="text-xs text-muted-foreground">→ {p.deliveryCity}</span>}
                 </div>
               ) : (
@@ -189,12 +189,12 @@ export function ParcelsTable({
     {
       key: 'sender',
       header: t('parcels:fields.sender'),
-      className: 'min-w-24 max-w-36 whitespace-normal',
+      className: 'min-w-28 max-w-44 whitespace-normal',
       cell: (p) =>
         p.senderName || p.senderPhone || p.senderCity ? (
           <div className="flex flex-col">
-            {p.senderName && <span>{p.senderName}</span>}
-            {p.senderPhone && <span className="text-xs text-muted-foreground">{formatPhone(p.senderPhone)}</span>}
+            {p.senderName && <span className="whitespace-nowrap">{p.senderName}</span>}
+            {p.senderPhone && <span className="text-xs whitespace-nowrap text-muted-foreground">{formatPhone(p.senderPhone)}</span>}
             {p.senderCity && <span className="text-xs text-muted-foreground">{p.senderCity}</span>}
           </div>
         ) : (
@@ -234,6 +234,7 @@ export function ParcelsTable({
           {
             key: 'payment',
             header: t('parcels:payment.title'),
+            className: 'min-w-28 max-w-40 whitespace-normal',
             cell: (p: ParcelResponse) => (
               <div className="flex flex-col">
                 <span>{formatMoney(p.deliveryPrice, p.deliveryPriceCurrency)}</span>
