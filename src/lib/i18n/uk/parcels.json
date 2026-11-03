@@ -5,7 +5,7 @@
   "needsEnrichment": "Потребує уточнення даних",
   "filters": {
     "allStatuses": "Усі статуси",
-    "searchPlaceholder": "Штрих-код, ТТН, наша ЕН, відправник або телефон",
+    "searchPlaceholder": "Пошук за нашим штрих-кодом, ТТН Нової Пошти, нашою ЕН, ПІБ або телефоном клієнта чи відправника",
     "needsEnrichment": "Потребують уточнення",
     "paidStorage": "Платне зберігання",
     "representative": "Представник",
@@ -246,5 +246,18 @@
     "npNumbers": "Номери",
     "npPayment": "Оплата НП",
     "npStatus": "Статус і дати"
+  },
+  "list": {
+    "parcel": "Посилка",
+    "seats": "місць: {{seats}}",
+    "noClient": "Без клієнта",
+    "moreFilters": "Ще фільтри",
+    "resetAll": "Скинути все",
+    "removeFilter": "Прибрати фільтр «{{name}}»",
+    "npDelivery": "Доставка {{date}}",
+    "found_one": "Знайдено {{count}} посилку",
+    "found_few": "Знайдено {{count}} посилки",
+    "found_many": "Знайдено {{count}} посилок",
+    "found_other": "Знайдено {{count}} посилки"
   }
 }

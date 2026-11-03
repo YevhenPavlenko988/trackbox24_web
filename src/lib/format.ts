@@ -10,6 +10,10 @@ export function formatDate(iso?: string): string {
   return iso ? format(parseISO(iso), 'dd.MM.yyyy', { locale: uk }) : '—'
 }
 
+export function formatTime(iso?: string): string {
+  return iso ? format(parseISO(iso), 'HH:mm', { locale: uk }) : ''
+}
+
 /**
  * Digits as stored by the backend → a readable international number.
  * Ukrainian numbers keep the grouping people here are used to; everything else goes through libphonenumber.
