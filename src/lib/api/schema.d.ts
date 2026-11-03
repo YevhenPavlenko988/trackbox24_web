@@ -282,7 +282,7 @@ export interface paths {
         get?: never;
         /**
          * Валюта розрахунку
-         * @description EUR або UAH: у ній ціна перевезення, ставки, склад і оплати переїзду.
+         * @description EUR або UAH: у ній ціна перевезення, ставки, склад і оплати переїзду. Показати рахунок можна в будь-якій валюті — `GET …/bill?in=`.
          */
         put: operations["setCurrency"];
         post?: never;
@@ -308,6 +308,30 @@ export interface paths {
          * @description У кошик; у роботах, де він був, лишається.
          */
         delete: operations["delete_4"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/currency/rates/{currency}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Встановити курс компанії
+         * @description Гривень за одиницю; діє замість курсу банку для нових оплат і перерахунків. Кожна зміна зберігається.
+         */
+        put: operations["set"];
+        post?: never;
+        /**
+         * Повернути курс банку
+         * @description Курс компанії перестає діяти; в історії він лишається.
+         */
+        delete: operations["reset"];
         options?: never;
         head?: never;
         patch?: never;
@@ -603,6 +627,27 @@ export interface paths {
          *     Вимкнути можна лише з увімкненими «Посилками» (інакше 400).
          */
         put: operations["setMovesEnabled"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{id}/currency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Увімкнути / вимкнути модуль «Курси валют»
+         * @description ADMIN або SALES. Увімкнено — компанія бачить курси банку (Monobank, резерв — ПриватБанк, щогодини), ставить свої
+         *     (`/api/currency/rates`) і приймає оплати переїздів у гривні, доларах, євро чи злотих з фіксацією курсу на момент оплати.
+         */
+        put: operations["setCurrencyEnabled"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1323,9 +1368,10 @@ export interface paths {
         /**
          * Перемістити вибрані місця без сканування
          * @description Кілька місць одразу (мультиселект): `WAREHOUSE` — на склад `warehouseId` за тими ж правилами, що й скан на складі;
-         *     `DELIVER` — видати отримувачу, лише водій або менеджер; якщо після цього лишаються невидані місця — потрібен `comment`.
+         *     `LOAD` — у рейс `tripId`, як введений вручну скан завантаження (водій — лише у свій рейс);
+         *     `DELIVER` — видати отримувачу: водій, представник або менеджер; якщо після цього лишаються невидані місця — потрібен `comment`.
          *     Місця, які вже там, пропускаються; усе або нічого. В історії кожного місця — «Без сканування» і хто перемістив.
-         *     У вебі це доступно менеджеру, у мобі — водію й представнику.
+         *     Веб і моб показують ці дії за однаковими правилами ролей і статусів.
          */
         post: operations["move"];
         delete?: never;
@@ -2192,7 +2238,8 @@ export interface paths {
         };
         /**
          * Підсумок переїзду
-         * @description Роботи, вантажники, склад, оплати, разом, до сплати; належить вантажникам і виплачено.
+         * @description Роботи, вантажники, склад, оплати, разом, до сплати; належить вантажникам і виплачено. `in` — показати в іншій
+         *     валюті (UAH, USD, EUR, PLN) за курсом компанії зараз; лише з модулем «Курси валют».
          */
         get: operations["bill"];
         put?: never;
@@ -2292,6 +2339,26 @@ export interface paths {
         };
         /** Кошик вантажників */
         get: operations["deleted_5"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/currency/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Курси компанії
+         * @description Для USD, EUR, PLN: курс банку (купівля / продаж, звідки й коли), курс компанії (хто й коли) і той, що діє.
+         */
+        get: operations["rates"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2848,7 +2915,7 @@ export interface components {
              * @example EUR
              * @enum {string}
              */
-            currency?: "UAH" | "EUR";
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
              * @description Спосіб оплати: CASH, UA_CARD, FOREIGN_CARD; немає — не вказано (або для notReceived)
              * @example CASH
@@ -3096,7 +3163,7 @@ export interface components {
              * @example UAH
              * @enum {string}
              */
-            deliveryPriceCurrency?: "UAH" | "EUR";
+            deliveryPriceCurrency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
              * @description ПІБ відправника
              * @example Петренко Олег
@@ -3331,7 +3398,7 @@ export interface components {
              * @example UAH
              * @enum {string}
              */
-            deliveryPriceCurrency?: "UAH" | "EUR";
+            deliveryPriceCurrency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
              * @description Статус оплати нашої доставки
              * @example PAID
@@ -3690,11 +3757,27 @@ export interface components {
         };
         MoveBillResponse: {
             /**
-             * @description Валюта переїзду (валюта ціни доставки, за замовчуванням EUR)
+             * @description Валюта сум у цій відповіді: валюта переїзду або та, у якій попросили показати (`?in=`)
              * @example EUR
              * @enum {string}
              */
-            currency?: "UAH" | "EUR";
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Валюта переїзду (валюта ціни доставки, за замовчуванням EUR): у ній вносять ціни, ставки й склад
+             * @example EUR
+             * @enum {string}
+             */
+            baseCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Показано в іншій валюті: скільки одиниць `currency` за одиницю валюти переїзду, за курсом компанії зараз
+             * @example 1.118
+             */
+            conversionRate?: number;
+            /**
+             * Format: date-time
+             * @description Коли перераховано (зараз); немає — суми у валюті переїзду
+             */
+            convertedAt?: string;
             /**
              * @description Перевезення — ціна доставки переїзду
              * @example 800
@@ -3760,6 +3843,22 @@ export interface components {
             note?: string;
             /** @example Водій переїзди */
             by?: string;
+            /**
+             * @description У чому заплатили; немає — у валюті переїзду
+             * @example USD
+             * @enum {string}
+             */
+            paidCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Скільки заплатили в тій валюті
+             * @example 200
+             */
+            paidAmount?: number;
+            /**
+             * @description Курс на момент оплати: одиниць валюти переїзду за одиницю валюти оплати
+             * @example 0.8943
+             */
+            paidRate?: number;
         };
         Storage: {
             /**
@@ -4040,6 +4139,72 @@ export interface components {
             /** @description Примітки */
             notes?: string;
         };
+        CompanyRateRequest: {
+            /**
+             * @description Гривень за одиницю валюти
+             * @example 46
+             */
+            rate: number;
+        };
+        /** @description Курс однієї валюти в гривнях: банку, компанії й той, що діє */
+        CurrencyRateResponse: {
+            /**
+             * @example USD
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Банк купує, грн за одиницю
+             * @example 45.66
+             */
+            bankBuy?: number;
+            /**
+             * @description Банк продає, грн за одиницю
+             * @example 46.06
+             */
+            bankSell?: number;
+            /**
+             * @description Звідки курс банку: MONOBANK або PRIVATBANK (резерв)
+             * @example MONOBANK
+             * @enum {string}
+             */
+            bankSource?: "MONOBANK" | "PRIVATBANK" | "COMPANY";
+            /** @example Monobank */
+            bankSourceLabel?: string;
+            /**
+             * Format: date-time
+             * @description Коли курс банку взято
+             */
+            bankAt?: string;
+            /**
+             * @description Курс компанії, грн за одиницю; немає — діє курс банку
+             * @example 46
+             */
+            companyRate?: number;
+            /**
+             * @description Хто поставив курс компанії
+             * @example Олена Савчук
+             */
+            companySetBy?: string;
+            /**
+             * Format: date-time
+             * @description Коли поставлено курс компанії
+             */
+            companySetAt?: string;
+            /**
+             * @description Курс, що діє: курс компанії, а без нього — продаж банку
+             * @example 45.66
+             */
+            rate?: number;
+            /**
+             * @description Звідки курс, що діє
+             * @example MONOBANK
+             * @enum {string}
+             */
+            source?: "MONOBANK" | "PRIVATBANK" | "COMPANY";
+            /** @example Monobank */
+            sourceLabel?: string;
+        };
         CrmTaskRequest: {
             /**
              * @description Що зробити
@@ -4233,7 +4398,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY";
             /**
              * @description Назва
              * @example Фото посилок
@@ -4321,7 +4486,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -4423,7 +4588,7 @@ export interface components {
             utmTerm?: string;
             utmContent?: string;
             /** @description Опції, що цікавлять */
-            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -4512,7 +4677,7 @@ export interface components {
              * @example BASE
              * @enum {string}
              */
-            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY";
             /**
              * @description Назва
              * @example Базовий тариф
@@ -4554,7 +4719,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            option?: "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
+            option?: "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY";
             /**
              * @description Назва
              * @example Фото посилок
@@ -4671,6 +4836,11 @@ export interface components {
              * @example false
              */
             movesEnabled?: boolean;
+            /**
+             * @description Модуль «Курси валют»: курси банку й компанії, оплати переїздів у гривні, доларах, євро, злотих (вмикає команда TrackBox24)
+             * @example false
+             */
+            currencyEnabled?: boolean;
             /**
              * @description Чи збережено резервний API-ключ НП компанії (сам ключ не повертається)
              * @example true
@@ -4821,7 +4991,7 @@ export interface components {
              * @example EUR
              * @enum {string}
              */
-            currency?: "UAH" | "EUR";
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
              * @description Наша ціна доставки всіх посилок клієнта (крім скасованих)
              * @example 105
@@ -5447,7 +5617,7 @@ export interface components {
              * @example UAH
              * @enum {string}
              */
-            deliveryPriceCurrency?: "UAH" | "EUR";
+            deliveryPriceCurrency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
              * @description ПІБ відправника
              * @example Петренко Олег
@@ -5669,7 +5839,7 @@ export interface components {
         };
         MovePaymentRequest: {
             /**
-             * @description Сума у валюті переїзду
+             * @description Сума — у валюті переїзду, або у валюті `currency`
              * @example 200
              */
             amount: number;
@@ -5690,6 +5860,12 @@ export interface components {
              * @example Передоплата
              */
             note?: string;
+            /**
+             * @description У чому заплатили: UAH, USD, EUR, PLN; не вказано — у валюті переїзду. Інша валюта — лише з модулем «Курси валют»: курс фіксується на момент оплати
+             * @example USD
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
         };
         SyncResult: {
             /**
@@ -5838,7 +6014,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            options?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT")[];
+            options?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY")[];
         };
         Manager: {
             /**
@@ -6133,6 +6309,30 @@ export interface components {
             content?: components["schemas"]["DeletedItemResponseRouteResponse"][];
             page?: components["schemas"]["PageMetadata"];
         };
+        Item: {
+            /**
+             * Format: int32
+             * @description Номер місця
+             * @example 3
+             */
+            number?: number;
+            /**
+             * @description Що це
+             * @example Холодильник
+             */
+            description?: string;
+            /**
+             * @description Статус місця
+             * @example IN_CAR
+             * @enum {string}
+             */
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            /**
+             * @description Статус словами для клієнта
+             * @example В дорозі
+             */
+            label?: string;
+        };
         PublicTrackingResponse: {
             /**
              * @description Наш штрих-код; немає — посилка ще в Новій Пошті
@@ -6210,14 +6410,6 @@ export interface components {
             history?: components["schemas"]["Step"][];
             /** @description Речі переїзду (місця) по номеру: що це й де зараз; для звичайної посилки — порожньо */
             items?: components["schemas"]["Item"][];
-        };
-        Item: {
-            /** Format: int32 */
-            number?: number;
-            description?: string;
-            /** @enum {string} */
-            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
-            label?: string;
         };
         Step: {
             /**
@@ -8843,7 +9035,7 @@ export interface operations {
     setCurrency: {
         parameters: {
             query: {
-                value: "UAH" | "EUR";
+                value: "UAH" | "EUR" | "USD" | "PLN";
             };
             header?: never;
             path: {
@@ -9134,6 +9326,205 @@ export interface operations {
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
                      *       "instance": "/api/loaders/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    set: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                currency: "UAH" | "EUR" | "USD" | "PLN";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyRateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CurrencyRateResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/currency/rates/{currency}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/currency/rates/{currency}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/currency/rates/{currency}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/currency/rates/{currency}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                currency: "UAH" | "EUR" | "USD" | "PLN";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CurrencyRateResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/currency/rates/{currency}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/currency/rates/{currency}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/currency/rates/{currency}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/currency/rates/{currency}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -9639,7 +10030,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT";
+                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY";
             };
             cookie?: never;
         };
@@ -11327,6 +11718,114 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/companies/{id}/moves"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setCurrencyEnabled: {
+        parameters: {
+            query: {
+                /**
+                 * @description true — увімкнути, false — вимкнути
+                 * @example true
+                 */
+                value: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/{id}/currency"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/{id}/currency"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/companies/{id}/currency"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/companies/{id}/currency"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -14868,7 +15367,7 @@ export interface operations {
                  */
                 deliveryCity?: string;
                 /**
-                 * @description Частина нашого штрих-коду, ТТН, ПІБ або телефону відправника
+                 * @description Частина нашого штрих-коду, ТТН, нашої ЕН, ПІБ чи телефону відправника або клієнта (назви організації); телефон — у будь-якому записі, напр. «+380 67 123-45-67»
                  * @example 2045154945
                  */
                 query?: string;
@@ -20304,7 +20803,9 @@ export interface operations {
     };
     invoiceXlsx: {
         parameters: {
-            query?: never;
+            query?: {
+                in?: "UAH" | "EUR" | "USD" | "PLN";
+            };
             header?: {
                 /**
                  * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
@@ -20509,7 +21010,9 @@ export interface operations {
     };
     bill: {
         parameters: {
-            query?: never;
+            query?: {
+                in?: "UAH" | "EUR" | "USD" | "PLN";
+            };
             header?: {
                 /**
                  * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
@@ -21086,6 +21589,85 @@ export interface operations {
                      *       "status": 403,
                      *       "detail": "Access Denied",
                      *       "instance": "/api/loaders/deleted"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    rates: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CurrencyRateResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/currency/rates"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/currency/rates"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/currency/rates"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

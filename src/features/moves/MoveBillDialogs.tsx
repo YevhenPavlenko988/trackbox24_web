@@ -21,8 +21,10 @@ import { PAYMENT_METHODS } from '@/features/parcels/paymentMethod'
 import { parseNumber } from '@/features/parcels/status'
 import { WarehouseSelect } from '@/features/warehouses/WarehouseSelect'
 import { showApiError } from '@/lib/api/problem'
-import type { MoveBillWork, MoveWorkKind, PaymentMethod } from '@/lib/api/types'
-import { formatPhone, fromDateTimeLocal, toDateTimeLocal } from '@/lib/format'
+import type { Currency, MoveBillWork, MoveWorkKind, PaymentMethod } from '@/lib/api/types'
+import { CURRENCY_SYMBOL, formatMoney, MONEY_ORDER, formatPhone, fromDateTimeLocal, toDateTimeLocal } from '@/lib/format'
+import { useCurrentCompany } from '@/features/companies/queries'
+import { convertRate, useRates } from '@/features/currency/queries'
 import { useAddPayment, useAddStorage, useAddWork, useUpdateWork } from './billApi'
 
 /**
@@ -279,20 +281,33 @@ export function StorageDialog({ parcelId, onClose }: { parcelId: number; onClose
   )
 }
 
-const paymentSchema = z.object({ amount: required, method: z.string(), paidOn: z.string(), note: z.string().trim() })
+const paymentSchema = z.object({ amount: required, method: z.string(), paidOn: z.string(), note: z.string().trim(), currency: z.string() })
+const PAY_CURRENCIES = MONEY_ORDER
 
 /** The client's money: a prepayment or the rest. */
-export function ClientPaymentDialog({ parcelId, onClose }: { parcelId: number; onClose: () => void }) {
+export function ClientPaymentDialog({ parcelId, billCurrency = 'EUR', onClose }: { parcelId: number; billCurrency?: Currency; onClose: () => void }) {
   const { t } = useTranslation(['moves', 'common'])
   const add = useAddPayment(parcelId)
+  // with «Курси валют» the client may pay in hryvnias, dollars, euros or zloty; the rate of this moment stays with it
+  const multi = useCurrentCompany().data?.currencyEnabled === true
+  const rates = useRates(multi).data
   const form = useForm<z.infer<typeof paymentSchema>>({
     resolver: zodResolver(paymentSchema),
-    defaultValues: { amount: '', method: 'CASH', paidOn: new Date().toISOString().slice(0, 10), note: '' },
+    defaultValues: { amount: '', method: 'CASH', paidOn: new Date().toISOString().slice(0, 10), note: '', currency: billCurrency },
   })
+  const paidIn = form.watch('currency') as Currency
+  const amount = num(form.watch('amount'))
+  const k = convertRate(rates, paidIn, billCurrency)
   const { errors, isSubmitting } = form.formState
   const submit = form.handleSubmit(async (v) => {
     try {
-      await add.mutateAsync({ amount: num(v.amount)!, method: (v.method || undefined) as PaymentMethod | undefined, paidOn: v.paidOn || undefined, note: v.note || undefined })
+      await add.mutateAsync({
+        amount: num(v.amount)!,
+        method: (v.method || undefined) as PaymentMethod | undefined,
+        paidOn: v.paidOn || undefined,
+        note: v.note || undefined,
+        currency: v.currency !== billCurrency ? (v.currency as Currency) : undefined,
+      })
       toast.success(t('common:common.saved'))
       onClose()
     } catch (e) {
@@ -318,6 +333,38 @@ export function ClientPaymentDialog({ parcelId, onClose }: { parcelId: number; o
                 <Input id="pm-date" type="date" {...form.register('paidOn')} />
               </Field>
             </div>
+            {multi && (
+              <Field>
+                <FieldLabel>{t('moves:bill.paidCurrency')}</FieldLabel>
+                <Controller
+                  control={form.control}
+                  name="currency"
+                  render={({ field }) => (
+                    <RadioGroup value={field.value} onValueChange={field.onChange} className="flex flex-wrap gap-4">
+                      {PAY_CURRENCIES.map((c) => (
+                        <Label key={c} className="flex items-center gap-2 font-normal">
+                          <RadioGroupItem value={c} />
+                          {CURRENCY_SYMBOL[c]}
+                        </Label>
+                      ))}
+                    </RadioGroup>
+                  )}
+                />
+                {/* what it comes to in the move's currency, at the company's rate now */}
+                {paidIn !== billCurrency && (
+                  <p className="text-sm text-muted-foreground">
+                    {k == null
+                      ? t('moves:bill.noRate')
+                      : amount == null
+                        ? `1 ${CURRENCY_SYMBOL[paidIn]} = ${k.toLocaleString('uk-UA', { maximumFractionDigits: 4 })} ${CURRENCY_SYMBOL[billCurrency]}`
+                        : t('moves:bill.convertPreview', {
+                            amount: formatMoney(Math.round(amount * k * 100) / 100, billCurrency),
+                            rate: `1 ${CURRENCY_SYMBOL[paidIn]} = ${k.toLocaleString('uk-UA', { maximumFractionDigits: 4 })} ${CURRENCY_SYMBOL[billCurrency]}`,
+                          })}
+                  </p>
+                )}
+              </Field>
+            )}
             <Controller
               control={form.control}
               name="method"

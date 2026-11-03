@@ -34,6 +34,8 @@ export type Access = {
   movesEnabled: boolean
   canSeeMoney: boolean
   canManageUsers: boolean
+  /** «Курси валют»: the company's own rates are set by a manager or a representative; the rest only see them. */
+  canEditRates: boolean
 }
 
 export function useAccess(): Access {
@@ -75,5 +77,6 @@ export function useAccess(): Access {
     movesEnabled: ownCompany.data?.movesEnabled === true,
     canSeeMoney: !(has('REPRESENTATIVE') && !isManager && !isViewer && !has('DRIVER') && !isAdmin),
     canManageUsers: isManager || isAdmin,
+    canEditRates: isManager || movesRepresentative,
   }
 }

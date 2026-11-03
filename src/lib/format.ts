@@ -35,9 +35,24 @@ export function fromDateTimeLocal(local: string): string | undefined {
   return local ? new Date(local).toISOString() : undefined
 }
 
-export function formatMoney(value?: number, currency: 'UAH' | 'EUR' = 'UAH'): string {
+export type MoneyCurrency = 'UAH' | 'EUR' | 'USD' | 'PLN'
+
+export const CURRENCY_SYMBOL: Record<MoneyCurrency, string> = { UAH: 'грн', EUR: '€', USD: '$', PLN: 'zł' }
+
+/** «1 $ = 0,9107 €»: how many of [to] one [from] is worth. */
+export function rateLine(from: MoneyCurrency, to: MoneyCurrency, k?: number): string {
+  return k == null ? '' : `1 ${CURRENCY_SYMBOL[from]} = ${k.toLocaleString('uk-UA', { maximumFractionDigits: 4 })} ${CURRENCY_SYMBOL[to]}`
+}
+
+/** How currencies are listed everywhere: euro, hryvnia, dollar, zloty. */
+export const MONEY_ORDER: MoneyCurrency[] = ['EUR', 'UAH', 'USD', 'PLN']
+
+/** A move's currency: euro or hryvnia; with «Курси валют» also dollar and zloty. */
+export const moveCurrencies = (multi: boolean): MoneyCurrency[] => (multi ? MONEY_ORDER : ['EUR', 'UAH'])
+
+export function formatMoney(value?: number, currency: MoneyCurrency = 'UAH'): string {
   if (value == null) return '—'
-  return `${value.toLocaleString('uk-UA')} ${currency === 'EUR' ? '€' : 'грн'}`
+  return `${value.toLocaleString('uk-UA')} ${CURRENCY_SYMBOL[currency] ?? currency}`
 }
 
 export function formatWeight(kg?: number): string {

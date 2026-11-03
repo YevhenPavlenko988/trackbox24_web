@@ -13,6 +13,7 @@ import {
   setCompanyPhotos,
   setCompanyPublicTracking,
   setCompanyTelegramBot,
+  setCompanyCurrency,
   setCompanyMoves,
   setCompanyParcels,
   syncNovaPoshta,
@@ -76,6 +77,10 @@ export function useSetCompanyPhotos(id: number) {
 
 export function useSetCompanyParcels(id: number) {
   return useCompanyMutation((value: boolean) => setCompanyParcels(id, value))
+}
+
+export function useSetCompanyCurrency(id: number) {
+  return useCompanyMutation((value: boolean) => setCompanyCurrency(id, value))
 }
 
 export function useSetCompanyMoves(id: number) {

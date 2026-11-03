@@ -39,7 +39,8 @@
     "MOVES": "Переїзди",
     "PHOTOS": "Фото посилок",
     "PUBLIC_TRACKING": "Публічне відстеження",
-    "TELEGRAM_BOT": "Telegram-бот"
+    "TELEGRAM_BOT": "Telegram-бот",
+    "CURRENCY": "Курси валют"
   },
   "stageKind": {
     "OPEN": "У роботі",

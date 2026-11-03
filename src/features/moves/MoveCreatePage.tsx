@@ -17,10 +17,12 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Textarea } from '@/components/ui/textarea'
 import { useAccess } from '@/features/auth/access'
 import { ClientPicker } from '@/features/clients/ClientPicker'
+import { useCurrentCompany } from '@/features/companies/queries'
 import { PriceFields } from '@/features/parcels/PriceFields'
 import { useCreateParcel } from '@/features/parcels/queries'
 import { orUndefined, parseNumber } from '@/features/parcels/status'
 import { useMutationError } from '@/lib/api/problem'
+import { moveCurrencies } from '@/lib/format'
 import { itemLines } from './items'
 
 const MAX_SEATS = 500
@@ -35,13 +37,14 @@ const schema = z.object({
   items: z.string(),
   count: z.string().trim(),
   deliveryPrice: z.string().trim().refine((s) => s === '' || (parseNumber(s) ?? -1) >= 0, 'number'),
-  deliveryPriceCurrency: z.enum(['UAH', 'EUR']),
+  deliveryPriceCurrency: z.enum(['EUR', 'UAH', 'USD', 'PLN']),
 })
 
 type FormValues = z.infer<typeof schema>
 
 /** A new move: who gets it, from where to where, and its items one per line (or just how many). */
 export function MoveCreatePage() {
+  const multi = useCurrentCompany().data?.currencyEnabled === true
   const { t } = useTranslation(['moves', 'parcels', 'common'])
   const { isManager } = useAccess()
   const navigate = useNavigate()
@@ -140,7 +143,7 @@ export function MoveCreatePage() {
                   <Input id="move-to" placeholder={t('moves:fields.toCityHint')} {...form.register('deliveryCity')} />
                 </Field>
               </div>
-              {isManager && <PriceFields form={form} idPrefix="move-" />}
+              {isManager && <PriceFields form={form} idPrefix="move-" currencies={moveCurrencies(multi)} />}
               <Field>
                 <FieldLabel htmlFor="move-notes">{t('moves:fields.notes')}</FieldLabel>
                 <Textarea id="move-notes" rows={2} {...form.register('notes')} />

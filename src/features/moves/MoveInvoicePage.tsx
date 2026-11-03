@@ -1,4 +1,5 @@
 import { ArrowLeft, FileSpreadsheet, Printer } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useParams } from 'react-router'
 import { LinkButton } from '@/components/common/LinkButton'
@@ -8,8 +9,11 @@ import { useCurrentCompany } from '@/features/companies/queries'
 import { useParcel } from '@/features/parcels/queries'
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { showApiError } from '@/lib/api/problem'
-import { formatDate, formatMoney, formatPhone } from '@/lib/format'
-import { downloadInvoiceXlsx, useMoveBill } from './billApi'
+import type { Currency } from '@/lib/api/types'
+import { CURRENCY_SYMBOL, formatDate, formatMoney, formatPhone, MONEY_ORDER, rateLine } from '@/lib/format'
+import { downloadInvoiceXlsx, useMoveBillIn } from './billApi'
+
+const SHOWN = MONEY_ORDER
 
 /**
  * The client's bill of a move, for printing (or saving as PDF from the browser): who, from where to where, the services
@@ -20,8 +24,11 @@ export function MoveInvoicePage() {
   const parcelId = Number(id)
   const { t } = useTranslation(['moves', 'common'])
   const parcel = useParcel(parcelId)
-  const bill = useMoveBill(parcelId)
+  // with «Курси валют» the final bill can be shown in any currency, at the company's rate now
+  const [shown, setShown] = useState<Currency>()
+  const bill = useMoveBillIn(parcelId, shown)
   const company = useCurrentCompany()
+  const multi = company.data?.currencyEnabled === true
 
   if (parcel.isPending || bill.isPending) return <Skeleton className="m-6 h-96" />
   if (!parcel.data || !bill.data) return <NotFoundPage />
@@ -76,10 +83,20 @@ export function MoveInvoicePage() {
           <Printer />
           {t('moves:invoice.print')}
         </Button>
-        <Button variant="outline" onClick={() => downloadInvoiceXlsx(parcelId, `Рахунок-${p.barcode}.xlsx`).catch(showApiError)}>
+        <Button variant="outline" onClick={() => downloadInvoiceXlsx(parcelId, `Рахунок-${p.barcode}.xlsx`, shown).catch(showApiError)}>
           <FileSpreadsheet />
           {t('moves:invoice.xlsx')}
         </Button>
+        {multi && (
+          <div className="ml-auto flex items-center gap-1" role="group" aria-label={t('moves:invoice.shownIn')}>
+            <span className="mr-1 text-sm text-muted-foreground">{t('moves:invoice.shownIn')}</span>
+            {SHOWN.map((c) => (
+              <Button key={c} size="sm" variant={b.currency === c ? 'default' : 'outline'} onClick={() => setShown(c === b.baseCurrency ? undefined : c)}>
+                {CURRENCY_SYMBOL[c]}
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-col gap-6 bg-white">
@@ -87,6 +104,16 @@ export function MoveInvoicePage() {
           <div>
             <h1 className="text-2xl font-bold">{t('moves:invoice.number', { number, date: formatDate(today.toISOString()) })}</h1>
             {route && <p className="mt-1 text-neutral-600">{route}</p>}
+            {b.baseCurrency && b.conversionRate != null && b.baseCurrency !== b.currency && (
+              <p className="mt-1 text-sm text-neutral-600">
+                {t('moves:invoice.rateLine', {
+                  from: CURRENCY_SYMBOL[b.baseCurrency],
+                  rate: b.conversionRate.toLocaleString('uk-UA', { maximumFractionDigits: 4 }),
+                  to: CURRENCY_SYMBOL[b.currency!],
+                  date: formatDate(b.convertedAt ?? today.toISOString()),
+                })}
+              </p>
+            )}
           </div>
           <div className="text-right text-sm">
             <div className="text-neutral-500">{t('moves:invoice.carrier')}</div>
@@ -134,6 +161,9 @@ export function MoveInvoicePage() {
                 <td colSpan={3} className="text-right">
                   {t('moves:bill.paidTotal')} {formatDate(pm.paidOn)}
                   {pm.note ? ` (${pm.note})` : ''}
+                  {pm.paidCurrency && pm.paidCurrency !== b.currency
+                    ? ` — ${formatMoney(pm.paidAmount, pm.paidCurrency)}, ${rateLine(pm.paidCurrency, b.currency!, pm.paidRate)}`
+                    : ''}
                 </td>
                 <td className="text-right tabular-nums">−{money(pm.amount)}</td>
               </tr>
