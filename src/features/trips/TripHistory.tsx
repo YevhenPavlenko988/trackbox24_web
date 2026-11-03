@@ -1,10 +1,10 @@
-import { ArrowRight, CalendarPlus, ListMinus, ListPlus, PackageCheck, PackageMinus, PackagePlus, Pencil, RefreshCw, RotateCcw, Trash2 } from 'lucide-react'
+import { ArrowRight, Banknote, CalendarPlus, ListMinus, ListPlus, PackageCheck, PackageMinus, PackagePlus, Pencil, RefreshCw, RotateCcw, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { TripEvent, TripHistoryResponse } from '@/lib/api/types'
-import { formatDateTime } from '@/lib/format'
+import { formatDateTime, formatMoney } from '@/lib/format'
 import { TripStatusBadge } from './TripStatusBadge'
 
 const ICONS: Record<TripEvent, ReactNode> = {
@@ -21,7 +21,7 @@ const ICONS: Record<TripEvent, ReactNode> = {
 }
 
 export function TripHistory({ entries, isLoading }: { entries?: TripHistoryResponse[]; isLoading: boolean }) {
-  const { t } = useTranslation('trips')
+  const { t } = useTranslation(['trips', 'common'])
 
   if (isLoading) return <Skeleton className="h-24 w-full" />
   if (!entries?.length) return <p className="text-sm text-muted-foreground">{t('history.empty')}</p>
@@ -52,6 +52,17 @@ export function TripHistory({ entries, isLoading }: { entries?: TripHistoryRespo
               )}
               <TripStatusBadge status={e.status} />
             </div>
+          )}
+          {/* the payment taken for the parcel handed over */}
+          {e.payment && (
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+              <Banknote className="size-4" />
+              {t('history.paid', {
+                method: e.payment.method ? t(`common:paymentMethod.${e.payment.method}`) : t('history.paidNoMethod'),
+                amount: formatMoney(e.payment.amount, e.payment.currency),
+              })}
+              {e.payment.price != null && e.payment.priceCurrency && <span className="font-normal text-muted-foreground">({formatMoney(e.payment.price, e.payment.priceCurrency)})</span>}
+            </p>
           )}
           {(e.changedByName || e.comment) && (
             <p className="mt-1 text-sm text-muted-foreground">

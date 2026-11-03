@@ -6244,6 +6244,36 @@ export interface components {
             content?: components["schemas"]["ParcelResponse"][];
             page?: components["schemas"]["PageMetadata"];
         };
+        DeliveryPayment: {
+            /**
+             * @description Спосіб оплати
+             * @example UA_CARD
+             * @enum {string}
+             */
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            /**
+             * @description Скільки прийнято
+             * @example 1552.79
+             */
+            amount?: number;
+            /**
+             * @description У якій валюті
+             * @example UAH
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Ціна доставки, якщо заплатили в іншій валюті
+             * @example 30
+             */
+            price?: number;
+            /**
+             * @description Валюта ціни, якщо заплатили в іншій валюті
+             * @example EUR
+             * @enum {string}
+             */
+            priceCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+        };
         PagedModelTripHistoryResponse: {
             content?: components["schemas"]["TripHistoryResponse"][];
             page?: components["schemas"]["PageMetadata"];
@@ -6306,6 +6336,8 @@ export interface components {
              * @example Not loaded before departure
              */
             comment?: string;
+            /** @description Для PARCEL_DELIVERED: оплата нашої доставки посилки, якщо її прийнято (немає для тих, кому наша ціна не показується) */
+            payment?: components["schemas"]["DeliveryPayment"];
         };
         DeletedItemResponseTripResponse: {
             /** @description Видалений запис */
