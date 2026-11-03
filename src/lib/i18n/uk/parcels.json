@@ -232,5 +232,19 @@
     "counter": "{{index}} з {{total}}",
     "by": "{{name}} · {{date}}",
     "purgeHint": "Фото буде видалено через 14 днів після видачі"
+  },
+  "groups": {
+    "client": "Клієнт",
+    "sender": "Відправник",
+    "cargo": "Вантаж",
+    "move": "Переїзд",
+    "route": "Маршрут",
+    "logistics": "Доставка",
+    "other": "Інше",
+    "added": "Додано",
+    "missing": "Не заповнено",
+    "npNumbers": "Номери",
+    "npPayment": "Оплата НП",
+    "npStatus": "Статус і дати"
   }
 }

@@ -169,7 +169,13 @@
     "hoursValue": "{{hours}} год",
     "payout_col": "Вантажнику виплачено",
     "paidOut": "Виплачено ✓",
-    "notPaidOut": "Не виплачено"
+    "notPaidOut": "Не виплачено",
+    "status": {
+      "UNPAID": "Не оплачено",
+      "PARTIAL": "Частково оплачено",
+      "PAID": "Оплачено"
+    },
+    "takenBy": "Прийняв оплату: {{name}}"
   },
   "invoice": {
     "title": "Рахунок",
