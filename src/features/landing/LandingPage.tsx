@@ -3,6 +3,9 @@ import {
   Boxes,
   Camera,
   Clock,
+  Coins,
+  FileSpreadsheet,
+  Lock,
   Cloud,
   CreditCard,
   Calculator,
@@ -56,6 +59,7 @@ export function LandingPage() {
         <NovaPoshta />
         <Moves />
         <Driver />
+        <Currency />
         <Money />
         <Control />
         <Start />
@@ -393,6 +397,85 @@ function Driver() {
           </div>
         </div>
         <PhoneFrame src="/landing/mob-payments.webp" alt={t('driver.shot')} className="mx-auto w-60 lg:w-72" />
+      </div>
+    </section>
+  )
+}
+
+/** «Курси валют»: a payment in whatever currency the client has, its rate kept, the bill in any currency. */
+function Currency() {
+  const { t } = useTranslation('landing')
+  const items = t('currency.items', { returnObjects: true }) as Item[]
+  const icons: LucideIcon[] = [Coins, Users, Lock, FileSpreadsheet]
+  const shown = ['€', 'грн', '$', 'zł']
+  return (
+    <section id="currency" className="scroll-mt-16 py-16 sm:py-20">
+      <div className={`${wrap} grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]`}>
+        <div>
+          <p className="mb-3 text-xs font-bold tracking-[0.2em] text-brand uppercase">{t('currency.kicker')}</p>
+          <h2 className={`${h2} text-balance`}>{t('currency.title')}</h2>
+          <p className="mt-4 text-lg text-navy/75">{t('currency.text')}</p>
+          <div className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+            {items.map((it, i) => {
+              const Icon = icons[i]
+              return (
+                <div key={it.name} className="flex gap-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
+                    <Icon className="size-4" />
+                  </span>
+                  <div>
+                    <p className="font-bold">{it.name}</p>
+                    <p className="mt-1 text-navy/70">{it.text}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <p className="mt-8 text-navy/60">{t('currency.note')}</p>
+        </div>
+
+        {/* what the driver enters and what the move counts: the rate stays with the payment */}
+        <div className="mx-auto flex w-full max-w-md flex-col gap-4" aria-hidden>
+          <div className="rounded-2xl bg-navy p-6 text-white shadow-lg">
+            <p className="text-sm text-white/70">{t('currency.card.payment')}</p>
+            <div className="mt-3 flex flex-wrap items-baseline gap-x-3 tabular-nums">
+              <span className="text-3xl font-bold whitespace-nowrap sm:text-4xl">30 €</span>
+              <span className="text-2xl text-brand">→</span>
+              <span className="text-3xl font-bold whitespace-nowrap text-brand sm:text-4xl">1 552,79 грн</span>
+            </div>
+            <p className="mt-3 flex items-center gap-2 text-sm text-white/80">
+              <Lock className="size-4 text-brand" />
+              {t('currency.card.rate')}
+            </p>
+          </div>
+          <div className="rounded-2xl bg-sand p-6">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-bold">{t('currency.card.bill')}</p>
+              <div className="flex rounded-lg bg-white p-0.5 text-sm">
+                {shown.map((c) => (
+                  <span key={c} className={`rounded-md px-2.5 py-1 font-semibold ${c === '$' ? 'bg-navy text-white' : 'text-navy/60'}`}>
+                    {c}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <dl className="mt-4 divide-y divide-navy/10 tabular-nums">
+              <div className="flex justify-between py-2">
+                <dt className="text-navy/70">{t('currency.card.total')}</dt>
+                <dd className="font-semibold">1 645,18 $</dd>
+              </div>
+              <div className="flex justify-between py-2">
+                <dt className="text-navy/70">{t('currency.card.paid')}</dt>
+                <dd className="font-semibold">549,50 $</dd>
+              </div>
+              <div className="flex justify-between py-2 text-lg">
+                <dt className="font-bold">{t('currency.card.due')}</dt>
+                <dd className="font-bold">1 095,68 $</dd>
+              </div>
+            </dl>
+            <p className="mt-2 text-sm text-navy/60">{t('currency.card.line')}</p>
+          </div>
+        </div>
       </div>
     </section>
   )
