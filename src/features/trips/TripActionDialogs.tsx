@@ -49,7 +49,8 @@ export function DepartDialog({ trip, open, onOpenChange }: { trip: TripResponse;
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('trips:departDialog.title')}</DialogTitle>
-          <DialogDescription>{t('trips:departDialog.description')}</DialogDescription>
+          {/* with the plan not all scanned, the warning below says it all */}
+          {trip.reminder !== 'LOAD' && <DialogDescription>{t('trips:departDialog.description')}</DialogDescription>}
         </DialogHeader>
         {open && (
           <form onSubmit={submit} noValidate>
