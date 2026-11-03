@@ -33,6 +33,7 @@ import { ParcelPhotosCard } from './ParcelPhotosCard'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 import { MarkPaidDialog } from './PaymentDialog'
 import { paidInLine } from '@/features/currency/PaidCurrency'
+import { DiscountOffButton } from '@/features/referral/DiscountOffButton'
 import { useDeleteParcel, useParcel, useParcelHistory, useRefreshParcelFromNp, useSetParcelPayment } from './queries'
 import { canEditParcel, isFinalStatus, isParcelDeletable } from './status'
 import { StatusChangeDialog } from './StatusChangeDialog'
@@ -41,7 +42,7 @@ export function ParcelPage() {
   const { id } = useParams()
   const parcelId = Number(id)
   const { t } = useTranslation(['parcels', 'common', 'clients', 'trips', 'warehouses', 'moves', 'currency'])
-  const { canEdit, canEditMoves, canSeeMoney } = useAccess()
+  const { canEdit, canEditMoves, canSeeMoney, isManager } = useAccess()
   const query = useParcel(parcelId)
   const history = useParcelHistory(parcelId)
   const refresh = useRefreshParcelFromNp(parcelId)
@@ -156,6 +157,32 @@ export function ParcelPage() {
   ]
   const paymentRows: InfoRow[] = [
     { label: t('parcels:payment.price'), value: formatMoney(p.deliveryPrice, p.deliveryPriceCurrency) },
+    // «Реферальна програма»: the referred client's discount (a manager may take it off before payment) and the points spent
+    {
+      label: t('parcels:payment.referralDiscount'),
+      value: p.referralDiscount ? (
+        <span className="flex flex-wrap items-center gap-2">
+          −{formatMoney(p.referralDiscount, p.deliveryPriceCurrency)}
+          {isManager && p.paymentStatus !== 'PAID' && <DiscountOffButton parcelId={p.id!} off />}
+        </span>
+      ) : p.referralDiscountOff ? (
+        <span className="flex flex-wrap items-center gap-2 text-muted-foreground">
+          {t('parcels:payment.discountRemoved')}
+          {isManager && p.paymentStatus !== 'PAID' && <DiscountOffButton parcelId={p.id!} off={false} />}
+        </span>
+      ) : undefined,
+    },
+    {
+      label: t('parcels:payment.pointsRedeemed'),
+      value: p.pointsRedeemed ? `${p.pointsRedeemed} · −${formatMoney(p.pointsValue, p.deliveryPriceCurrency)}` : undefined,
+    },
+    {
+      label: t('parcels:payment.due'),
+      value:
+        p.dueAmount != null && p.deliveryPrice != null && p.dueAmount !== p.deliveryPrice ? (
+          <span className="font-semibold">{formatMoney(p.dueAmount, p.deliveryPriceCurrency)}</span>
+        ) : undefined,
+    },
     {
       label: t('parcels:payment.status'),
       value: hasPrice ? (

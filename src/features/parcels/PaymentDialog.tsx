@@ -14,6 +14,8 @@ import { useMutationError } from '@/lib/api/problem'
 import { PAYMENT_METHODS } from '@/features/parcels/paymentMethod'
 import { defaultPaidCurrency, PaidCurrencyField } from '@/features/currency/PaidCurrency'
 import type { Currency, ParcelResponse, PaymentMethod } from '@/lib/api/types'
+import { useCurrentCompany } from '@/features/companies/queries'
+import { useRedeemInfo } from '@/features/referral/queries'
 import { formatMoney, fromDateTimeLocal } from '@/lib/format'
 import { useSetParcelPayment } from './queries'
 
@@ -22,6 +24,7 @@ const schema = z.object({
   // Asked for every payment: the trip's takings are summed by method, and an unspecified one is reported apart.
   method: z.enum(PAYMENT_METHODS),
   currency: z.string(),
+  points: z.string(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -32,8 +35,15 @@ export function MarkPaidDialog({ parcel, open, onOpenChange }: { parcel: ParcelR
   const priceCurrency = (parcel.deliveryPriceCurrency ?? 'UAH') as Currency
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { paidAt: '', method: 'CASH', currency: defaultPaidCurrency('CASH', priceCurrency) },
+    defaultValues: { paidAt: '', method: 'CASH', currency: defaultPaidCurrency('CASH', priceCurrency), points: '' },
   })
+  // «Реферальна програма»: the points of the parcel's client (our client) come off «до сплати»
+  const referral = useCurrentCompany().data?.referralEnabled === true && parcel.kind !== 'MOVE' && parcel.clientId != null
+  const redeem = useRedeemInfo(parcel.id!, referral && open).data
+  const points = Math.min(Math.max(0, Math.floor(Number(form.watch('points') || 0))), redeem?.maxPoints ?? 0)
+  const pointsValue = Math.round(points * (redeem?.pointValue ?? 0) * 100) / 100
+  const due = parcel.dueAmount ?? parcel.deliveryPrice
+  const toPay = due == null ? undefined : Math.max(0, Math.round((due - pointsValue) * 100) / 100)
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
 
@@ -44,6 +54,7 @@ export function MarkPaidDialog({ parcel, open, onOpenChange }: { parcel: ParcelR
         paidAt: fromDateTimeLocal(v.paidAt),
         method: v.method,
         currency: v.currency !== priceCurrency ? (v.currency as Currency) : undefined,
+        pointsToRedeem: referral && points > 0 ? points : undefined,
       })
       toast.success(t('common:common.saved'))
       onOpenChange(false)
@@ -57,7 +68,7 @@ export function MarkPaidDialog({ parcel, open, onOpenChange }: { parcel: ParcelR
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {t('parcels:payment.markPaid')} — {formatMoney(parcel.deliveryPrice, parcel.deliveryPriceCurrency)}
+            {t('parcels:payment.markPaid')} — {formatMoney(due, parcel.deliveryPriceCurrency)}
           </DialogTitle>
         </DialogHeader>
         {open && (
@@ -89,12 +100,32 @@ export function MarkPaidDialog({ parcel, open, onOpenChange }: { parcel: ParcelR
                   </Field>
                 )}
               />
+              {referral && redeem && (
+                <Field>
+                  <FieldLabel htmlFor="pay-points">{t('parcels:payment.points')}</FieldLabel>
+                  {redeem.maxPoints ? (
+                    <>
+                      <Input id="pay-points" inputMode="numeric" className="w-32" placeholder="0" {...form.register('points')} />
+                      <FieldDescription>
+                        {t('parcels:payment.pointsHint', {
+                          balance: redeem.balance,
+                          max: redeem.maxPoints,
+                          value: formatMoney(redeem.pointValue, redeem.currency),
+                        })}
+                        {points > 0 && toPay != null && <> · −{formatMoney(pointsValue, priceCurrency)} → {formatMoney(toPay, priceCurrency)}</>}
+                      </FieldDescription>
+                    </>
+                  ) : (
+                    <FieldDescription>{t('parcels:payment.pointsNone', { reason: redeem.reason })}</FieldDescription>
+                  )}
+                </Field>
+              )}
               <Controller
                 control={form.control}
                 name="currency"
                 render={({ field }) => (
                   <PaidCurrencyField
-                    price={parcel.deliveryPrice}
+                    price={toPay}
                     priceCurrency={priceCurrency}
                     method={form.watch('method')}
                     value={field.value as Currency}

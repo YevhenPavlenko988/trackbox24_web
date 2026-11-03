@@ -3,12 +3,14 @@ import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { FieldErrorText } from '@/components/common/FieldErrorText'
 import { Button } from '@/components/ui/button'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Textarea } from '@/components/ui/textarea'
 import { ChannelFields } from '@/features/channels/channel'
+import { useCurrentCompany } from '@/features/companies/queries'
+import { ClientPicker } from './ClientPicker'
 import { useMutationError } from '@/lib/api/problem'
 import type { ClientRequest } from '@/lib/api/types'
 import { clientSchema, emptyClientValues, formValuesToRequest, type ClientFormValues } from './schema'
@@ -32,6 +34,7 @@ export function ClientForm({
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
   const type = form.watch('type')
+  const referral = useCurrentCompany().data?.referralEnabled === true
 
   const submit = form.handleSubmit(async (values) => {
     try {
@@ -123,6 +126,29 @@ export function ClientForm({
         </div>
 
         <ChannelFields form={form} idPrefix={idPrefix} />
+
+        {/* «Реферальна програма»: who recommended the client, set once; a referred client comes by recommendation */}
+        {referral && (
+          <Controller
+            control={form.control}
+            name="referredById"
+            render={({ field }) => (
+              <Field>
+                <FieldLabel htmlFor={`${idPrefix}referredBy`}>{t('clients:fields.referredBy')}</FieldLabel>
+                <ClientPicker
+                  id={`${idPrefix}referredBy`}
+                  value={field.value}
+                  placeholder={t('clients:fields.referredByHint')}
+                  onChange={(id) => {
+                    field.onChange(id)
+                    if (id && !form.getValues('channel')) form.setValue('channel', 'REFERRAL')
+                  }}
+                />
+                <FieldDescription>{t('clients:fields.referredByOnce')}</FieldDescription>
+              </Field>
+            )}
+          />
+        )}
 
         <Field data-invalid={!!errors.notes}>
           <FieldLabel htmlFor={`${idPrefix}notes`}>{t('clients:fields.notes')}</FieldLabel>

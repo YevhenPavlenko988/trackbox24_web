@@ -1,4 +1,4 @@
-import { Boxes, Camera, Coins, Globe, Package, Send, type LucideIcon } from 'lucide-react'
+import { Boxes, Camera, Coins, Gift, Globe, Package, Send, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -10,7 +10,7 @@ import { usePrices } from '@/features/billing/queries'
 import { showApiError } from '@/lib/api/problem'
 import type { CompanyOption, CompanyResponse } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
-import { useSetCompanyCurrency, useSetCompanyMoves, useSetCompanyParcels, useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
+import { useSetCompanyCurrency, useSetCompanyMoves, useSetCompanyReferral, useSetCompanyParcels, useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
 
 type Mutation = { mutateAsync: (value: boolean) => Promise<unknown>; isPending: boolean }
 
@@ -21,6 +21,7 @@ const ICONS: Record<CompanyOption, { icon: LucideIcon; tint: string }> = {
   PUBLIC_TRACKING: { icon: Globe, tint: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300' },
   TELEGRAM_BOT: { icon: Send, tint: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' },
   CURRENCY: { icon: Coins, tint: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
+  REFERRAL: { icon: Gift, tint: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300' },
 }
 
 /**
@@ -40,6 +41,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
     TELEGRAM_BOT: useSetCompanyTelegramBot(id),
     MOVES: useSetCompanyMoves(id),
     CURRENCY: useSetCompanyCurrency(id),
+    REFERRAL: useSetCompanyReferral(id),
   }
   const on: Record<CompanyOption, boolean> = {
     PARCELS: company.parcelsEnabled !== false,
@@ -48,6 +50,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
     TELEGRAM_BOT: company.telegramBotEnabled === true,
     MOVES: company.movesEnabled === true,
     CURRENCY: company.currencyEnabled === true,
+    REFERRAL: company.referralEnabled === true,
   }
   const toggle = async (option: CompanyOption, value: boolean) => {
     try {

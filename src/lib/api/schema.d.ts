@@ -119,6 +119,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/referral/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Правила програми компанії
+         * @description Поки менеджер не зберіг — значення за замовчуванням.
+         */
+        get: operations["settings"];
+        /**
+         * Зберегти правила програми
+         * @description Діють для нових цін і оплат; уже нараховане й списане не змінюється.
+         */
+        put: operations["saveSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/referral/parcels/{id}/discount": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Зняти або повернути знижку за рекомендацією для посилки
+         * @description Лише менеджер і лише до оплати.
+         */
+        put: operations["setDiscountOff"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parcels/{id}": {
         parameters: {
             query?: never;
@@ -501,6 +545,27 @@ export interface paths {
          *     Вимкнено — бот не знаходить посилок компанії й не пише про них, на сторінці відстеження немає кнопки Telegram.
          */
         put: operations["setTelegramBotEnabled"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{id}/referral": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Увімкнути / вимкнути модуль «Реферальна програма»
+         * @description ADMIN або SALES. Увімкнено — менеджер налаштовує знижку за рекомендацією й бали (`/api/referral/settings`), клієнти
+         *     отримують бали за оплачені посилки й списують їх при оплаті. Переїзди не беруть участі.
+         */
+        put: operations["setReferralEnabled"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1214,6 +1279,28 @@ export interface paths {
          *     і без плеча, що вантажиться), планується на нове плече.
          */
         post: operations["addLeg"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/tracking/{code}/points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Бали клієнта за телефоном
+         * @description Без авторизації. Для посилки компанії з реферальною програмою: повний телефон клієнта цієї посилки — і видно лише
+         *     його баланс балів. Інші люди з посилки й інші клієнти не шукаються. Не той телефон — 404; забагато спроб для
+         *     посилки чи з адреси (5 на годину) — 429.
+         */
+        post: operations["points"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2145,6 +2232,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/referral/parcels/{id}/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Скільки балів клієнт посилки може списати на неї
+         * @description Перед оплатою: баланс, максимум для цієї посилки, вартість бала у валюті ціни.
+         */
+        get: operations["redeemInfo"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/referral/clients/{id}/redeem": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Скільки балів клієнт може списати на нову посилку
+         * @description Для прийому з оплатою: посилки ще немає, тож за ціною й валютою.
+         */
+        get: operations["redeemForNew"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/referral/clients/{id}/points": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Історія балів клієнта
+         * @description Нове першим: нараховано, списано, скасовано, згоріли.
+         */
+        get: operations["history_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/referral/clients/{id}/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Баланс балів клієнта */
+        get: operations["balance"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/tracking/{code}": {
         parameters: {
             query?: never;
@@ -2220,7 +2384,7 @@ export interface paths {
          * Історія статусів
          * @description Усі зміни внутрішнього статусу і статусу НП у хронологічному порядку: коли, хто, як (SCAN / MANUAL / NOVA_POSHTA / SYSTEM).
          */
-        get: operations["history_1"];
+        get: operations["history_2"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3093,113 +3257,87 @@ export interface components {
             /** @description Переїзди рейсу (у плані чи в машині): що це за вантаж — для списку рейсів. Посилки сюди не входять. */
             moves?: components["schemas"]["Move"][];
         };
-        ParcelUpdateRequest: {
+        ReferralSettingsDto: {
             /**
-             * Format: int64
-             * @description ID представника
-             * @example 3
+             * @description Валюта вартості бала
+             * @example EUR
+             * @enum {string}
              */
-            representativeId?: number;
+            currency: "UAH" | "EUR" | "USD" | "PLN";
             /**
-             * Format: int64
-             * @description ID клієнта-отримувача
-             * @example 7
+             * @description Скільки коштує 1 бал у цій валюті
+             * @example 0.1
              */
-            clientId?: number;
+            pointValue: number;
             /**
-             * Format: int64
-             * @description ID клієнта-відправника (переїзд: віддає один, отримує інший); ПІБ, телефон і місто відправника беруться з нього, якщо не вказані
-             * @example 9
+             * @description Знижка тому, кого порадили: PERCENT або FIXED (у валюті бала); немає — без знижки
+             * @example PERCENT
+             * @enum {string}
              */
-            senderClientId?: number;
+            discountType?: "PERCENT" | "FIXED";
             /**
-             * @description Опис вмісту
-             * @example Взуття
+             * @description Розмір знижки: відсоток або сума
+             * @example 10
              */
-            description?: string;
-            /**
-             * @description Вага, кг; 0 або не заповнено — допустимо для документів (тип вантажу НП «Документи»)
-             * @example 2.5
-             */
-            weightKg?: number;
+            discountValue?: number;
             /**
              * Format: int32
-             * @description Кількість місць
-             * @example 1
+             * @description На перші N посилок; немає — на кожну
+             * @example 2
              */
-            seatsAmount?: number;
+            discountParcels?: number;
             /**
-             * @description Довжина, см
-             * @example 40
+             * @description Від якої ціни посилки (у валюті бала)
+             * @example 10
              */
-            lengthCm?: number;
+            discountMinPrice?: number;
             /**
-             * @description Ширина, см
-             * @example 30
+             * Format: int32
+             * @description Бали тому, хто порадив, за кожну оплачену посилку нового клієнта; немає — без балів
+             * @example 50
              */
-            widthCm?: number;
+            referrerPoints?: number;
             /**
-             * @description Висота, см
-             * @example 25
+             * Format: int32
+             * @description За перші N посилок нового клієнта; немає — за кожну
+             * @example 5
              */
-            heightCm?: number;
+            referrerParcels?: number;
             /**
-             * @description Місто доставки клієнту; не вказано — береться місто клієнта
-             * @example Варшава
-             */
-            deliveryCity?: string;
-            /**
-             * @description Оголошена вартість, грн
-             * @example 1500
-             */
-            declaredValue?: number;
-            /**
-             * @description Наша ціна доставки (вводиться вручну)
-             * @example 350
-             */
-            deliveryPrice?: number;
-            /**
-             * @description Валюта ціни доставки; якщо ціну вказано без валюти — UAH
-             * @example UAH
+             * @description Бали за власні оплачені посилки: PERCENT (від оплаченого, у вартості бала) або FIXED (балів за посилку); немає — без
+             * @example PERCENT
              * @enum {string}
              */
-            deliveryPriceCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            ownPointsType?: "PERCENT" | "FIXED";
             /**
-             * @description ПІБ відправника
-             * @example Петренко Олег
+             * @description Відсоток або кількість балів
+             * @example 5
              */
-            senderName?: string;
+            ownPointsValue?: number;
             /**
-             * @description Телефон відправника
-             * @example 380501234567
+             * Format: int32
+             * @description Балами можна оплатити не більше цього відсотка ціни
+             * @example 50
              */
-            senderPhone?: string;
+            maxRedeemPercent: number;
             /**
-             * @description Місто відправника
-             * @example Львів
+             * Format: int32
+             * @description Списувати від такої кількості балів
+             * @example 100
              */
-            senderCity?: string;
+            minRedeemPoints: number;
             /**
-             * @description Примітки
-             * @example Крихке
+             * Format: int32
+             * @description Через скільки місяців бали згоряють; немає — не згоряють
+             * @example 12
              */
-            notes?: string;
+            expiryMonths?: number;
             /**
-             * @description Звідки прийшла посилка; не вказано — береться з клієнта: TELEGRAM, VIBER, WHATSAPP, INSTAGRAM, FACEBOOK, TIKTOK, WEBSITE, PHONE_CALL, REFERRAL, OTHER
-             * @example INSTAGRAM
+             * @description Для кого: ALL, PRIVATE_PERSON, ORGANIZATION
+             * @example ALL
              * @enum {string}
              */
-            channel?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
-            /**
-             * @description Уточнення джерела: нік, посилання, назва групи
-             * @example @kyivkraut_shop
-             */
-            channelDetails?: string;
-            /**
-             * @description false — дані заповнено (зняти прапорець), true — знову позначити; не передано — не змінюється
-             * @example false
-             */
-            needsEnrichment?: boolean;
+            clientTypes: "ALL" | "PRIVATE_PERSON" | "ORGANIZATION";
         };
         NpShipmentResponse: {
             recipientLastName?: string;
@@ -3682,6 +3820,38 @@ export interface components {
              * @example 51.7598
              */
             paidRate?: number;
+            /**
+             * @description «Реферальна програма»: знижка за рекомендацією з ціни (немає — без знижки або знята менеджером)
+             * @example 3
+             */
+            referralDiscount?: number;
+            /**
+             * Format: int32
+             * @description Скільки балів списано на посилку
+             * @example 100
+             */
+            pointsRedeemed?: number;
+            /**
+             * @description Скільки це у валюті ціни
+             * @example 10
+             */
+            pointsValue?: number;
+            /**
+             * @description До сплати: ціна мінус знижка й бали
+             * @example 17
+             */
+            dueAmount?: number;
+            /**
+             * Format: int64
+             * @description Хто платив (клієнт, якому бали)
+             * @example 12
+             */
+            payerClientId?: number;
+            /**
+             * @description Менеджер зняв знижку за рекомендацією з цієї посилки
+             * @example false
+             */
+            referralDiscountOff?: boolean;
         };
         ParcelSeatResponse: {
             /**
@@ -3728,6 +3898,114 @@ export interface components {
              * @example Диван
              */
             description?: string;
+        };
+        ParcelUpdateRequest: {
+            /**
+             * Format: int64
+             * @description ID представника
+             * @example 3
+             */
+            representativeId?: number;
+            /**
+             * Format: int64
+             * @description ID клієнта-отримувача
+             * @example 7
+             */
+            clientId?: number;
+            /**
+             * Format: int64
+             * @description ID клієнта-відправника (переїзд: віддає один, отримує інший); ПІБ, телефон і місто відправника беруться з нього, якщо не вказані
+             * @example 9
+             */
+            senderClientId?: number;
+            /**
+             * @description Опис вмісту
+             * @example Взуття
+             */
+            description?: string;
+            /**
+             * @description Вага, кг; 0 або не заповнено — допустимо для документів (тип вантажу НП «Документи»)
+             * @example 2.5
+             */
+            weightKg?: number;
+            /**
+             * Format: int32
+             * @description Кількість місць
+             * @example 1
+             */
+            seatsAmount?: number;
+            /**
+             * @description Довжина, см
+             * @example 40
+             */
+            lengthCm?: number;
+            /**
+             * @description Ширина, см
+             * @example 30
+             */
+            widthCm?: number;
+            /**
+             * @description Висота, см
+             * @example 25
+             */
+            heightCm?: number;
+            /**
+             * @description Місто доставки клієнту; не вказано — береться місто клієнта
+             * @example Варшава
+             */
+            deliveryCity?: string;
+            /**
+             * @description Оголошена вартість, грн
+             * @example 1500
+             */
+            declaredValue?: number;
+            /**
+             * @description Наша ціна доставки (вводиться вручну)
+             * @example 350
+             */
+            deliveryPrice?: number;
+            /**
+             * @description Валюта ціни доставки; якщо ціну вказано без валюти — UAH
+             * @example UAH
+             * @enum {string}
+             */
+            deliveryPriceCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description ПІБ відправника
+             * @example Петренко Олег
+             */
+            senderName?: string;
+            /**
+             * @description Телефон відправника
+             * @example 380501234567
+             */
+            senderPhone?: string;
+            /**
+             * @description Місто відправника
+             * @example Львів
+             */
+            senderCity?: string;
+            /**
+             * @description Примітки
+             * @example Крихке
+             */
+            notes?: string;
+            /**
+             * @description Звідки прийшла посилка; не вказано — береться з клієнта: TELEGRAM, VIBER, WHATSAPP, INSTAGRAM, FACEBOOK, TIKTOK, WEBSITE, PHONE_CALL, REFERRAL, OTHER
+             * @example INSTAGRAM
+             * @enum {string}
+             */
+            channel?: "TELEGRAM" | "VIBER" | "WHATSAPP" | "INSTAGRAM" | "FACEBOOK" | "TIKTOK" | "WEBSITE" | "PHONE_CALL" | "REFERRAL" | "OTHER";
+            /**
+             * @description Уточнення джерела: нік, посилання, назва групи
+             * @example @kyivkraut_shop
+             */
+            channelDetails?: string;
+            /**
+             * @description false — дані заповнено (зняти прапорець), true — знову позначити; не передано — не змінюється
+             * @example false
+             */
+            needsEnrichment?: boolean;
         };
         MoveWorkRequest: {
             /**
@@ -4007,6 +4285,12 @@ export interface components {
              * @enum {string}
              */
             currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * Format: int32
+             * @description Для PAID: скільки балів клієнта посилки списати («Реферальна програма»)
+             * @example 100
+             */
+            pointsToRedeem?: number;
         };
         NpShipmentRequest: {
             /**
@@ -4420,7 +4704,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL";
             /**
              * @description Назва
              * @example Фото посилок
@@ -4508,7 +4792,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -4610,7 +4894,7 @@ export interface components {
             utmTerm?: string;
             utmContent?: string;
             /** @description Опції, що цікавлять */
-            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -4699,7 +4983,7 @@ export interface components {
              * @example BASE
              * @enum {string}
              */
-            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL";
             /**
              * @description Назва
              * @example Базовий тариф
@@ -4741,7 +5025,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            option?: "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY";
+            option?: "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL";
             /**
              * @description Назва
              * @example Фото посилок
@@ -4863,6 +5147,11 @@ export interface components {
              * @example false
              */
             currencyEnabled?: boolean;
+            /**
+             * @description Модуль «Реферальна програма»: знижки за рекомендацією й бали за оплачені посилки (вмикає команда TrackBox24)
+             * @example false
+             */
+            referralEnabled?: boolean;
             /**
              * @description Чи збережено резервний API-ключ НП компанії (сам ключ не повертається)
              * @example true
@@ -5006,6 +5295,12 @@ export interface components {
              * @example @kyivkraut_shop
              */
             channelDetails?: string;
+            /**
+             * Format: int64
+             * @description «Реферальна програма»: клієнт, який порадив (вказується один раз)
+             * @example 7
+             */
+            referredById?: number;
         };
         ClientMoney: {
             /**
@@ -5106,6 +5401,23 @@ export interface components {
             channelDetails?: string;
             /** @description Гроші за посилки клієнта по валютах: усього, оплачено, борг, ще до оплати. Лише в картці клієнта; представнику не видно */
             money?: components["schemas"]["ClientMoney"][];
+            /**
+             * Format: int64
+             * @description Хто порадив клієнта («Реферальна програма»)
+             * @example 7
+             */
+            referredById?: number;
+            /**
+             * @description Ім'я того, хто порадив
+             * @example Коваль Іван
+             */
+            referredByName?: string;
+            /**
+             * Format: int32
+             * @description Баланс балів (лише в картці клієнта, з модулем; представнику не видно)
+             * @example 340
+             */
+            points?: number;
         };
         CarRequest: {
             /**
@@ -5419,6 +5731,12 @@ export interface components {
              */
             paidCurrency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
+             * Format: int32
+             * @description Для видачі: скільки балів отримувача списати на цю посилку («Реферальна програма»)
+             * @example 100
+             */
+            pointsToRedeem?: number;
+            /**
              * Format: int64
              * @description Тільки для переміщення на склад, обов'язково: склад, куди переміщають
              * @example 2
@@ -5482,6 +5800,12 @@ export interface components {
              */
             paidCurrency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
+             * Format: int32
+             * @description Для видачі: скільки балів отримувача списати на цю посилку («Реферальна програма»)
+             * @example 100
+             */
+            pointsToRedeem?: number;
+            /**
              * Format: int64
              * @description Для TO_WAREHOUSE, обов'язково: склад
              * @example 2
@@ -5544,6 +5868,30 @@ export interface components {
             notes?: string;
             /** @description Плечі по порядку, як рейси: машина, водій, звідки → куди, дати; можна жодного — додати потім */
             legs?: components["schemas"]["TripRequest"][];
+        };
+        PointsCheckRequest: {
+            /**
+             * @description Повний телефон клієнта посилки
+             * @example +380501234567
+             */
+            phone: string;
+        };
+        PublicPointsResponse: {
+            /**
+             * Format: int32
+             * @example 340
+             */
+            points?: number;
+            /**
+             * @description Скільки це коштує
+             * @example 34
+             */
+            value?: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
         };
         DemoRequest: {
             /**
@@ -5700,6 +6048,12 @@ export interface components {
              * @enum {string}
              */
             paidCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * Format: int32
+             * @description Оплата при прийомі: скільки балів відправника списати («Реферальна програма»)
+             * @example 100
+             */
+            pointsToRedeem?: number;
             /**
              * @description PARCEL (за замовчуванням) або MOVE — переїзд: потрібен модуль «Переїзди», без ТТН НП
              * @example MOVE
@@ -6054,7 +6408,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            options?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY")[];
+            options?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL")[];
         };
         Manager: {
             /**
@@ -6381,6 +6735,102 @@ export interface components {
             content?: components["schemas"]["DeletedItemResponseRouteResponse"][];
             page?: components["schemas"]["PageMetadata"];
         };
+        RedeemInfoResponse: {
+            /**
+             * Format: int64
+             * @description Клієнт, чиї бали
+             * @example 12
+             */
+            clientId?: number;
+            clientName?: string;
+            /**
+             * Format: int32
+             * @description Баланс балів
+             * @example 340
+             */
+            balance?: number;
+            /**
+             * Format: int32
+             * @description Скільки балів можна списати на цю посилку (0 — не можна)
+             * @example 135
+             */
+            maxPoints?: number;
+            /**
+             * @description Скільки коштує 1 бал у валюті ціни посилки
+             * @example 0.1
+             */
+            pointValue?: number;
+            /**
+             * @description Валюта ціни посилки
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Чому не можна списати, якщо maxPoints = 0
+             * @example Списувати від 100 балів
+             */
+            reason?: string;
+        };
+        Pageable: {
+            /** Format: int32 */
+            page?: number;
+            /** Format: int32 */
+            size?: number;
+            sort?: string[];
+        };
+        PagedModelPointsEntryResponse: {
+            content?: components["schemas"]["PointsEntryResponse"][];
+            page?: components["schemas"]["PageMetadata"];
+        };
+        PointsEntryResponse: {
+            /** Format: int64 */
+            id?: number;
+            /**
+             * @description EARNED — за посилку, REFERRAL — за рекомендацію, REDEEMED — списано, REVERSED — скасовано, EXPIRED — згоріли
+             * @example EARNED
+             * @enum {string}
+             */
+            kind?: "EARNED" | "REFERRAL" | "REDEEMED" | "REVERSED" | "EXPIRED";
+            kindLabel?: string;
+            /**
+             * Format: int32
+             * @description Скільки: плюс — додано, мінус — знято
+             * @example 15
+             */
+            points?: number;
+            /** Format: int64 */
+            parcelId?: number;
+            parcelBarcode?: string;
+            /** Format: date-time */
+            expiresAt?: string;
+            note?: string;
+            by?: string;
+            /** Format: date-time */
+            createdAt?: string;
+        };
+        PointsBalanceResponse: {
+            /**
+             * Format: int32
+             * @example 340
+             */
+            points?: number;
+            /**
+             * @description Скільки це у валюті програми
+             * @example 34
+             */
+            value?: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * Format: date-time
+             * @description Найближча дата, коли згорять бали; немає — не згоряють
+             */
+            nextExpiry?: string;
+        };
         Item: {
             /**
              * Format: int32
@@ -6482,6 +6932,11 @@ export interface components {
             history?: components["schemas"]["Step"][];
             /** @description Речі переїзду (місця) по номеру: що це й де зараз; для звичайної посилки — порожньо */
             items?: components["schemas"]["Item"][];
+            /**
+             * @description У компанії реферальна програма: клієнт може подивитися свої бали, підтвердивши телефон
+             * @example true
+             */
+            pointsAvailable?: boolean;
         };
         Step: {
             /**
@@ -7878,6 +8333,276 @@ export interface operations {
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
                      *       "instance": "/api/trips/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    settings: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReferralSettingsDto"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/referral/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/referral/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/referral/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    saveSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReferralSettingsDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ReferralSettingsDto"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/referral/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/referral/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/referral/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setDiscountOff: {
+        parameters: {
+            query: {
+                /** @description true — зняти, false — повернути */
+                off: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ParcelResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/referral/parcels/{id}/discount"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/referral/parcels/{id}/discount"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/referral/parcels/{id}/discount"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/referral/parcels/{id}/discount"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -10102,7 +10827,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY";
+                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL";
             };
             cookie?: never;
         };
@@ -11110,6 +11835,114 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/companies/{id}/telegram-bot"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setReferralEnabled: {
+        parameters: {
+            query: {
+                /**
+                 * @description true — увімкнути, false — вимкнути
+                 * @example true
+                 */
+                value: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/{id}/referral"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/{id}/referral"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/companies/{id}/referral"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/companies/{id}/referral"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -15353,6 +16186,54 @@ export interface operations {
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    points: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /**
+                 * @description PT або ТТН
+                 * @example PT0123456789
+                 */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PointsCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Посилку не знайдено або телефон не збігається */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PublicPointsResponse"];
+                };
+            };
+            /** @description Забагато спроб; `Retry-After` — через скільки секунд */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PublicPointsResponse"];
                 };
             };
         };
@@ -20721,6 +21602,415 @@ export interface operations {
             };
         };
     };
+    redeemInfo: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RedeemInfoResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/referral/parcels/{id}/redeem"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/referral/parcels/{id}/redeem"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/referral/parcels/{id}/redeem"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/referral/parcels/{id}/redeem"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    redeemForNew: {
+        parameters: {
+            query: {
+                /**
+                 * @description Ціна доставки
+                 * @example 30
+                 */
+                price: number;
+                /**
+                 * @description Валюта ціни
+                 * @example EUR
+                 */
+                currency: "UAH" | "EUR" | "USD" | "PLN";
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["RedeemInfoResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/referral/clients/{id}/redeem"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/referral/clients/{id}/redeem"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/referral/clients/{id}/redeem"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/referral/clients/{id}/redeem"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    history_1: {
+        parameters: {
+            query: {
+                pageable: components["schemas"]["Pageable"];
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagedModelPointsEntryResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/referral/clients/{id}/points"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/referral/clients/{id}/points"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/referral/clients/{id}/points"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/referral/clients/{id}/points"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    balance: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PointsBalanceResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/referral/clients/{id}/balance"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/referral/clients/{id}/balance"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/referral/clients/{id}/balance"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/referral/clients/{id}/balance"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     track: {
         parameters: {
             query?: never;
@@ -20974,7 +22264,7 @@ export interface operations {
             };
         };
     };
-    history_1: {
+    history_2: {
         parameters: {
             query?: {
                 /** @description Zero-based page index (0..N) */

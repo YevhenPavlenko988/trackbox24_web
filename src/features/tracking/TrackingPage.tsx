@@ -10,6 +10,7 @@ import type { PublicTrackingResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { telegramWebUrl } from './telegram'
+import { PointsCheck } from './PointsCheck'
 import { normalizeTrackingCode, npTrackingUrl, TRACKING_CODE, trackParcel } from './api'
 
 /**
@@ -217,6 +218,8 @@ function Result({ data }: { data: PublicTrackingResponse }) {
           </div>
         )}
         {data.telegramUrl && <p className="mt-2 text-sm text-navy/55">{t('telegramHint')}</p>}
+        {/* «Реферальна програма»: the recipient or the sender sees their points after typing their phone */}
+        {data.pointsAvailable && (data.barcode ?? data.npTtn) && <PointsCheck code={(data.barcode ?? data.npTtn)!} />}
       </section>
 
       {items.length > 0 && (

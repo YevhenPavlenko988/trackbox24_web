@@ -1,7 +1,7 @@
 import { Pencil } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { DetailsList } from '@/components/common/DetailsList'
 import { Pagination } from '@/components/common/Pagination'
@@ -23,6 +23,7 @@ import { formatPhone } from '@/lib/format'
 import { NotFoundPage } from '@/routes/ErrorPages'
 import { clientDisplayName } from './api'
 import { ClientForm } from './ClientForm'
+import { ClientPointsCard } from '@/features/referral/ClientPointsCard'
 import { ClientMoneyCard } from './ClientMoneyCard'
 import { useClient, useClientParcels, useUpdateClient } from './queries'
 import { clientToFormValues } from './schema'
@@ -79,12 +80,22 @@ export function ClientPage() {
                   { label: t('clients:fields.city'), value: client.city },
                   { label: t('clients:fields.address'), value: client.address },
                   { label: t('common:channelField.label'), value: client.channel ? <ChannelBadge channel={client.channel} details={client.channelDetails} /> : undefined },
+                  {
+                    label: t('clients:fields.referredBy'),
+                    value: client.referredById ? (
+                      <Link to={`/clients/${client.referredById}`} className="underline underline-offset-4">
+                        {client.referredByName}
+                      </Link>
+                    ) : undefined,
+                  },
                   { label: t('clients:fields.notes'), value: client.notes },
                 ]}
               />
             </CardContent>
           </Card>
           {canSeeMoney && <ClientMoneyCard money={client.money} />}
+          {/* the points come with the card only where the program is on and our money is shown */}
+          {canSeeMoney && client.points != null && <ClientPointsCard client={client} />}
         </TabsContent>
         <TabsContent value="parcels" className="mt-4">
           {tab === 'parcels' && <ClientParcels clientId={clientId} />}
