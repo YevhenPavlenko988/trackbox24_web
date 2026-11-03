@@ -1,16 +1,20 @@
 import {
   Banknote,
+  Boxes,
   Camera,
   Clock,
   Cloud,
   CreditCard,
+  Calculator,
   FileOutput,
   GitMerge,
   LayoutDashboard,
   ListChecks,
+  ListX,
   Menu,
   PackagePlus,
   RotateCcw,
+  Route,
   ScanLine,
   ShieldCheck,
   TriangleAlert,
@@ -50,6 +54,7 @@ export function LandingPage() {
         <Roles />
         <Journey />
         <NovaPoshta />
+        <Moves />
         <Driver />
         <Money />
         <Control />
@@ -94,6 +99,7 @@ function Header() {
     ['#features', t('nav.features')],
     ['#how', t('nav.how')],
     ['#np', t('nav.np')],
+    ['#moves', t('nav.moves')],
     ['#start', t('nav.start')],
   ] as const
   return (
@@ -182,7 +188,7 @@ function Hero() {
   )
 }
 
-function BrowserFrame({ src, alt }: { src: string; alt: string }) {
+function BrowserFrame({ src, alt, lazy = false }: { src: string; alt: string; lazy?: boolean }) {
   return (
     <div className="overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/20">
       <div className="flex items-center gap-1.5 border-b border-slate-200 bg-slate-100 px-3 py-2">
@@ -190,7 +196,7 @@ function BrowserFrame({ src, alt }: { src: string; alt: string }) {
         <span className="size-2.5 rounded-full bg-slate-300" />
         <span className="size-2.5 rounded-full bg-slate-300" />
       </div>
-      <img src={src} alt={alt} className="block w-full" loading="eager" />
+      <img src={src} alt={alt} className="block w-full" loading={lazy ? 'lazy' : 'eager'} />
     </div>
   )
 }
@@ -304,6 +310,61 @@ function NovaPoshta() {
             )
           })}
         </ul>
+      </div>
+    </section>
+  )
+}
+
+/** The moves module: what it gives, the order's seven steps, the web and the phone side by side. */
+function Moves() {
+  const { t } = useTranslation('landing')
+  const items = t('moves.items', { returnObjects: true }) as Item[]
+  const steps = t('moves.steps', { returnObjects: true }) as Item[]
+  const icons: LucideIcon[] = [Boxes, ListX, Route, Calculator]
+  return (
+    <section id="moves" className="scroll-mt-16 bg-sand py-16 sm:py-20">
+      <div className={wrap}>
+        <div className="grid items-center gap-12 lg:grid-cols-[1fr_1.15fr]">
+          <div>
+            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-brand uppercase">{t('moves.kicker')}</p>
+            <h2 className={`${h2} text-balance`}>{t('moves.title')}</h2>
+            <p className="mt-4 text-lg text-navy/75">{t('moves.text')}</p>
+          </div>
+          <div className="relative mx-auto w-full max-w-xl pb-8 lg:max-w-none">
+            <BrowserFrame src="/landing/web-move.webp" alt={t('moves.webShot')} lazy />
+            <div className="absolute -right-2 -bottom-2 w-[30%] sm:-right-4">
+              <PhoneFrame src="/landing/mob-move.webp" alt={t('moves.mobShot')} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((it, i) => {
+            const Icon = icons[i]
+            return (
+              <div key={it.name} className="rounded-2xl bg-white p-6 shadow-sm">
+                <Icon className="size-7 text-brand" />
+                <p className="mt-3 text-lg font-bold">{it.name}</p>
+                <p className="mt-1 text-navy/75">{it.text}</p>
+              </div>
+            )
+          })}
+        </div>
+
+        <h3 className="mt-14 text-2xl font-bold tracking-tight">{t('moves.stepsTitle')}</h3>
+        <ol className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+          {steps.map((s, i) => {
+            const last = i === steps.length - 1
+            return (
+              <li key={s.name} className={`rounded-2xl p-4 ${last ? 'bg-navy text-white' : 'bg-white shadow-sm'}`}>
+                <p className="text-xl font-bold text-brand">{i + 1}</p>
+                <p className="mt-1 font-bold">{s.name}</p>
+                <p className={`mt-1 text-sm ${last ? 'text-white/80' : 'text-navy/70'}`}>{s.text}</p>
+              </li>
+            )
+          })}
+        </ol>
+        <p className="mt-6 max-w-3xl text-navy/70">{t('moves.note')}</p>
       </div>
     </section>
   )
