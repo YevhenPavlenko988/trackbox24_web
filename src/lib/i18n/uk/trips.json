@@ -101,6 +101,8 @@
     "PARCEL_UNPLANNED": "Прибрано з плану",
     "PARCEL_LOADED": "Завантажено",
     "PARCEL_DELIVERED": "Видано",
+    "paid": "Оплачено: {{method}} · {{amount}}",
+    "paidNoMethod": "спосіб не вказано",
     "PARCEL_UNLOADED": "Вивантажено",
     "empty": "Історія порожня",
     "DELETED": "Рейс видалено",
