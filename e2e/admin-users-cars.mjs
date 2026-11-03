@@ -37,7 +37,7 @@ export async function run() {
     const newCompanyUrl = page.url()
     await shot('02-company-page')
 
-    await page.getByRole('button', { name: 'Ключ НП' }).click()
+    await page.getByRole('button', { name: /Ключ Нової Пошти/ }).click()
     await dialog().waitFor()
     await page.fill('#np-key', 'not-a-valid-key')
     await page.click('[data-slot=dialog-content] button[type=submit]')

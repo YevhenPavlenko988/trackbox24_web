@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useAccess } from '@/features/auth/access'
 import type { ParcelResponse } from '@/lib/api/types'
-import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
+import { formatDate, formatDateTime, formatMoney, formatPhone, formatTime } from '@/lib/format'
 import { NpStateBadge } from './NpStateBadge'
 import { NpPaymentSummary } from './NpPaymentCard'
 import { ChannelBadge } from '@/features/channels/channel'
@@ -58,146 +58,177 @@ export function ParcelsTable({
   const navigate = useNavigate()
   const { canSeeMoney } = useAccess()
 
+  // Nova Poshta's column only where there is something of it (the archive or a trip of our own parcels has none)
+  const showNp = !hideNp && rows.some((p) => p.npTtn || p.npShipment?.waybillNumber)
+
   const columns: Column<ParcelResponse>[] = [
     {
       key: 'code',
-      header: t('parcels:fields.barcode'),
-      cell: (p) => (
-        <div className="flex flex-col">
-          <span className="font-mono font-medium">{p.barcode ?? '—'}</span>
-          {p.npTtn && (
-            <span className="text-xs text-muted-foreground">
-              {t('parcels:fields.npTtnShort')} <NpNumber value={p.npTtn} />
-            </span>
-          )}
-          {/* Our own outgoing waybill (return parcels); a search by this number finds the parcel. */}
-          {p.npShipment?.waybillNumber && (
-            <span className="text-xs text-muted-foreground">
-              {t('novaPoshta:shipment.waybillShort')} <NpNumber value={p.npShipment.waybillNumber} />
-            </span>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'status',
-      header: t('parcels:fields.status'),
-      cell: (p) => (
-        <div className="flex flex-wrap items-center gap-1.5">
-          <ParcelStatusBadge status={p.status} />
-          {p.status === 'AT_WAREHOUSE' && p.warehouseName && <span className="text-xs text-muted-foreground">{p.warehouseName}</span>}
-          {/* Planned for a trip but not loaded yet: otherwise it looks free to plan elsewhere. */}
-          {!hidePlan && p.plannedTripId != null && p.tripId == null && (
-            <Badge variant="outline" className="gap-1 font-normal">
-              <Route className="size-3" />
-              {t('trips:picker.inPlan', { number: legNo(p.plannedTripNumber ?? p.plannedTripId, p.tripLegNumber) })}
-            </Badge>
-          )}
-          {/* Actually loaded: «У машині» alone does not say whose car it is in. */}
-          {!hidePlan && p.tripId != null && (
-            <Badge variant="secondary" className="gap-1 font-normal">
-              <Truck className="size-3" />
-              {t('trips:one', { number: legNo(p.tripNumber ?? p.tripId, p.tripLegNumber) })}
-            </Badge>
-          )}
-          {extra?.(p)}
-          {p.needsEnrichment && (
-            <Tooltip>
-              <TooltipTrigger render={<span />}>
-                <AlertCircle className="size-4 text-amber-600" />
-              </TooltipTrigger>
-              <TooltipContent>{t('parcels:needsEnrichment')}</TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: 'npState',
-      header: t('parcels:fields.npState'),
+      header: t('parcels:list.parcel'),
       cell: (p) => {
-        // The incoming waybill if there is one, otherwise our own outgoing one (return parcels).
-        const source = npStateOf(p) ? p : p.npShipment && npStateOf(p.npShipment) ? p.npShipment : undefined
-        if (!source) {
-          return p.npTtn ? <span className="text-xs text-muted-foreground">{t('parcels:np.noTracking')}</span> : <span className="text-muted-foreground">—</span>
-        }
-        const state = npStateOf(source)
-        const text = npStatusTextOf(source)
+        const seats = seatsProgress(p)
         return (
-          <div className="flex flex-col items-start gap-0.5">
-            <NpStateBadge parcel={source} />
-            {text && state !== 'OTHER' && (
-              <span className="line-clamp-2 max-w-56 text-xs text-muted-foreground" title={text}>
-                {text}
-              </span>
-            )}
-            {source.npStatusUpdatedAt && <span className="text-xs text-muted-foreground">{formatDateTime(source.npStatusUpdatedAt)}</span>}
+          // the «needs details» mark sits at the cell's right edge, so it stays in one column whatever the code's length
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex flex-col">
+              {/* our barcode when there is one, else the waybill: never a lone «—» */}
+              <span className="font-mono font-medium">{p.barcode ?? (p.npTtn ? <NpNumber value={p.npTtn} /> : `#${p.id}`)}</span>
+              {p.barcode && p.npTtn && (
+                <span className="text-xs text-muted-foreground">
+                  {t('parcels:fields.npTtnShort')} <NpNumber value={p.npTtn} />
+                </span>
+              )}
+              {/* Our own outgoing waybill (return parcels); a search by this number finds the parcel. */}
+              {p.npShipment?.waybillNumber && (
+                <span className="text-xs text-muted-foreground">
+                  {t('novaPoshta:shipment.waybillShort')} <NpNumber value={p.npShipment.waybillNumber} />
+                </span>
+              )}
+              {seats !== '1' && (
+                <span className="text-xs text-muted-foreground" title={seats === '?' ? t('parcels:np.seatsUnknownShort') : undefined}>
+                  {t('parcels:list.seats', { seats })}
+                </span>
+              )}
+            </div>
+            <span className="flex w-4 shrink-0 justify-center pt-0.5">
+              {p.needsEnrichment && (
+                <Tooltip>
+                  <TooltipTrigger render={<span />}>
+                    <AlertCircle className="size-4 text-amber-600" />
+                  </TooltipTrigger>
+                  <TooltipContent>{t('parcels:needsEnrichment')}</TooltipContent>
+                </Tooltip>
+              )}
+            </span>
           </div>
         )
       },
     },
+    {
+      key: 'status',
+      header: t('parcels:fields.status'),
+      cell: (p) => {
+        return (
+          <div className="flex flex-col items-start gap-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <ParcelStatusBadge status={p.status} />
+              {/* Planned for a trip but not loaded yet: otherwise it looks free to plan elsewhere. */}
+              {!hidePlan && p.plannedTripId != null && p.tripId == null && (
+                <Badge variant="outline" className="gap-1 font-normal">
+                  <Route className="size-3" />
+                  {t('trips:picker.inPlan', { number: legNo(p.plannedTripNumber ?? p.plannedTripId, p.tripLegNumber) })}
+                </Badge>
+              )}
+              {/* Actually loaded: «У машині» alone does not say whose car it is in. */}
+              {!hidePlan && p.tripId != null && (
+                <Badge variant="secondary" className="gap-1 font-normal">
+                  <Truck className="size-3" />
+                  {t('trips:one', { number: legNo(p.tripNumber ?? p.tripId, p.tripLegNumber) })}
+                </Badge>
+              )}
+              {extra?.(p)}
+            </div>
+            {p.status === 'AT_WAREHOUSE' && p.warehouseName && <span className="text-xs text-muted-foreground">{p.warehouseName}</span>}
+          </div>
+        )
+      },
+    },
+    ...(showNp
+      ? [
+          {
+            key: 'npState',
+            header: t('parcels:fields.npState'),
+            className: 'min-w-32 max-w-40 whitespace-normal',
+            cell: (p: ParcelResponse) => {
+              // The incoming waybill if there is one, otherwise our own outgoing one (return parcels).
+              const source = npStateOf(p) ? p : p.npShipment && npStateOf(p.npShipment) ? p.npShipment : undefined
+              if (!source) {
+                return p.npTtn ? <span className="text-xs text-muted-foreground">{t('parcels:np.noTracking')}</span> : <span className="text-muted-foreground">—</span>
+              }
+              const text = npStatusTextOf(source)
+              return (
+                <div className="flex flex-col items-start gap-0.5">
+                  <NpStateBadge parcel={source} />
+                  {text && npStateOf(source) !== 'OTHER' && (
+                    // Nova Poshta's own words; the full text and when it was updated are in the hint
+                    <span
+                      className="line-clamp-2 text-xs text-muted-foreground"
+                      title={[text, source.npStatusUpdatedAt ? formatDateTime(source.npStatusUpdatedAt) : undefined].filter(Boolean).join(' · ')}
+                    >
+                      {text}
+                    </span>
+                  )}
+                </div>
+              )
+            },
+          },
+        ]
+      : []),
     ...(hideClient
       ? []
       : [
           {
             key: 'client',
             header: t('parcels:fields.client'),
-            cell: (p: ParcelResponse) => (
-              <div className="flex flex-col">
-                <span className="inline-flex items-center gap-1.5">
-                  {p.channel && <ChannelBadge channel={p.channel} compact />}
-                  {p.clientName ?? '—'}
-                </span>
-                {p.clientPhone && <span className="text-xs text-muted-foreground">{formatPhone(p.clientPhone)}</span>}
-                {p.deliveryCity && <span className="text-xs text-muted-foreground">→ {p.deliveryCity}</span>}
-              </div>
-            ),
+            className: 'min-w-32 max-w-44 whitespace-normal',
+            cell: (p: ParcelResponse) =>
+              p.clientName || p.deliveryCity ? (
+                <div className="flex flex-col">
+                  <span className="inline-flex items-center gap-1.5">
+                    {p.channel && <ChannelBadge channel={p.channel} compact />}
+                    {p.clientName ?? <span className="text-muted-foreground">{t('parcels:list.noClient')}</span>}
+                  </span>
+                  {p.clientPhone && <span className="text-xs text-muted-foreground">{formatPhone(p.clientPhone)}</span>}
+                  {p.deliveryCity && <span className="text-xs text-muted-foreground">→ {p.deliveryCity}</span>}
+                </div>
+              ) : (
+                <span className="text-xs text-muted-foreground">{t('parcels:list.noClient')}</span>
+              ),
           },
         ]),
     {
       key: 'sender',
       header: t('parcels:fields.sender'),
-      cell: (p) => (
-        <div className="flex flex-col">
-          <span>{p.senderName ?? '—'}</span>
-          {p.senderPhone && <span className="text-xs text-muted-foreground">{formatPhone(p.senderPhone)}</span>}
-          {p.senderCity && <span className="text-xs text-muted-foreground">{p.senderCity}</span>}
-        </div>
-      ),
-    },
-    {
-      key: 'seats',
-      header: t('parcels:fields.seats'),
-      cell: (p) => {
-        const v = seatsProgress(p)
-        return v === '?' ? <span title={t('parcels:np.seatsUnknownShort')}>?</span> : v
-      },
-      className: 'text-center',
-    },
-    {
-      key: 'npDates',
-      header: t('parcels:fields.npDates'),
+      className: 'min-w-24 max-w-36 whitespace-normal',
       cell: (p) =>
-        p.npScheduledDeliveryAt || p.npPaidStorageFrom || p.npShipment?.estimatedDeliveryDate ? (
+        p.senderName || p.senderPhone || p.senderCity ? (
           <div className="flex flex-col">
-            {p.npScheduledDeliveryAt && <span>{formatDate(p.npScheduledDeliveryAt)}</span>}
-            {p.npPaidStorageFrom && (
-              <span className={isPaidStorageDue(p) ? 'text-xs font-medium text-destructive' : 'text-xs text-muted-foreground'}>
-                {t('parcels:fields.npPaidStorageShort', { date: formatDate(p.npPaidStorageFrom) })}
-              </span>
-            )}
-            {/* Our own outgoing waybill (return parcels): when Nova Poshta expects to deliver it. */}
-            {p.npShipment?.estimatedDeliveryDate && (
-              <span className={p.npScheduledDeliveryAt ? 'text-xs text-muted-foreground' : undefined}>
-                {t('parcels:np.outgoingEta', { date: formatDate(p.npShipment.estimatedDeliveryDate) })}
-              </span>
-            )}
+            {p.senderName && <span>{p.senderName}</span>}
+            {p.senderPhone && <span className="text-xs text-muted-foreground">{formatPhone(p.senderPhone)}</span>}
+            {p.senderCity && <span className="text-xs text-muted-foreground">{p.senderCity}</span>}
           </div>
         ) : (
           <span className="text-muted-foreground">—</span>
         ),
     },
-    { key: 'npPayment', header: t('parcels:np.columnTitle'), cell: (p) => <NpPaymentSummary parcel={p} /> },
+    ...(showNp
+      ? [
+          {
+            key: 'np',
+            header: t('parcels:sections.novaPoshta'),
+            className: 'min-w-36 max-w-48 whitespace-normal',
+            cell: (p: ParcelResponse) => {
+              const dates = p.npScheduledDeliveryAt || p.npPaidStorageFrom || p.npShipment?.estimatedDeliveryDate
+              if (!dates && !p.npTtn && !p.npShipment?.waybillNumber) return <span className="text-muted-foreground">—</span>
+              return (
+                <div className="flex flex-col gap-0.5">
+                  {p.npScheduledDeliveryAt && <span className="text-xs text-muted-foreground">{t('parcels:list.npDelivery', { date: formatDate(p.npScheduledDeliveryAt) })}</span>}
+                  {p.npPaidStorageFrom && (
+                    <span className={isPaidStorageDue(p) ? 'text-xs font-medium text-destructive' : 'text-xs text-muted-foreground'}>
+                      {t('parcels:fields.npPaidStorageShort', { date: formatDate(p.npPaidStorageFrom) })}
+                    </span>
+                  )}
+                  {/* Our own outgoing waybill (return parcels): when Nova Poshta expects to deliver it. */}
+                  {p.npShipment?.estimatedDeliveryDate && (
+                    <span className="text-xs text-muted-foreground">{t('parcels:np.outgoingEta', { date: formatDate(p.npShipment.estimatedDeliveryDate) })}</span>
+                  )}
+                  <NpPaymentSummary parcel={p} />
+                </div>
+              )
+            },
+          },
+        ]
+      : []),
     ...(canSeeMoney
       ? [
           {
@@ -217,7 +248,15 @@ export function ParcelsTable({
           },
         ]
       : []),
-    { key: 'createdAt', header: t('common:common.createdAt'), cell: (p) => formatDateTime(p.createdAt) },
+    {
+      key: 'createdAt',
+      header: t('common:common.createdAt'),
+      cell: (p) => (
+        <span className="whitespace-nowrap" title={formatTime(p.createdAt)}>
+          {formatDate(p.createdAt)}
+        </span>
+      ),
+    },
     ...(actions
       ? [
           {
@@ -234,11 +273,9 @@ export function ParcelsTable({
       : []),
   ]
 
-  const visible = hideNp ? columns.filter((c) => !['npState', 'npDates', 'npPayment'].includes(c.key)) : columns
-
   return (
     <DataTable
-      columns={visible}
+      columns={columns}
       rows={rows}
       rowKey={(p) => p.id ?? 0}
       onRowClick={(p) => navigate(`/parcels/${p.id}`)}

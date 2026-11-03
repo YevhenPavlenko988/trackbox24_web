@@ -14,7 +14,8 @@ export function PageHeader({
 }) {
   return (
     <div data-slot="page-header" className="mb-6 flex flex-wrap items-start justify-between gap-4">
-      <div className="min-w-0 flex-1">
+      {/* the title keeps its width on a phone: the actions wrap under it instead of covering it */}
+      <div className="min-w-[min(100%,14rem)] flex-1">
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
         {badges && (
           <div data-slot="page-badges" className="mt-2 flex flex-wrap items-center gap-2">

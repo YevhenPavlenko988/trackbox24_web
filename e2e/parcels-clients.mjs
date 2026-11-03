@@ -68,7 +68,7 @@ export async function run() {
     // Reset clears the filters but stays on the current tab.
     await page.waitForURL(/\/parcels$/)
 
-    await page.fill('input[placeholder*="Штрих-код"]', 'Взуття')
+    await page.fill('input[placeholder*="штрих-код"]', 'Взуття')
     await page.waitForURL('**/parcels?*query=*')
     ok('search syncs to URL', page.url().includes('query='))
 
