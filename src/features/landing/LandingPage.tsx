@@ -4,6 +4,7 @@ import {
   Camera,
   Clock,
   Coins,
+  Gift,
   FileSpreadsheet,
   Lock,
   Cloud,
@@ -62,6 +63,7 @@ export function LandingPage() {
         <Currency />
         <Money />
         <Control />
+        <Referral />
         <Start />
         <Faq />
         <Cta />
@@ -544,6 +546,78 @@ function Control() {
               </div>
             )
           })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/** «Реферальна програма»: how a client brings a client, in order, and what the client sees of their points. */
+function Referral() {
+  const { t } = useTranslation('landing')
+  const steps = t('referral.steps', { returnObjects: true }) as Item[]
+  return (
+    <section id="referral" className="scroll-mt-16 bg-sand py-16 sm:py-20">
+      <div className={`${wrap} grid items-center gap-12 lg:grid-cols-[1.15fr_1fr]`}>
+        <div>
+          <p className="mb-3 text-xs font-bold tracking-[0.2em] text-brand uppercase">{t('referral.kicker')}</p>
+          <h2 className={`${h2} text-balance`}>{t('referral.title')}</h2>
+          <p className="mt-4 text-lg text-navy/75">{t('referral.text')}</p>
+          <ol className="mt-8 grid gap-3 sm:grid-cols-2">
+            {steps.map((s, i) => (
+              <li key={s.name} className="rounded-2xl bg-white p-5 shadow-sm">
+                <p className="text-xl font-bold text-brand">{i + 1}</p>
+                <p className="mt-1 font-bold">{s.name}</p>
+                <p className="mt-1 text-navy/70">{s.text}</p>
+              </li>
+            ))}
+          </ol>
+          <h3 className="mt-10 text-xl font-bold tracking-tight">{t('referral.settingsTitle')}</h3>
+          <ul className="mt-4 flex flex-col gap-2.5 text-navy/80">
+            {(t('referral.settings', { returnObjects: true }) as string[]).map((s) => (
+              <li key={s} className="flex items-start gap-3">
+                <ListChecks className="mt-0.5 size-5 shrink-0 text-brand" />
+                {s}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 text-navy/60">{t('referral.note')}</p>
+        </div>
+
+        {/* what the client sees: the balance on the tracking page and the bot's message after a payment */}
+        <div className="mx-auto flex w-full max-w-sm flex-col gap-4" aria-hidden>
+          <div className="rounded-2xl bg-white p-6 shadow-lg">
+            <p className="text-sm text-navy/60">{t('referral.card.tracking')}</p>
+            <div className="mt-3 flex items-center gap-3">
+              <span className="flex size-11 items-center justify-center rounded-full bg-brand/15 text-brand">
+                <Gift className="size-5" />
+              </span>
+              <p>
+                <span className="block text-sm text-navy/60">{t('referral.card.yours')}</span>
+                <span className="text-3xl font-bold tabular-nums">340</span> <span className="text-navy/60">{t('referral.card.unit')} ≈ 34 €</span>
+              </p>
+            </div>
+          </div>
+          <div className="self-end rounded-2xl rounded-br-sm bg-[#E3F2FD] p-4 text-navy shadow-sm sm:max-w-[85%]">
+            <p className="text-xs font-semibold text-[#1F8BC2]">TrackBox24</p>
+            <p className="mt-1">{t('referral.card.bot')}</p>
+            <p className="mt-1 font-semibold">{t('referral.card.botTotal')}</p>
+          </div>
+          <div className="rounded-2xl bg-navy p-5 text-white">
+            <p className="text-sm text-white/70">{t('referral.card.pay')}</p>
+            <p className="mt-2 flex items-baseline justify-between tabular-nums">
+              <span>{t('referral.card.price')}</span>
+              <span className="font-semibold">30 €</span>
+            </p>
+            <p className="flex items-baseline justify-between tabular-nums text-brand">
+              <span>{t('referral.card.points')}</span>
+              <span className="font-semibold">−5 €</span>
+            </p>
+            <p className="mt-1 flex items-baseline justify-between border-t border-white/15 pt-2 text-lg font-bold tabular-nums">
+              <span>{t('referral.card.due')}</span>
+              <span>25 €</span>
+            </p>
+          </div>
         </div>
       </div>
     </section>
