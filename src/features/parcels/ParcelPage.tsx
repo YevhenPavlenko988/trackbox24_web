@@ -32,6 +32,7 @@ import { ParcelHistory } from './ParcelHistory'
 import { ParcelPhotosCard } from './ParcelPhotosCard'
 import { ParcelStatusBadge } from './ParcelStatusBadge'
 import { MarkPaidDialog } from './PaymentDialog'
+import { paidInLine } from '@/features/currency/PaidCurrency'
 import { useDeleteParcel, useParcel, useParcelHistory, useRefreshParcelFromNp, useSetParcelPayment } from './queries'
 import { canEditParcel, isFinalStatus, isParcelDeletable } from './status'
 import { StatusChangeDialog } from './StatusChangeDialog'
@@ -39,7 +40,7 @@ import { StatusChangeDialog } from './StatusChangeDialog'
 export function ParcelPage() {
   const { id } = useParams()
   const parcelId = Number(id)
-  const { t } = useTranslation(['parcels', 'common', 'clients', 'trips', 'warehouses', 'moves'])
+  const { t } = useTranslation(['parcels', 'common', 'clients', 'trips', 'warehouses', 'moves', 'currency'])
   const { canEdit, canEditMoves, canSeeMoney } = useAccess()
   const query = useParcel(parcelId)
   const history = useParcelHistory(parcelId)
@@ -166,6 +167,8 @@ export function ParcelPage() {
     { label: t('parcels:payment.paidAt'), value: formatDateTime(p.paidAt) },
     { label: t('parcels:payment.paidBy'), value: p.paidBy },
     { label: t('parcels:payment.method'), value: p.paymentMethod ? t(`common:paymentMethod.${p.paymentMethod}`) : undefined },
+    // paid in another currency than the price: what the client gave, at the rate of that moment
+    { label: t('currency:paidIn'), value: paidInLine(t, p) },
     { label: t('parcels:fields.npDeliveryCost'), value: p.npDeliveryCost ? formatMoney(p.npDeliveryCost) : undefined },
     { label: t('parcels:fields.npCodAmount'), value: p.npCodAmount ? formatMoney(p.npCodAmount) : undefined },
   ]

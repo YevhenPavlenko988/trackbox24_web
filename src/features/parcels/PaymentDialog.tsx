@@ -12,7 +12,8 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { useMutationError } from '@/lib/api/problem'
 import { PAYMENT_METHODS } from '@/features/parcels/paymentMethod'
-import type { ParcelResponse } from '@/lib/api/types'
+import { defaultPaidCurrency, PaidCurrencyField } from '@/features/currency/PaidCurrency'
+import type { Currency, ParcelResponse, PaymentMethod } from '@/lib/api/types'
 import { formatMoney, fromDateTimeLocal } from '@/lib/format'
 import { useSetParcelPayment } from './queries'
 
@@ -20,6 +21,7 @@ const schema = z.object({
   paidAt: z.string().refine((s) => s === '' || new Date(s).getTime() <= Date.now(), 'notFuture'),
   // Asked for every payment: the trip's takings are summed by method, and an unspecified one is reported apart.
   method: z.enum(PAYMENT_METHODS),
+  currency: z.string(),
 })
 
 type FormValues = z.infer<typeof schema>
@@ -27,13 +29,22 @@ type FormValues = z.infer<typeof schema>
 export function MarkPaidDialog({ parcel, open, onOpenChange }: { parcel: ParcelResponse; open: boolean; onOpenChange: (o: boolean) => void }) {
   const { t } = useTranslation(['parcels', 'common'])
   const setPayment = useSetParcelPayment(parcel.id!)
-  const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { paidAt: '', method: 'CASH' } })
+  const priceCurrency = (parcel.deliveryPriceCurrency ?? 'UAH') as Currency
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
+    defaultValues: { paidAt: '', method: 'CASH', currency: defaultPaidCurrency('CASH', priceCurrency) },
+  })
   const { errors, isSubmitting } = form.formState
   const onError = useMutationError(form)
 
   const submit = form.handleSubmit(async (v) => {
     try {
-      await setPayment.mutateAsync({ status: 'PAID', paidAt: fromDateTimeLocal(v.paidAt), method: v.method })
+      await setPayment.mutateAsync({
+        status: 'PAID',
+        paidAt: fromDateTimeLocal(v.paidAt),
+        method: v.method,
+        currency: v.currency !== priceCurrency ? (v.currency as Currency) : undefined,
+      })
       toast.success(t('common:common.saved'))
       onOpenChange(false)
     } catch (e) {
@@ -58,7 +69,15 @@ export function MarkPaidDialog({ parcel, open, onOpenChange }: { parcel: ParcelR
                 render={({ field }) => (
                   <Field data-invalid={!!errors.method}>
                     <FieldLabel>{t('parcels:payment.method')}</FieldLabel>
-                    <RadioGroup value={field.value} onValueChange={field.onChange} className="flex flex-wrap gap-4">
+                    <RadioGroup
+                      value={field.value}
+                      onValueChange={(m) => {
+                        field.onChange(m)
+                        // the method decides the usual currency: a Ukrainian card pays in hryvnias, a foreign one not
+                        form.setValue('currency', defaultPaidCurrency(m as PaymentMethod, priceCurrency))
+                      }}
+                      className="flex flex-wrap gap-4"
+                    >
                       {PAYMENT_METHODS.map((value) => (
                         <Label key={value} className="flex items-center gap-2 font-normal">
                           <RadioGroupItem value={value} />
@@ -68,6 +87,19 @@ export function MarkPaidDialog({ parcel, open, onOpenChange }: { parcel: ParcelR
                     </RadioGroup>
                     <FieldErrorText error={errors.method} />
                   </Field>
+                )}
+              />
+              <Controller
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <PaidCurrencyField
+                    price={parcel.deliveryPrice}
+                    priceCurrency={priceCurrency}
+                    method={form.watch('method')}
+                    value={field.value as Currency}
+                    onChange={field.onChange}
+                  />
                 )}
               />
               <Field data-invalid={!!errors.paidAt}>

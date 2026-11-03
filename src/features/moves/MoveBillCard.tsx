@@ -15,7 +15,7 @@ import { convertRate, useRates } from '@/features/currency/queries'
 import { parseNumber } from '@/features/parcels/status'
 import { showApiError } from '@/lib/api/problem'
 import type { Currency, MoveBillResponse, MoveBillWork, MoveBillWorkLoader, ParcelResponse } from '@/lib/api/types'
-import { CURRENCY_SYMBOL, formatDate, formatDateTime, formatMoney, formatPhone, moveCurrencies, rateLine } from '@/lib/format'
+import { CURRENCY_SYMBOL, formatDate, formatDateTime, formatMoney, formatPhone, priceCurrencies, rateLine } from '@/lib/format'
 import { useDeletePayment, useDeleteStorage, useDeleteWork, useMoveBill, useSetBillCurrency, useSetFact } from './billApi'
 import { ClientPaymentDialog, StorageDialog, WorkDialog } from './MoveBillDialogs'
 
@@ -62,7 +62,7 @@ export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
             <>
               {/* the currency of the whole move: transport, rates, storage and payments */}
               <div className="flex rounded-md border p-0.5" role="group" aria-label={t('moves:bill.currency')}>
-                {moveCurrencies(multi || bill.currency === 'USD' || bill.currency === 'PLN').map((c) => (
+                {priceCurrencies(multi || bill.currency === 'USD' || bill.currency === 'PLN').map((c) => (
                   <Button
                     key={c}
                     size="sm"
