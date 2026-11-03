@@ -35,7 +35,8 @@ export function MyCompanyPage() {
       <PageHeader
         title={t('companies:myTitle')}
         actions={
-          canEdit && (
+          // Nova Poshta serves ordinary parcels only: a company that only does moves has nothing to sync
+          canEdit && query.data.parcelsEnabled !== false && (
             <Button variant="outline" onClick={onSync} disabled={sync.isPending}>
               <RefreshCw className={sync.isPending ? 'animate-spin' : undefined} />
               {t('companies:actions.sync')}

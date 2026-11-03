@@ -203,7 +203,7 @@ try {
 
   await go('/company', 'text=Тест Логістик')
   await shot('39-my-company')
-  await openDialog('Ключ НП')
+  await openDialog(/Ключ Нової Пошти/)
   await shot('40-dialog-company-np-key')
   await closeDialog()
   await openDialog('Змінити пароль')
