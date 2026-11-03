@@ -87,7 +87,7 @@ export async function run() {
     await page.locator('[data-slot=dialog-content] button[type=submit]').click()
     await page.waitForFunction(() => document.body.innerText.includes('910'))
     ok('storage 10 × 5 adds 50: 910', true)
-    await page.getByRole('button', { name: 'Оплата клієнта' }).click()
+    await page.getByRole('button', { name: 'Оплата клієнта' }).first().click() // the bill's; «Оплата» has the same
     await page.fill('#pm-amount', '200')
     await page.locator('[data-slot=dialog-content] button[type=submit]').click()
     await page.waitForFunction(() => document.body.innerText.includes('710'))

@@ -1,4 +1,4 @@
-import { AlertCircle, ArrowLeft, BadgeCheck, BadgeX, Copy, Link2, Pencil, Printer, RefreshCw, Repeat, Trash2 } from 'lucide-react'
+import { AlertCircle, ArrowLeft, BadgeCheck, BadgeX, CalendarClock, Copy, Hash, Info, Link2, Package, Pencil, Printer, RefreshCw, Repeat, Send, Sofa, Trash2, Truck, UserRound, Wallet } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import i18n from 'i18next'
 import { useTranslation } from 'react-i18next'
@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { legNo } from '@/features/trips/status'
 import { NpNumber } from '@/components/common/NpNumber'
-import { DetailsList } from '@/components/common/DetailsList'
+import { InfoGroup, MissingFields, type InfoRow } from '@/components/common/InfoGroup'
 import { LinkButton } from '@/components/common/LinkButton'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Badge } from '@/components/ui/badge'
@@ -25,6 +25,7 @@ import { isNpDeliveryPaid, NpPaymentCard } from './NpPaymentCard'
 import { NpShipmentCard } from './NpShipmentCard'
 import { ChannelBadge } from '@/features/channels/channel'
 import { MoveBillCard } from '@/features/moves/MoveBillCard'
+import { MovePaymentCard } from '@/features/moves/MovePaymentCard'
 import { MoveSeatsCard } from '@/features/moves/MoveSeatsCard'
 import { NpStateBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
@@ -95,6 +96,81 @@ export function ParcelPage() {
         {t('trips:one', { number: legNo(number ?? tripId, p.tripLegNumber) })}
       </Link>
     ) : undefined
+
+  const clientRows: InfoRow[] = [
+    {
+      label: t('parcels:fields.client'),
+      value: p.clientId ? (
+        <Link to={`/clients/${p.clientId}`} className="underline underline-offset-4">
+          {p.clientName}
+        </Link>
+      ) : undefined,
+    },
+    { label: t('clients:fields.phone'), value: formatPhone(p.clientPhone) },
+    { label: t('parcels:fields.clientCity'), value: p.clientCity },
+    { label: t('parcels:fields.clientAddress'), value: p.clientAddress },
+  ]
+  // a move made for the client themself has them as the sender too: one block is enough then
+  const showSender = !move || (p.senderClientId ?? null) !== (p.clientId ?? null) || (!!p.senderName && p.senderName !== p.clientName)
+  const senderRows: InfoRow[] = [
+    { label: t('parcels:fields.senderName'), value: p.senderName },
+    { label: t('parcels:fields.senderPhone'), value: formatPhone(p.senderPhone) },
+    { label: t('parcels:fields.senderCity'), value: p.senderCity },
+  ]
+  // Nova Poshta's figure, nothing to fill in: never listed as missing
+  const volumeRow: InfoRow = { label: t('parcels:fields.npVolumeWeight'), value: formatWeight(p.npVolumeWeight) }
+  const route = [p.senderCity, p.deliveryCity].filter(Boolean).join(' → ')
+  const cargoRows: InfoRow[] = move
+    ? [
+        { label: t('parcels:fields.description'), value: p.description },
+        { label: t('parcels:fields.seatsAmount'), value: p.seatsAmount },
+        { label: t('parcels:groups.route'), value: route || undefined },
+      ]
+    : [
+        { label: t('parcels:fields.description'), value: p.description },
+        { label: t('parcels:fields.seatsAmount'), value: p.seatsAmount },
+        { label: t('parcels:fields.weightKg'), value: formatWeight(p.weightKg) },
+        volumeRow,
+        {
+          label: t('parcels:fields.dimensions'),
+          value: p.lengthCm != null || p.widthCm != null || p.heightCm != null ? [p.lengthCm, p.widthCm, p.heightCm].map((v) => v ?? '?').join(' × ') : undefined,
+        },
+        { label: t('parcels:fields.declaredValue'), value: formatMoney(p.declaredValue) },
+      ]
+  const logisticsRows: InfoRow[] = [
+    { label: t('parcels:fields.deliveryCity'), value: p.deliveryCity },
+    { label: t('parcels:fields.representative'), value: p.representativeName },
+    { label: t('parcels:fields.warehouse'), value: p.warehouseName },
+    { label: t('trips:fields.plannedTrip'), value: tripLink(p.plannedTripId, p.plannedTripNumber) },
+    { label: t('trips:fields.trip'), value: tripLink(p.tripId, p.tripNumber) },
+  ]
+  const otherRows: InfoRow[] = [
+    { label: t('common:channelField.label'), value: p.channel ? <ChannelBadge channel={p.channel} details={p.channelDetails} /> : undefined },
+    { label: t('parcels:fields.notes'), value: p.notes },
+    // how the parcel got here (by hand or from Nova Poshta) and when, in one line
+    {
+      label: t('parcels:groups.added'),
+      value: [formatDateTime(p.createdAt), p.source ? t(`parcels:source.${p.source}`).toLowerCase() : undefined].filter((v) => v && v !== '—').join(' · ') || undefined,
+    },
+  ]
+  const paymentRows: InfoRow[] = [
+    { label: t('parcels:payment.price'), value: formatMoney(p.deliveryPrice, p.deliveryPriceCurrency) },
+    {
+      label: t('parcels:payment.status'),
+      value: hasPrice ? (
+        <Badge variant={p.paymentStatus === 'PAID' ? 'secondary' : 'outline'} className={p.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-900' : 'text-amber-700'}>
+          {t(`parcels:payment.${p.paymentStatus ?? 'UNPAID'}`)}
+        </Badge>
+      ) : undefined,
+    },
+    { label: t('parcels:payment.paidAt'), value: formatDateTime(p.paidAt) },
+    { label: t('parcels:payment.paidBy'), value: p.paidBy },
+    { label: t('parcels:payment.method'), value: p.paymentMethod ? t(`common:paymentMethod.${p.paymentMethod}`) : undefined },
+    { label: t('parcels:fields.npDeliveryCost'), value: p.npDeliveryCost ? formatMoney(p.npDeliveryCost) : undefined },
+    { label: t('parcels:fields.npCodAmount'), value: p.npCodAmount ? formatMoney(p.npCodAmount) : undefined },
+  ]
+  // storage is only charged while the parcel still sits at the branch
+  const paidStorageDue = p.status === 'IN_NOVA_POSHTA' && !!p.npPaidStorageFrom && new Date(p.npPaidStorageFrom) <= new Date()
 
   return (
     <>
@@ -193,203 +269,176 @@ export function ParcelPage() {
         }}
       />
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        {move ? (
-          <>
-            <MoveSeatsCard parcel={p} />
-            <MoveBillCard parcel={p} />
-          </>
-        ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('parcels:sections.seats')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {p.seats?.length ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>№</TableHead>
-                    <TableHead>{t('parcels:fields.barcode')}</TableHead>
-                    <TableHead>{t('parcels:fields.status')}</TableHead>
-                    {hasSeatWarehouse && <TableHead>{t('parcels:fields.warehouse')}</TableHead>}
-                    <TableHead>{t('parcels:fields.statusChangedAt')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {p.seats.map((s) => (
-                    <TableRow key={s.seatNumber}>
-                      <TableCell>{s.seatNumber}</TableCell>
-                      <TableCell className="font-mono">{s.barcode}</TableCell>
-                      <TableCell>
-                        <ParcelStatusBadge status={s.status} />
-                      </TableCell>
-                      {hasSeatWarehouse && <TableCell>{s.warehouseName ?? '—'}</TableCell>}
-                      <TableCell className="whitespace-normal text-muted-foreground">
-                        <div className="flex flex-col">
-                          <span>{formatDateTime(s.statusChangedAt)}</span>
-                          {s.statusChangedBy && <span className="text-xs">{s.statusChangedBy}</span>}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {p.seatsAmount == null ? t('parcels:sections.seatsUnknown') : t('parcels:sections.seatsPending', { count: p.seatsAmount })}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-        )}
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t(move ? 'parcels:sections.moveDetails' : 'parcels:sections.details')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DetailsList
-              items={[
-                {
-                  label: t('parcels:fields.client'),
-                  value: p.clientId ? (
-                    <Link to={`/clients/${p.clientId}`} className="underline underline-offset-4">
-                      {p.clientName}
-                    </Link>
-                  ) : undefined,
-                },
-                { label: t('clients:fields.phone'), value: formatPhone(p.clientPhone) },
-                { label: t('parcels:fields.clientCity'), value: p.clientCity },
-                { label: t('parcels:fields.clientAddress'), value: p.clientAddress },
-                ...(move ? [] : [{ label: t('parcels:fields.representative'), value: p.representativeName }]),
-                { label: t('parcels:fields.source'), value: p.source ? t(`parcels:source.${p.source}`) : undefined },
-                { label: t('common:channelField.label'), value: p.channel ? <ChannelBadge channel={p.channel} details={p.channelDetails} /> : undefined },
-                { label: t('parcels:fields.description'), value: p.description },
-                { label: t('parcels:fields.seatsAmount'), value: p.seatsAmount },
-                // a move: no weights, sizes or declared value of a parcel; where each item is, the items card says
-                ...(move
-                  ? []
-                  : [
-                      { label: t('parcels:fields.weightKg'), value: formatWeight(p.weightKg) },
-                      { label: t('parcels:fields.npVolumeWeight'), value: formatWeight(p.npVolumeWeight) },
-                      {
-                        label: t('parcels:fields.dimensions'),
-                        value: p.lengthCm != null || p.widthCm != null || p.heightCm != null ? [p.lengthCm, p.widthCm, p.heightCm].map((v) => v ?? '?').join(' × ') : undefined,
-                      },
-                    ]),
-                { label: t('parcels:fields.deliveryCity'), value: p.deliveryCity },
-                ...(move ? [] : [{ label: t('parcels:fields.declaredValue'), value: formatMoney(p.declaredValue) }]),
-                { label: t('parcels:fields.senderName'), value: p.senderName },
-                { label: t('parcels:fields.senderPhone'), value: formatPhone(p.senderPhone) },
-                { label: t('parcels:fields.senderCity'), value: p.senderCity },
-                { label: t('parcels:fields.notes'), value: p.notes },
-                ...(move
-                  ? []
-                  : [
-                      { label: t('parcels:fields.warehouse'), value: p.warehouseName },
-                      { label: t('trips:fields.plannedTrip'), value: tripLink(p.plannedTripId, p.plannedTripNumber) },
-                      { label: t('trips:fields.trip'), value: tripLink(p.tripId, p.tripNumber) },
-                    ]),
-                { label: t('common:common.createdAt'), value: formatDateTime(p.createdAt) },
-              ]}
-            />
-          </CardContent>
-        </Card>
-
-        <ParcelPhotosCard parcel={p} />
-
-        {canSeeMoney && (
-          <Card>
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
-              <CardTitle>{t('parcels:payment.title')}</CardTitle>
-              {canEdit &&
-                (p.paymentStatus === 'PAID' ? (
-                  <Button size="sm" variant="outline" onClick={() => setUnpaying(true)}>
-                    <BadgeX />
-                    {t('parcels:payment.markUnpaid')}
-                  </Button>
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger render={<span />}>
-                      <Button size="sm" disabled={!hasPrice} onClick={() => setMarkingPaid(true)}>
-                        <BadgeCheck />
-                        {t('parcels:payment.markPaid')}
-                      </Button>
-                    </TooltipTrigger>
-                    {!hasPrice && <TooltipContent>{t('parcels:payment.noPrice')}</TooltipContent>}
-                  </Tooltip>
-                ))}
-            </CardHeader>
-            <CardContent>
-              <DetailsList
-                items={[
-                  { label: t('parcels:payment.price'), value: formatMoney(p.deliveryPrice, p.deliveryPriceCurrency) },
-                  {
-                    label: t('parcels:payment.status'),
-                    value: hasPrice ? (
-                      <Badge variant={p.paymentStatus === 'PAID' ? 'secondary' : 'outline'} className={p.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-900' : 'text-amber-700'}>
-                        {t(`parcels:payment.${p.paymentStatus ?? 'UNPAID'}`)}
-                      </Badge>
-                    ) : undefined,
-                  },
-                  { label: t('parcels:payment.paidAt'), value: formatDateTime(p.paidAt) },
-                  { label: t('parcels:payment.paidBy'), value: p.paidBy },
-                  { label: t('parcels:payment.method'), value: p.paymentMethod ? t(`common:paymentMethod.${p.paymentMethod}`) : undefined },
-                  { label: t('parcels:fields.npDeliveryCost'), value: p.npDeliveryCost ? formatMoney(p.npDeliveryCost) : undefined },
-                  { label: t('parcels:fields.npCodAmount'), value: p.npCodAmount ? formatMoney(p.npCodAmount) : undefined },
-                ]}
-              />
-            </CardContent>
-          </Card>
-        )}
-
-        {p.npTtn && <NpPaymentCard parcel={p} />}
-
-        {!move && <NpShipmentCard parcel={p} />}
-
-        {p.npTtn && (
+      {/* a move: its items and bill need the whole width; then the same two columns as a parcel */}
+      {move && (
+        <div className="mb-4 grid gap-4 lg:grid-cols-2">
+          <MoveSeatsCard parcel={p} />
+          <MoveBillCard parcel={p} />
+        </div>
+      )}
+      {/* Two independent columns: a short card never leaves a hole next to a tall one. The facts come first on a phone. */}
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] xl:grid-cols-[minmax(0,1fr)_minmax(0,27rem)]">
+        <div className="flex flex-col gap-4 lg:order-2">
           <Card>
             <CardHeader>
-              <CardTitle>{t('parcels:sections.novaPoshta')}</CardTitle>
+              <CardTitle>{t(move ? 'parcels:sections.moveDetails' : 'parcels:sections.details')}</CardTitle>
             </CardHeader>
-            <CardContent>
-              {!p.npStatusUpdatedAt && <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{t('parcels:np.noTrackingHint')}</p>}
-              <DetailsList
-                items={[
-                  { label: t('parcels:fields.npTtn'), value: <CopyableCode value={p.npTtn} /> },
-                  {
-                    label: t('parcels:np.previousTtnLabel'),
-                    value: p.npPreviousTtn ? <CopyableCode value={p.npPreviousTtn} hint={t('parcels:np.previousTtn', { ttn: p.npPreviousTtn })} /> : undefined,
-                  },
-                  { label: t('parcels:np.payerType'), value: p.npPayerType ? t(`parcels:np.payer.${p.npPayerType}`, { defaultValue: p.npPayerType }) : undefined },
-                  { label: t('parcels:np.paymentMethod'), value: p.npPaymentMethod ? t(`parcels:np.method.${p.npPaymentMethod}`, { defaultValue: p.npPaymentMethod }) : undefined },
-                  // Nova Poshta only reports these when the representative's phone matches the recipient in the waybill.
-                  { label: t('parcels:fields.npPaymentStatus'), value: isNpDeliveryPaid(p) ? t('parcels:np.paidOnline') : p.npPaymentStatus },
-                  { label: t('parcels:fields.npDeliveryAmountDue'), value: p.npDeliveryAmountDue != null ? formatMoney(p.npDeliveryAmountDue) : undefined },
-                  { label: t('parcels:fields.npStatus'), value: p.npStatusText ? `${p.npStatusText}${p.npStatusCode ? ` (${p.npStatusCode})` : ''}` : undefined },
-                  { label: t('parcels:fields.npStatusUpdatedAt'), value: formatDateTime(p.npStatusUpdatedAt) },
-                  { label: t('parcels:fields.npRecipientWarehouse'), value: p.npRecipientWarehouse },
-                  { label: t('parcels:fields.npCreatedAt'), value: formatDateTime(p.npCreatedAt) },
-                  { label: t('parcels:fields.npScheduledDeliveryAt'), value: formatDate(p.npScheduledDeliveryAt) },
-                  { label: t('parcels:fields.npArrivedAt'), value: formatDateTime(p.npArrivedAt) },
-                  { label: t('parcels:fields.npReceivedAt'), value: formatDateTime(p.npReceivedAt) },
-                  { label: t('parcels:fields.npReturnAt'), value: formatDate(p.npReturnAt) },
-                  { label: t('parcels:fields.npPaidStorageFrom'), value: formatDate(p.npPaidStorageFrom) },
-                ]}
-              />
+            <CardContent className="flex flex-col gap-4">
+              <InfoGroup icon={UserRound} title={t('parcels:groups.client')} rows={clientRows} />
+              {showSender && <InfoGroup icon={Send} title={t('parcels:groups.sender')} rows={senderRows} />}
+              <InfoGroup icon={move ? Sofa : Package} title={t(move ? 'parcels:groups.move' : 'parcels:groups.cargo')} rows={cargoRows} />
+              {!move && <InfoGroup icon={Truck} title={t('parcels:groups.logistics')} rows={logisticsRows} />}
+              <InfoGroup icon={Info} title={t('parcels:groups.other')} rows={otherRows} />
+              <MissingFields label={t('parcels:groups.missing')} rows={[...clientRows, ...(showSender ? senderRows : []), ...cargoRows.filter((r) => r !== volumeRow)]} />
             </CardContent>
           </Card>
-        )}
 
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>{t('parcels:history.title')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ParcelHistory entries={history.data} isLoading={history.isPending} />
-          </CardContent>
-        </Card>
+          {/* a move: the client pays the whole bill, so «Оплата» sums it up instead of a separate transport payment */}
+          {move && canSeeMoney && <MovePaymentCard parcel={p} />}
+          {!move && canSeeMoney && (
+            <Card>
+              <CardHeader className="flex flex-row items-start justify-between gap-4">
+                <CardTitle>{t('parcels:payment.title')}</CardTitle>
+                {canEdit &&
+                  (p.paymentStatus === 'PAID' ? (
+                    <Button size="sm" variant="outline" onClick={() => setUnpaying(true)}>
+                      <BadgeX />
+                      {t('parcels:payment.markUnpaid')}
+                    </Button>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger render={<span />}>
+                        <Button size="sm" disabled={!hasPrice} onClick={() => setMarkingPaid(true)}>
+                          <BadgeCheck />
+                          {t('parcels:payment.markPaid')}
+                        </Button>
+                      </TooltipTrigger>
+                      {!hasPrice && <TooltipContent>{t('parcels:payment.noPrice')}</TooltipContent>}
+                    </Tooltip>
+                  ))}
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2">
+                <InfoGroup rows={paymentRows} />
+                {!hasPrice && <p className="text-sm text-muted-foreground">{t('parcels:payment.noPrice')}</p>}
+              </CardContent>
+            </Card>
+          )}
+
+          <ParcelPhotosCard parcel={p} />
+        </div>
+
+        <div className="flex flex-col gap-4 lg:order-1">
+          {!move && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('parcels:sections.seats')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {p.seats?.length ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>№</TableHead>
+                        <TableHead>{t('parcels:fields.barcode')}</TableHead>
+                        <TableHead>{t('parcels:fields.status')}</TableHead>
+                        {hasSeatWarehouse && <TableHead>{t('parcels:fields.warehouse')}</TableHead>}
+                        <TableHead>{t('parcels:fields.statusChangedAt')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {p.seats.map((s) => (
+                        <TableRow key={s.seatNumber}>
+                          <TableCell>{s.seatNumber}</TableCell>
+                          <TableCell className="font-mono">{s.barcode}</TableCell>
+                          <TableCell>
+                            <ParcelStatusBadge status={s.status} />
+                          </TableCell>
+                          {hasSeatWarehouse && <TableCell>{s.warehouseName ?? '—'}</TableCell>}
+                          <TableCell className="whitespace-normal text-muted-foreground">
+                            <div className="flex flex-col">
+                              <span>{formatDateTime(s.statusChangedAt)}</span>
+                              {s.statusChangedBy && <span className="text-xs">{s.statusChangedBy}</span>}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    {p.seatsAmount == null ? t('parcels:sections.seatsUnknown') : t('parcels:sections.seatsPending', { count: p.seatsAmount })}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {p.npTtn && (
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('parcels:sections.novaPoshta')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {!p.npStatusUpdatedAt && <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{t('parcels:np.noTrackingHint')}</p>}
+                <div className="flex flex-col gap-4">
+                  <InfoGroup
+                    icon={Hash}
+                    title={t('parcels:groups.npNumbers')}
+                    rows={[
+                      { label: t('parcels:fields.npTtn'), value: <CopyableCode value={p.npTtn} /> },
+                      {
+                        label: t('parcels:np.previousTtnLabel'),
+                        value: p.npPreviousTtn ? <CopyableCode value={p.npPreviousTtn} hint={t('parcels:np.previousTtn', { ttn: p.npPreviousTtn })} /> : undefined,
+                      },
+                      { label: t('parcels:fields.npRecipientWarehouse'), value: p.npRecipientWarehouse },
+                    ]}
+                  />
+                  <InfoGroup
+                    icon={Wallet}
+                    title={t('parcels:groups.npPayment')}
+                    rows={[
+                      { label: t('parcels:np.payerType'), value: p.npPayerType ? t(`parcels:np.payer.${p.npPayerType}`, { defaultValue: p.npPayerType }) : undefined },
+                      { label: t('parcels:np.paymentMethod'), value: p.npPaymentMethod ? t(`parcels:np.method.${p.npPaymentMethod}`, { defaultValue: p.npPaymentMethod }) : undefined },
+                      // Nova Poshta only reports these when the representative's phone matches the recipient in the waybill.
+                      { label: t('parcels:fields.npPaymentStatus'), value: isNpDeliveryPaid(p) ? t('parcels:np.paidOnline') : p.npPaymentStatus },
+                      { label: t('parcels:fields.npDeliveryAmountDue'), value: p.npDeliveryAmountDue != null ? formatMoney(p.npDeliveryAmountDue) : undefined },
+                    ]}
+                  />
+                  <InfoGroup
+                    icon={CalendarClock}
+                    title={t('parcels:groups.npStatus')}
+                    rows={[
+                      { label: t('parcels:fields.npStatus'), value: p.npStatusText ? `${p.npStatusText}${p.npStatusCode ? ` (${p.npStatusCode})` : ''}` : undefined },
+                      { label: t('parcels:fields.npStatusUpdatedAt'), value: formatDateTime(p.npStatusUpdatedAt) },
+                      { label: t('parcels:fields.npCreatedAt'), value: formatDateTime(p.npCreatedAt) },
+                      { label: t('parcels:fields.npScheduledDeliveryAt'), value: formatDate(p.npScheduledDeliveryAt) },
+                      { label: t('parcels:fields.npArrivedAt'), value: formatDateTime(p.npArrivedAt) },
+                      { label: t('parcels:fields.npReceivedAt'), value: formatDateTime(p.npReceivedAt) },
+                      { label: t('parcels:fields.npReturnAt'), value: formatDate(p.npReturnAt) },
+                      {
+                        label: t('parcels:fields.npPaidStorageFrom'),
+                        value: p.npPaidStorageFrom ? <span className={paidStorageDue ? 'text-destructive' : undefined}>{formatDate(p.npPaidStorageFrom)}</span> : undefined,
+                      },
+                    ]}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {p.npTtn && <NpPaymentCard parcel={p} />}
+
+          {!move && <NpShipmentCard parcel={p} />}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('parcels:history.title')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ParcelHistory entries={history.data} isLoading={history.isPending} />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <ParcelEditDialog parcel={p} open={editing} onOpenChange={setEditing} />
