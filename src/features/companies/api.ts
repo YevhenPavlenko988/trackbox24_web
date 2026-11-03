@@ -37,6 +37,10 @@ export function setCompanyParcels(id: number, value: boolean): Promise<CompanyRe
   return unwrap(api.PUT('/api/companies/{id}/parcels', { params: { path: { id }, query: { value } } }))
 }
 
+export function setCompanyReferral(id: number, value: boolean): Promise<CompanyResponse> {
+  return unwrap(api.PUT('/api/companies/{id}/referral', { params: { path: { id }, query: { value } } }))
+}
+
 export function setCompanyCurrency(id: number, value: boolean): Promise<CompanyResponse> {
   return unwrap(api.PUT('/api/companies/{id}/currency', { params: { path: { id }, query: { value } } }))
 }

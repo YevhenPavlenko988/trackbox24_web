@@ -29,6 +29,15 @@
     "count": "Обрано: {{count}}"
   },
   "payment": {
+    "referralDiscount": "Знижка за рекомендацією",
+    "pointsRedeemed": "Списано балів",
+    "due": "До сплати",
+    "discountOff": "Зняти",
+    "discountBack": "Повернути знижку",
+    "discountRemoved": "знято менеджером",
+    "points": "Списати бали",
+    "pointsHint": "Є {{balance}} балів, можна до {{max}} (1 бал = {{value}})",
+    "pointsNone": "Бали: {{reason}}",
     "title": "Оплата",
     "price": "Ціна доставки",
     "currency": "Валюта",

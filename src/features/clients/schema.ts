@@ -30,6 +30,8 @@ export const clientSchema = z
     notes: optionalText,
     channel: z.union([z.enum(CHANNELS as [Channel, ...Channel[]]), z.literal('')]),
     channelDetails: z.string().trim().max(255),
+    /** «Реферальна програма»: who recommended the client. */
+    referredById: z.number().optional(),
   })
   .superRefine((v, ctx) => {
     if (v.type === 'ORGANIZATION' && !v.organizationName) {
@@ -68,6 +70,7 @@ export function clientToFormValues(c: ClientResponse): ClientFormValues {
     notes: c.notes ?? '',
     channel: c.channel ?? '',
     channelDetails: c.channelDetails ?? '',
+    referredById: c.referredById,
   }
 }
 
@@ -87,5 +90,6 @@ export function formValuesToRequest(v: ClientFormValues): ClientRequest {
     notes: orUndefined(v.notes),
     channel: v.channel || undefined,
     channelDetails: v.channel ? orUndefined(v.channelDetails) : undefined,
+    referredById: v.referredById,
   }
 }

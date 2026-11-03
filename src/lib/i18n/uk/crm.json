@@ -40,7 +40,8 @@
     "PHOTOS": "Фото посилок",
     "PUBLIC_TRACKING": "Публічне відстеження",
     "TELEGRAM_BOT": "Telegram-бот",
-    "CURRENCY": "Курси валют"
+    "CURRENCY": "Курси валют",
+    "REFERRAL": "Реферальна програма"
   },
   "stageKind": {
     "OPEN": "У роботі",
