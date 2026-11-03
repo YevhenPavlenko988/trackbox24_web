@@ -9,10 +9,13 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAccess } from '@/features/auth/access'
+import { useCurrentCompany } from '@/features/companies/queries'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { convertRate, useRates } from '@/features/currency/queries'
 import { parseNumber } from '@/features/parcels/status'
 import { showApiError } from '@/lib/api/problem'
-import type { MoveBillResponse, MoveBillWork, MoveBillWorkLoader, ParcelResponse } from '@/lib/api/types'
-import { formatDate, formatDateTime, formatMoney, formatPhone } from '@/lib/format'
+import type { Currency, MoveBillResponse, MoveBillWork, MoveBillWorkLoader, ParcelResponse } from '@/lib/api/types'
+import { CURRENCY_SYMBOL, formatDate, formatDateTime, formatMoney, formatPhone, moveCurrencies, rateLine } from '@/lib/format'
 import { useDeletePayment, useDeleteStorage, useDeleteWork, useMoveBill, useSetBillCurrency, useSetFact } from './billApi'
 import { ClientPaymentDialog, StorageDialog, WorkDialog } from './MoveBillDialogs'
 
@@ -23,8 +26,12 @@ import { ClientPaymentDialog, StorageDialog, WorkDialog } from './MoveBillDialog
 export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
   const { t } = useTranslation(['moves', 'common'])
   const { canEditMoves: canEdit } = useAccess()
+  const multi = useCurrentCompany().data?.currencyEnabled === true
   const id = parcel.id!
   const setCurrency = useSetBillCurrency(id)
+  // switching the move's currency recalculates its prices: asked first, with the rate
+  const [switchTo, setSwitchTo] = useState<Currency>()
+  const rates = useRates(multi).data
   const query = useMoveBill(id)
   const deleteWork = useDeleteWork(id)
   const deleteStorage = useDeleteStorage(id)
@@ -55,15 +62,15 @@ export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
             <>
               {/* the currency of the whole move: transport, rates, storage and payments */}
               <div className="flex rounded-md border p-0.5" role="group" aria-label={t('moves:bill.currency')}>
-                {(['EUR', 'UAH'] as const).map((c) => (
+                {moveCurrencies(multi || bill.currency === 'USD' || bill.currency === 'PLN').map((c) => (
                   <Button
                     key={c}
                     size="sm"
                     variant={bill.currency === c ? 'default' : 'ghost'}
                     className="h-7 px-3"
-                    onClick={() => bill.currency !== c && run(() => setCurrency.mutateAsync(c))}
+                    onClick={() => bill.currency !== c && setSwitchTo(c)}
                   >
-                    {c === 'EUR' ? '€' : 'грн'}
+                    {CURRENCY_SYMBOL[c]}
                   </Button>
                 ))}
               </div>
@@ -170,7 +177,14 @@ export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
                 {p.by && <span className="text-muted-foreground"> · {p.by}</span>}
               </span>
               <span className="flex items-center gap-2">
-                <span className="font-medium tabular-nums">{money(p.amount)}</span>
+                <span className="font-medium tabular-nums">
+                  {p.paidCurrency && (
+                    <span className="mr-1 text-xs font-normal text-muted-foreground">
+                      {t('moves:bill.paidAtRate', { paid: formatMoney(p.paidAmount, p.paidCurrency), rate: rateLine(p.paidCurrency, bill.currency!, p.paidRate) })} →
+                    </span>
+                  )}
+                  {money(p.amount)}
+                </span>
                 {canEdit && p.id != null && (
                   <Button variant="ghost" size="icon-sm" aria-label={t('common:actions.delete')} onClick={() => run(() => deletePayment.mutateAsync(p.id!))}>
                     <Trash2 />
@@ -183,7 +197,23 @@ export function MoveBillCard({ parcel }: { parcel: ParcelResponse }) {
       </CardContent>
       {work && <WorkDialog parcelId={id} work={work === 'new' ? undefined : work} onClose={() => setWork(null)} />}
       {storing && <StorageDialog parcelId={id} onClose={() => setStoring(false)} />}
-      {paying && <ClientPaymentDialog parcelId={id} onClose={() => setPaying(false)} />}
+      {paying && <ClientPaymentDialog parcelId={id} billCurrency={bill.currency} onClose={() => setPaying(false)} />}
+      {switchTo && bill.currency && (
+        <ConfirmDialog
+          open
+          onOpenChange={(o) => !o && setSwitchTo(undefined)}
+          title={t('moves:bill.switchTitle', { currency: CURRENCY_SYMBOL[switchTo] })}
+          description={(() => {
+            const k = convertRate(rates, bill.currency, switchTo)
+            return t('moves:bill.switchText', {
+              rate: k == null ? '' : ` 1 ${CURRENCY_SYMBOL[bill.currency]} = ${k.toLocaleString('uk-UA', { maximumFractionDigits: 4 })} ${CURRENCY_SYMBOL[switchTo]}`,
+            })
+          })()}
+          confirmLabel={t('moves:bill.switchConfirm')}
+          pending={setCurrency.isPending}
+          onConfirm={() => run(() => setCurrency.mutateAsync(switchTo)).finally(() => setSwitchTo(undefined))}
+        />
+      )}
     </Card>
   )
 }

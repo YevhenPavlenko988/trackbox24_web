@@ -11,7 +11,16 @@ export const CURRENCIES: Currency[] = ['UAH', 'EUR']
 type PriceValues = { deliveryPrice: string; deliveryPriceCurrency: Currency }
 
 /** "Our" delivery price + currency; only managers may send these (others get 403). */
-export function PriceFields<T extends FieldValues & PriceValues>({ form, idPrefix = '' }: { form: UseFormReturn<T>; idPrefix?: string }) {
+export function PriceFields<T extends FieldValues & PriceValues>({
+  form,
+  idPrefix = '',
+  currencies = CURRENCIES,
+}: {
+  form: UseFormReturn<T>
+  idPrefix?: string
+  /** A move offers more with «Курси валют». */
+  currencies?: Currency[]
+}) {
   const { t } = useTranslation('parcels')
   const errors = form.formState.errors as Partial<Record<keyof PriceValues, { message?: string }>>
   return (
@@ -32,7 +41,7 @@ export function PriceFields<T extends FieldValues & PriceValues>({ form, idPrefi
                 <SelectValue>{field.value}</SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {CURRENCIES.map((c) => (
+                {currencies.map((c) => (
                   <SelectItem key={c} value={c}>
                     {c}
                   </SelectItem>

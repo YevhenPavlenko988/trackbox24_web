@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAccess } from '@/features/auth/access'
 import type { ParcelResponse } from '@/lib/api/types'
-import { formatDate, formatMoney } from '@/lib/format'
+import { formatDate, formatMoney, rateLine } from '@/lib/format'
 import { useMoveBill } from './billApi'
 import { ClientPaymentDialog } from './MoveBillDialogs'
 
@@ -74,12 +74,20 @@ export function MovePaymentCard({ parcel }: { parcel: ParcelResponse }) {
                 {/* who took the money */}
                 {p.by && <span className="block text-xs text-muted-foreground">{t('moves:bill.takenBy', { name: p.by })}</span>}
               </span>
-              <span className="font-medium whitespace-nowrap tabular-nums">{money(p.amount)}</span>
+              <span className="font-medium whitespace-nowrap tabular-nums">
+                {/* paid in another currency: what the client gave → what it counts in the move's currency */}
+                {p.paidCurrency && (
+                  <span className="mr-1 text-xs font-normal text-muted-foreground">
+                    {t('moves:bill.paidAtRate', { paid: formatMoney(p.paidAmount, p.paidCurrency), rate: rateLine(p.paidCurrency, bill.currency!, p.paidRate) })} →
+                  </span>
+                )}
+                {money(p.amount)}
+              </span>
             </div>
           ))}
         </div>
       </CardContent>
-      {paying && <ClientPaymentDialog parcelId={parcel.id!} onClose={() => setPaying(false)} />}
+      {paying && <ClientPaymentDialog parcelId={parcel.id!} billCurrency={bill.currency} onClose={() => setPaying(false)} />}
     </Card>
   )
 }

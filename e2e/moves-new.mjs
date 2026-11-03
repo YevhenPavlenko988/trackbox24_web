@@ -94,11 +94,14 @@ export async function run() {
     ok('prepayment 200: due 710', true)
     await shot('03-bill')
 
-    // currency
+    // currency: asked first, the prices are recalculated at the rate; back to euros gives the same sums
     await page.getByRole('button', { name: 'грн', exact: true }).click()
-    await page.waitForFunction(() => document.body.innerText.includes('710 грн'))
-    ok('the bill switches to UAH', true)
+    ok('switching the currency asks first', await page.getByText('Перевести переїзд у грн?').isVisible())
+    await page.getByRole('button', { name: 'Перерахувати' }).click()
+    await page.waitForFunction(() => !document.body.innerText.includes('710 €') && /\d грн/.test(document.body.innerText))
+    ok('the bill switches to UAH, recalculated', true)
     await page.getByRole('button', { name: '€', exact: true }).click()
+    await page.getByRole('button', { name: 'Перерахувати' }).click()
     await page.waitForFunction(() => document.body.innerText.includes('710 €'))
 
     // the invoice
