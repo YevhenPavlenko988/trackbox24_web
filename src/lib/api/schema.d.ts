@@ -3666,6 +3666,22 @@ export interface components {
              * @enum {string}
              */
             kind?: "PARCEL" | "MOVE";
+            /**
+             * @description Оплату прийнято в іншій валюті, ніж ціна («Курси валют»): яка
+             * @example UAH
+             * @enum {string}
+             */
+            paidCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Скільки в ній заплатили
+             * @example 1552.79
+             */
+            paidAmount?: number;
+            /**
+             * @description Скільки одиниць цієї валюти за одиницю валюти ціни на мить оплати
+             * @example 51.7598
+             */
+            paidRate?: number;
         };
         ParcelSeatResponse: {
             /**
@@ -3985,6 +4001,12 @@ export interface components {
              * @enum {string}
              */
             method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            /**
+             * @description Для PAID: валюта, в якій заплатили, якщо не у валюті ціни («Курси валют»)
+             * @example USD
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
         };
         NpShipmentRequest: {
             /**
@@ -4193,7 +4215,7 @@ export interface components {
             companySetAt?: string;
             /**
              * @description Курс, що діє: курс компанії, а без нього — продаж банку
-             * @example 45.66
+             * @example 46.06
              */
             rate?: number;
             /**
@@ -5391,6 +5413,12 @@ export interface components {
              */
             paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
             /**
+             * @description Для видачі: валюта, в якій клієнт заплатив, якщо не у валюті ціни («Курси валют»): UAH, EUR, USD, PLN. Сума перераховується за курсом компанії на цю мить і зберігається з посилкою
+             * @example UAH
+             * @enum {string}
+             */
+            paidCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
              * Format: int64
              * @description Тільки для переміщення на склад, обов'язково: склад, куди переміщають
              * @example 2
@@ -5447,6 +5475,12 @@ export interface components {
              * @enum {string}
              */
             paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            /**
+             * @description Для видачі: валюта, в якій клієнт заплатив, якщо не у валюті ціни («Курси валют»): UAH, EUR, USD, PLN. Сума перераховується за курсом компанії на цю мить і зберігається з посилкою
+             * @example UAH
+             * @enum {string}
+             */
+            paidCurrency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
              * Format: int64
              * @description Для TO_WAREHOUSE, обов'язково: склад
@@ -5660,6 +5694,12 @@ export interface components {
              * @enum {string}
              */
             paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            /**
+             * @description Оплата при прийомі в іншій валюті, ніж ціна («Курси валют»): UAH, EUR, USD, PLN
+             * @example UAH
+             * @enum {string}
+             */
+            paidCurrency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
              * @description PARCEL (за замовчуванням) або MOVE — переїзд: потрібен модуль «Переїзди», без ТТН НП
              * @example MOVE

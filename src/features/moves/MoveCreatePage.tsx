@@ -22,7 +22,7 @@ import { PriceFields } from '@/features/parcels/PriceFields'
 import { useCreateParcel } from '@/features/parcels/queries'
 import { orUndefined, parseNumber } from '@/features/parcels/status'
 import { useMutationError } from '@/lib/api/problem'
-import { moveCurrencies } from '@/lib/format'
+import { priceCurrencies } from '@/lib/format'
 import { itemLines } from './items'
 
 const MAX_SEATS = 500
@@ -143,7 +143,7 @@ export function MoveCreatePage() {
                   <Input id="move-to" placeholder={t('moves:fields.toCityHint')} {...form.register('deliveryCity')} />
                 </Field>
               </div>
-              {isManager && <PriceFields form={form} idPrefix="move-" currencies={moveCurrencies(multi)} />}
+              {isManager && <PriceFields form={form} idPrefix="move-" currencies={priceCurrencies(multi)} />}
               <Field>
                 <FieldLabel htmlFor="move-notes">{t('moves:fields.notes')}</FieldLabel>
                 <Textarea id="move-notes" rows={2} {...form.register('notes')} />

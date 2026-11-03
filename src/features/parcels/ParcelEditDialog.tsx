@@ -19,7 +19,7 @@ import { CHANNELS, ChannelFields } from '@/features/channels/channel'
 import type { Channel } from '@/lib/api/types'
 import { DimensionFields } from './DimensionFields'
 import { useCurrentCompany } from '@/features/companies/queries'
-import { moveCurrencies } from '@/lib/format'
+import { priceCurrencies } from '@/lib/format'
 import { PriceFields } from './PriceFields'
 import { useUpdateParcel } from './queries'
 import { canEditSeatsAmount, orUndefined, parseNumber } from './status'
@@ -100,7 +100,7 @@ export function ParcelEditDialog({
 function EditForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => void }) {
   const { t } = useTranslation(['parcels', 'common'])
   const update = useUpdateParcel(parcel.id!)
-  // a move may be in dollars or zloty with «Курси валют»; an ordinary parcel stays in UAH or EUR
+  // a price may be in dollars or zloty with «Курси валют»
   const multi = useCurrentCompany().data?.currencyEnabled === true
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: toFormValues(parcel) })
   const { errors, isSubmitting } = form.formState
@@ -206,7 +206,7 @@ function EditForm({ parcel, onClose }: { parcel: ParcelResponse; onClose: () => 
           <DimensionFields form={form} idPrefix="e-" />
 
           {isManager && (
-            <PriceFields form={form} idPrefix="e-" currencies={parcel.kind === 'MOVE' ? moveCurrencies(multi) : undefined} />
+            <PriceFields form={form} idPrefix="e-" currencies={priceCurrencies(multi)} />
           )}
 
           <div className="grid gap-4 sm:grid-cols-3">

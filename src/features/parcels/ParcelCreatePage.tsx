@@ -21,10 +21,13 @@ import { ClientPicker } from '@/features/clients/ClientPicker'
 import { UserSelect } from '@/features/users/UserSelect'
 import { useMutationError } from '@/lib/api/problem'
 import { CHANNELS, ChannelFields } from '@/features/channels/channel'
-import type { Channel } from '@/lib/api/types'
+import type { Channel, Currency, PaymentMethod } from '@/lib/api/types'
 import { DimensionFields } from './DimensionFields'
 import { PAYMENT_METHODS } from './paymentMethod'
 import { PriceFields } from './PriceFields'
+import { useCurrentCompany } from '@/features/companies/queries'
+import { defaultPaidCurrency, PaidCurrencyField } from '@/features/currency/PaidCurrency'
+import { priceCurrencies } from '@/lib/format'
 import { useCreateParcel } from './queries'
 import { orUndefined, parseNumber } from './status'
 
@@ -55,7 +58,8 @@ const schema = z
     senderCity: z.string().trim(),
     notes: z.string().trim(),
     deliveryPrice: numberField,
-    deliveryPriceCurrency: z.enum(['UAH', 'EUR']),
+    deliveryPriceCurrency: z.enum(['EUR', 'UAH', 'USD', 'PLN']),
+    paidCurrency: z.string(),
     // The sender may pay our delivery when handing the parcel over; empty means not paid yet.
     paymentMethod: z.union([z.enum(PAYMENT_METHODS), z.literal('')]),
     channel: z.union([z.enum(CHANNELS as [Channel, ...Channel[]]), z.literal('')]),
@@ -73,6 +77,7 @@ type FormValues = z.infer<typeof schema>
 const NOT_PAID = '__none__'
 
 export function ParcelCreatePage() {
+  const multi = useCurrentCompany().data?.currencyEnabled === true
   const { t } = useTranslation(['parcels', 'common'])
   const navigate = useNavigate()
   const create = useCreateParcel()
@@ -99,6 +104,7 @@ export function ParcelCreatePage() {
       notes: '',
       deliveryPrice: '',
       deliveryPriceCurrency: 'UAH',
+      paidCurrency: 'UAH',
       paymentMethod: '',
     },
   })
@@ -133,6 +139,10 @@ export function ParcelCreatePage() {
         deliveryPriceCurrency: isManager && v.deliveryPrice ? v.deliveryPriceCurrency : undefined,
         // Without a price the backend refuses a payment, so a method typed before the price was cleared stays home.
         paymentMethod: isManager && parseNumber(v.deliveryPrice) != null && v.paymentMethod ? v.paymentMethod : undefined,
+        paidCurrency:
+          isManager && parseNumber(v.deliveryPrice) != null && v.paymentMethod && v.paidCurrency !== v.deliveryPriceCurrency
+            ? (v.paidCurrency as Currency)
+            : undefined,
       })
       toast.success(t('common:common.saved'))
       navigate(`/parcels/${created.id}`, { replace: true })
@@ -259,7 +269,7 @@ export function ParcelCreatePage() {
 
               <DimensionFields form={form} />
 
-              {isManager && <PriceFields form={form} />}
+              {isManager && <PriceFields form={form} currencies={priceCurrencies(multi)} />}
               {isManager && (
                 <Controller
                   control={form.control}
@@ -267,7 +277,15 @@ export function ParcelCreatePage() {
                   render={({ field }) => (
                     <Field>
                       <FieldLabel htmlFor="paymentMethod">{t('parcels:payment.paidNow')}</FieldLabel>
-                      <Select value={field.value || NOT_PAID} onValueChange={(v) => field.onChange(v === NOT_PAID ? '' : String(v))} disabled={!form.watch('deliveryPrice')}>
+                      <Select
+                        value={field.value || NOT_PAID}
+                        onValueChange={(v) => {
+                          const m = v === NOT_PAID ? '' : String(v)
+                          field.onChange(m)
+                          form.setValue('paidCurrency', defaultPaidCurrency(m as PaymentMethod, form.getValues('deliveryPriceCurrency')))
+                        }}
+                        disabled={!form.watch('deliveryPrice')}
+                      >
                         <SelectTrigger id="paymentMethod" className="w-full sm:w-1/2">
                           <SelectValue>{field.value ? t(`common:paymentMethod.${field.value}`) : t('parcels:payment.notPaidNow')}</SelectValue>
                         </SelectTrigger>
@@ -282,6 +300,21 @@ export function ParcelCreatePage() {
                       </Select>
                       <FieldDescription>{t('parcels:payment.paidNowHint')}</FieldDescription>
                     </Field>
+                  )}
+                />
+              )}
+              {isManager && form.watch('paymentMethod') && (
+                <Controller
+                  control={form.control}
+                  name="paidCurrency"
+                  render={({ field }) => (
+                    <PaidCurrencyField
+                      price={parseNumber(form.watch('deliveryPrice'))}
+                      priceCurrency={form.watch('deliveryPriceCurrency')}
+                      method={form.watch('paymentMethod')}
+                      value={field.value as Currency}
+                      onChange={field.onChange}
+                    />
                   )}
                 />
               )}

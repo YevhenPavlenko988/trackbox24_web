@@ -47,8 +47,8 @@ export function rateLine(from: MoneyCurrency, to: MoneyCurrency, k?: number): st
 /** How currencies are listed everywhere: euro, hryvnia, dollar, zloty. */
 export const MONEY_ORDER: MoneyCurrency[] = ['EUR', 'UAH', 'USD', 'PLN']
 
-/** A move's currency: euro or hryvnia; with «Курси валют» also dollar and zloty. */
-export const moveCurrencies = (multi: boolean): MoneyCurrency[] => (multi ? MONEY_ORDER : ['EUR', 'UAH'])
+/** A price's currency (a parcel or a move): euro or hryvnia; with «Курси валют» also dollar and zloty. */
+export const priceCurrencies = (multi: boolean): MoneyCurrency[] => (multi ? MONEY_ORDER : ['EUR', 'UAH'])
 
 export function formatMoney(value?: number, currency: MoneyCurrency = 'UAH'): string {
   if (value == null) return '—'
