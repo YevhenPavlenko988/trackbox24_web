@@ -1388,7 +1388,7 @@ export interface paths {
         put?: never;
         /**
          * «Я оплатив» за реквізитами
-         * @description Без авторизації. Клієнт переказав гроші сам; посилка чи переїзд отримує позначку для менеджера, той підтверджує
+         * @description Без авторизації. Для переїзду — `amount`, якщо переказав лише частину (передоплату). Клієнт переказав гроші сам; посилка чи переїзд отримує позначку для менеджера, той підтверджує
          *     чи відхиляє (`/api/online-payments/{id}/confirm|reject`).
          */
         post: operations["claim"];
@@ -1409,7 +1409,8 @@ export interface paths {
         put?: never;
         /**
          * Перейти до оплати карткою
-         * @description Без авторизації. Створює рахунок у провайдера перевізника на суму до сплати у вибраній валюті й повертає
+         * @description Без авторизації. Створює рахунок у провайдера перевізника на суму до сплати (для переїзду можна менше — `amount`,
+         *     передоплата) у вибраній валюті й повертає
          *     сторінку оплати. Після оплати провайдер повертає клієнта на сторінку відстеження з `?payment=<token>`.
          */
         post: operations["checkout"];
@@ -4188,6 +4189,12 @@ export interface components {
             /** @description Приватний ключ LiqPay; порожньо — лишити збережений */
             liqpayPrivateKey?: string;
             /**
+             * Format: int64
+             * @description ID товару в касі LiqPay (кабінет LiqPay → РРО → Каса → Товари): з ним ПРРО LiqPay видає клієнту фіскальний чек; немає — без чека
+             * @example 123456
+             */
+            liqpayRroItemId?: number;
+            /**
              * @description Мерчант WayForPay (merchantAccount)
              * @example trackbox24_com
              */
@@ -4257,6 +4264,12 @@ export interface components {
              * @example false
              */
             liqpayPrivateKeySet?: boolean;
+            /**
+             * Format: int64
+             * @description ID товару в касі LiqPay для фіскального чека
+             * @example 123456
+             */
+            liqpayRroItemId?: number;
             /**
              * @description Мерчант WayForPay
              * @example trackbox24_com
@@ -6415,11 +6428,21 @@ export interface components {
              */
             phone: string;
             /**
-             * @description Валюта рахунку з `card.options`; немає — перша
+             * @description Валюта рахунку з `card.options`; немає — перша (для «Я оплатив» не потрібна)
              * @example UAH
              * @enum {string}
              */
             currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Лише переїзд: скільки сплатити зараз у валюті переїзду — передоплата чи частина; немає — увесь залишок
+             * @example 200
+             */
+            amount?: number;
+            /**
+             * @description Email клієнта для фіскального чека, якщо перевізник увімкнув ПРРО у своєму провайдері
+             * @example olena@example.com
+             */
+            email?: string;
         };
         PublicCheckoutResponse: {
             /**
@@ -17192,7 +17215,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["PhoneRequest"];
+                "application/json": components["schemas"]["CheckoutRequest"];
             };
         };
         responses: {
