@@ -26,6 +26,7 @@ import { NpShipmentCard } from './NpShipmentCard'
 import { ChannelBadge } from '@/features/channels/channel'
 import { MoveBillCard } from '@/features/moves/MoveBillCard'
 import { MovePaymentCard } from '@/features/moves/MovePaymentCard'
+import { OnlinePaymentsCard } from '@/features/payments/OnlinePaymentsCard'
 import { MoveSeatsCard } from '@/features/moves/MoveSeatsCard'
 import { NpStateBadge } from './NpStateBadge'
 import { ParcelHistory } from './ParcelHistory'
@@ -191,6 +192,10 @@ export function ParcelPage() {
         </Badge>
       ) : undefined,
     },
+    {
+      label: t('parcels:online.claimedBadge'),
+      value: p.paymentClaimedAt ? <span className="font-medium text-amber-700">{formatDateTime(p.paymentClaimedAt)}</span> : undefined,
+    },
     { label: t('parcels:payment.paidAt'), value: formatDateTime(p.paidAt) },
     { label: t('parcels:payment.paidBy'), value: p.paidBy },
     { label: t('parcels:payment.method'), value: p.paymentMethod ? t(`common:paymentMethod.${p.paymentMethod}`) : undefined },
@@ -353,6 +358,8 @@ export function ParcelPage() {
               </CardContent>
             </Card>
           )}
+          {/* «Онлайн-оплата»: the client's invoices and «Я оплатив» for a transfer, waiting for the manager */}
+          {canSeeMoney && <OnlinePaymentsCard parcel={p} canDecide={isManager} />}
 
           <ParcelPhotosCard parcel={p} />
         </div>

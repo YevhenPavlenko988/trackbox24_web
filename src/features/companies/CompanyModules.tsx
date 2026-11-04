@@ -1,4 +1,4 @@
-import { Boxes, Camera, Coins, Gift, Globe, Package, Send, type LucideIcon } from 'lucide-react'
+import { Boxes, Camera, Coins, CreditCard, Gift, Globe, Package, Send, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -10,7 +10,7 @@ import { usePrices } from '@/features/billing/queries'
 import { showApiError } from '@/lib/api/problem'
 import type { CompanyOption, CompanyResponse } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
-import { useSetCompanyCurrency, useSetCompanyMoves, useSetCompanyReferral, useSetCompanyParcels, useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
+import { useSetCompanyCurrency, useSetCompanyMoves, useSetCompanyOnlinePayments, useSetCompanyReferral, useSetCompanyParcels, useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
 
 type Mutation = { mutateAsync: (value: boolean) => Promise<unknown>; isPending: boolean }
 
@@ -22,6 +22,7 @@ const ICONS: Record<CompanyOption, { icon: LucideIcon; tint: string }> = {
   TELEGRAM_BOT: { icon: Send, tint: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300' },
   CURRENCY: { icon: Coins, tint: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
   REFERRAL: { icon: Gift, tint: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300' },
+  ONLINE_PAYMENTS: { icon: CreditCard, tint: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' },
 }
 
 /**
@@ -42,6 +43,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
     MOVES: useSetCompanyMoves(id),
     CURRENCY: useSetCompanyCurrency(id),
     REFERRAL: useSetCompanyReferral(id),
+    ONLINE_PAYMENTS: useSetCompanyOnlinePayments(id),
   }
   const on: Record<CompanyOption, boolean> = {
     PARCELS: company.parcelsEnabled !== false,
@@ -51,6 +53,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
     MOVES: company.movesEnabled === true,
     CURRENCY: company.currencyEnabled === true,
     REFERRAL: company.referralEnabled === true,
+    ONLINE_PAYMENTS: company.onlinePaymentsEnabled === true,
   }
   const toggle = async (option: CompanyOption, value: boolean) => {
     try {
@@ -72,7 +75,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
           const { icon: Icon, tint } = ICONS[option]
           const price = prices.find((p) => p.code === option)?.amountEur
           // the bot shows what the public page shows: without the page it cannot be switched on
-          const blocked = option === 'TELEGRAM_BOT' && !on.PUBLIC_TRACKING
+          const blocked = (option === 'TELEGRAM_BOT' || option === 'ONLINE_PAYMENTS') && !on.PUBLIC_TRACKING
           // parcels or moves: the last of the two stays on
           const last = (option === 'PARCELS' && !on.MOVES) || (option === 'MOVES' && !on.PARCELS)
           return (

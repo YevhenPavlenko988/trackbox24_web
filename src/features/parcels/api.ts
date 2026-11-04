@@ -28,6 +28,8 @@ export type ParcelListParams = PageParams & {
   representativeId?: number
   needsEnrichment?: boolean
   paymentStatus?: PaymentStatus
+  /** Only those where the client said they transferred and the manager has not answered yet. */
+  paymentClaimed?: boolean
   warehouseId?: number
   deliveryCity?: string
   channel?: Channel
@@ -46,6 +48,7 @@ export async function listParcels(params: ParcelListParams): Promise<Page<Parcel
           representativeId: params.representativeId,
           needsEnrichment: params.needsEnrichment,
           paymentStatus: params.paymentStatus,
+          paymentClaimed: params.paymentClaimed || undefined,
           warehouseId: params.warehouseId,
           deliveryCity: params.deliveryCity || undefined,
           channel: params.channel,
