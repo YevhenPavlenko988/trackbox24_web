@@ -24,6 +24,8 @@ export function PayOnline({ code }: { code: string }) {
   const [result, setResult] = useState<PublicPaymentResponse>()
   // a move may be paid in part — a prepayment; empty means the whole balance
   const [part, setPart] = useState('')
+  // for the fiscal receipt the carrier's provider may send
+  const [email, setEmail] = useState('')
 
   const due = result?.amount ?? 0
   const typed = part.trim() === '' ? undefined : Number(part.replace(',', '.'))
@@ -53,7 +55,7 @@ export function PayOnline({ code }: { code: string }) {
   const checkout = (currency?: Currency) =>
     call(async () => {
       const r = await unwrap<PublicCheckoutResponse>(
-        api.POST('/api/public/tracking/{code}/payment/checkout', { params: { path: { code } }, body: { phone, currency, amount: partAmount } }),
+        api.POST('/api/public/tracking/{code}/payment/checkout', { params: { path: { code } }, body: { phone, currency, amount: partAmount, email: email.trim() || undefined } }),
       )
       if (r.url) window.location.assign(r.url)
     })
@@ -161,6 +163,19 @@ export function PayOnline({ code }: { code: string }) {
             {t('pay.byCard')}
           </h3>
           <p className="text-sm text-navy/60">{t('pay.byCardHint', { provider: result.card.provider })}</p>
+          <label htmlFor="pay-email" className="text-sm font-medium">
+            {t('pay.email')}
+          </label>
+          <input
+            id="pay-email"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="-mt-2 h-11 rounded-xl border border-navy/15 bg-white px-3 outline-none focus-visible:ring-2 focus-visible:ring-brand sm:max-w-xs"
+          />
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {options.map((o, i) => (
               <button

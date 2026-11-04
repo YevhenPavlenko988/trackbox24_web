@@ -23,6 +23,7 @@ type Form = {
   monoToken: string
   liqpayPublicKey: string
   liqpayPrivateKey: string
+  liqpayRroItemId: string
   wfpMerchantAccount: string
   wfpSecretKey: string
   wfpDomain: string
@@ -40,6 +41,7 @@ const toForm = (s: PaymentSettingsResponse): Form => ({
   monoToken: '',
   liqpayPublicKey: s.liqpayPublicKey ?? '',
   liqpayPrivateKey: '',
+  liqpayRroItemId: s.liqpayRroItemId == null ? '' : String(s.liqpayRroItemId),
   wfpMerchantAccount: s.wfpMerchantAccount ?? '',
   wfpSecretKey: '',
   wfpDomain: s.wfpDomain ?? '',
@@ -79,6 +81,7 @@ export function PaymentSettingsCard({ onSaved }: { onSaved?: () => void }) {
         monoToken: blank(f.monoToken),
         liqpayPublicKey: blank(f.liqpayPublicKey),
         liqpayPrivateKey: blank(f.liqpayPrivateKey),
+        liqpayRroItemId: blank(f.liqpayRroItemId) ? Number(f.liqpayRroItemId.trim()) : undefined,
         wfpMerchantAccount: blank(f.wfpMerchantAccount),
         wfpSecretKey: blank(f.wfpSecretKey),
         wfpDomain: blank(f.wfpDomain),
@@ -171,6 +174,8 @@ export function PaymentSettingsCard({ onSaved }: { onSaved?: () => void }) {
                 {text('pay-lp-pub', t('companies:payments.liqpayPublicKey'), 'liqpayPublicKey')}
                 {secret('pay-lp-priv', t('companies:payments.liqpayPrivateKey'), 'liqpayPrivateKey', saved.liqpayPrivateKeySet)}
                 <FieldDescription>{t('companies:payments.liqpayHint')}</FieldDescription>
+                {text('pay-lp-rro', t('companies:payments.liqpayRroItemId'), 'liqpayRroItemId', '123456')}
+                <FieldDescription>{t('companies:payments.liqpayRroHint')}</FieldDescription>
               </>
             )}
             {f.provider === 'WAYFORPAY' && (
@@ -192,6 +197,7 @@ export function PaymentSettingsCard({ onSaved }: { onSaved?: () => void }) {
               </div>
             )}
             {f.provider && <p className="text-xs text-muted-foreground">{t('companies:payments.commission')}</p>}
+            {f.provider && <p className="text-xs text-muted-foreground">{t('companies:payments.receipt')}</p>}
           </section>
 
           <section className="flex flex-col gap-3 rounded-lg border p-4">
