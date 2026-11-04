@@ -1,12 +1,17 @@
-import { Boxes, Camera, Coins, CreditCard, Gift, Globe, Package, Send, type LucideIcon } from 'lucide-react'
+import { Boxes, Camera, Coins, CreditCard, Gift, Globe, Package, Send, Settings2, type LucideIcon } from 'lucide-react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
 import { useAccess } from '@/features/auth/access'
 import { formatEur } from '@/features/billing/format'
 import { usePrices } from '@/features/billing/queries'
+import { PaymentSettingsCard } from '@/features/payments/PaymentSettingsCard'
+import { ReferralSettingsCard } from '@/features/referral/ReferralSettingsCard'
 import { showApiError } from '@/lib/api/problem'
 import type { CompanyOption, CompanyResponse } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
@@ -31,8 +36,12 @@ const ICONS: Record<CompanyOption, { icon: LucideIcon; tint: string }> = {
  */
 export function CompanyModules({ company }: { company: CompanyResponse }) {
   const { t } = useTranslation(['companies', 'common'])
-  const { isPlatform, companyMode } = useAccess()
+  const { isPlatform, companyMode, isManager } = useAccess()
   const editable = isPlatform && !companyMode
+  // modules with the company's own rules: its manager sets them in a dialog from the tile
+  const [settings, setSettings] = useState<'REFERRAL' | 'ONLINE_PAYMENTS'>()
+  const configurable = (option: CompanyOption): option is 'REFERRAL' | 'ONLINE_PAYMENTS' =>
+    isManager && (option === 'REFERRAL' || option === 'ONLINE_PAYMENTS')
   const prices = usePrices({ enabled: editable }).data ?? []
   const id = company.id!
   const mutations: Record<CompanyOption, Mutation> = {
@@ -107,6 +116,12 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
                 <p className="font-semibold">{t(`companies:modules.${option}.name`)}</p>
                 <p className="text-sm text-muted-foreground">{t(`companies:modules.${option}.text`)}</p>
               </div>
+              {configurable(option) && on[option] && (
+                <Button size="sm" variant="outline" className="self-start bg-background" onClick={() => setSettings(option)}>
+                  <Settings2 />
+                  {t('companies:modules.configure')}
+                </Button>
+              )}
               <div className="mt-auto flex flex-wrap items-center justify-between gap-2 text-sm">
                 {editable && price != null && <span className="font-medium tabular-nums">{t('companies:modules.perMonth', { price: formatEur(price) })}</span>}
                 {editable && (
@@ -119,6 +134,23 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
           )
         })}
       </CardContent>
+      <Dialog open={settings != null} onOpenChange={(o) => !o && setSettings(undefined)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+          {settings && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t(settings === 'REFERRAL' ? 'companies:referral.title' : 'companies:payments.title')}</DialogTitle>
+                <DialogDescription>{t(settings === 'REFERRAL' ? 'companies:referral.subtitle' : 'companies:payments.subtitle')}</DialogDescription>
+              </DialogHeader>
+              {settings === 'REFERRAL' ? (
+                <ReferralSettingsCard onSaved={() => setSettings(undefined)} />
+              ) : (
+                <PaymentSettingsCard onSaved={() => setSettings(undefined)} />
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

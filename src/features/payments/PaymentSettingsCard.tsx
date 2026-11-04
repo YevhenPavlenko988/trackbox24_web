@@ -1,10 +1,9 @@
-import { CheckCircle2, CircleAlert, CreditCard, Landmark } from 'lucide-react'
+import { CheckCircle2, CircleAlert, Landmark } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -59,7 +58,7 @@ const blank = (s: string) => (s.trim() === '' ? undefined : s.trim())
  * «Онлайн-оплата» on the company page: the carrier's own acquiring (one provider, its keys) and / or the requisites the
  * client transfers to, with the NBU QR as the client will see it. Secrets are write-only: saved ones show as «збережено».
  */
-export function PaymentSettingsCard() {
+export function PaymentSettingsCard({ onSaved }: { onSaved?: () => void }) {
   const { t } = useTranslation(['companies', 'common'])
   const query = usePaymentSettings()
   const save = useSavePaymentSettings()
@@ -92,6 +91,7 @@ export function PaymentSettingsCard() {
         cardLink: blank(f.cardLink),
       })
       toast.success(t('common:common.saved'))
+      onSaved?.()
     } catch (e) {
       showApiError(e)
     }
@@ -128,15 +128,7 @@ export function PaymentSettingsCard() {
   const ibanReady = f.iban.replace(/\s/g, '').length === 29 && f.recipientName.trim() && /^\d{8}$|^\d{10}$/.test(f.taxId.trim())
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CreditCard className="size-5 text-indigo-600" />
-          {t('companies:payments.title')}
-        </CardTitle>
-        <CardDescription>{t('companies:payments.subtitle')}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
         <p
           className={cn(
             'flex items-center gap-2 text-sm font-medium',
@@ -220,11 +212,11 @@ export function PaymentSettingsCard() {
             {f.requisitesEnabled && (
               <div className="flex flex-col gap-3">
                 {text('pay-recipient', t('companies:payments.recipientName'), 'recipientName', t('companies:payments.recipientPlaceholder'))}
-                <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
-                  {text('pay-iban', t('companies:payments.iban'), 'iban', 'UA00 0000 0000 0000 0000 0000 0000 0')}
+                {text('pay-iban', t('companies:payments.iban'), 'iban', 'UA00 0000 0000 0000 0000 0000 0000 0')}
+                <div className="grid gap-3 sm:grid-cols-2">
                   {text('pay-tax', t('companies:payments.taxId'), 'taxId')}
+                  {text('pay-bank', t('companies:payments.bankName'), 'bankName')}
                 </div>
-                {text('pay-bank', t('companies:payments.bankName'), 'bankName')}
                 <div className="grid gap-3 sm:grid-cols-2">
                   {text('pay-card', t('companies:payments.cardNumber'), 'cardNumber', '0000 0000 0000 0000')}
                   {text('pay-link', t('companies:payments.cardLink'), 'cardLink', t('companies:payments.cardLinkPlaceholder'))}
@@ -250,7 +242,6 @@ export function PaymentSettingsCard() {
             {t('common:actions.save')}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   )
 }
