@@ -1,4 +1,4 @@
-import { AlertCircle, Archive, Banknote, Clock, Inbox, Layers, Plus, RefreshCw, Search, SlidersHorizontal, Warehouse, X, type LucideIcon } from 'lucide-react'
+import { AlertCircle, Archive, Banknote, BellRing, Clock, Inbox, Layers, Plus, RefreshCw, Search, SlidersHorizontal, Warehouse, X, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -12,6 +12,8 @@ import { Input } from '@/components/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { useCurrentCompany } from '@/features/companies/queries'
+import { useClaimedCount } from '@/features/payments/queries'
 import { useAccess } from '@/features/auth/access'
 import { ClientPicker } from '@/features/clients/ClientPicker'
 import { UserSelect } from '@/features/users/UserSelect'
@@ -49,6 +51,8 @@ export function ParcelsListPage() {
     }
   }
   const { page, size, sort, get, set, setPage, setSize } = useListParams()
+  const company = useCurrentCompany()
+  const claimed = useClaimedCount(canSeeMoney && company.data?.onlinePaymentsEnabled === true).data
 
   const urlQuery = get('query') ?? ''
   const [search, setSearch] = useState(urlQuery)
@@ -64,6 +68,8 @@ export function ParcelsListPage() {
   const representativeId = get('representativeId') ? Number(get('representativeId')) : undefined
   const warehouseId = get('warehouseId') ? Number(get('warehouseId')) : undefined
   const paymentStatus = get('paymentStatus') as PaymentStatus | undefined
+  // «Повідомили про оплату»: across every tab, a claimed parcel may be anywhere on its way
+  const paymentClaimed = get('paymentClaimed') === 'true'
   const channelParam = get('channel')
   const channel = isChannel(channelParam) ? channelParam : undefined
   const deliveryCity = get('deliveryCity') ?? ''
@@ -77,11 +83,11 @@ export function ParcelsListPage() {
   // No backend filter by npState yet: filter the loaded page on the client, with a bigger page so it is useful.
   const npGroupParam = get('npState')
   const npGroup: NpStateGroup | undefined = isNpStateGroup(npGroupParam) ? npGroupParam : undefined
-  const hasFilters = !!(urlQuery || status || clientId || representativeId || warehouseId || paymentStatus || deliveryCity || needsEnrichment || sort || npGroup || channel)
+  const hasFilters = !!(urlQuery || status || clientId || representativeId || warehouseId || paymentStatus || paymentClaimed || deliveryCity || needsEnrichment || sort || npGroup || channel)
 
   const query = useParcels({
     // One status narrows inside the tab; otherwise the whole tab is asked for at once.
-    status: status ? [status] : TAB_STATUSES[tab],
+    status: status ? [status] : paymentClaimed ? undefined : TAB_STATUSES[tab],
     // moves have their own section
     kind: 'PARCEL',
     query: urlQuery,
@@ -89,6 +95,7 @@ export function ParcelsListPage() {
     representativeId,
     warehouseId,
     paymentStatus,
+    paymentClaimed,
     deliveryCity,
     channel,
     needsEnrichment,
@@ -120,7 +127,7 @@ export function ParcelsListPage() {
   const reset = () => {
     setSearch('')
     setCityInput('')
-    set({ query: undefined, deliveryCity: undefined, status: undefined, clientId: undefined, representativeId: undefined, warehouseId: undefined, paymentStatus: undefined, needsEnrichment: undefined, sort: undefined, npState: undefined, channel: undefined })
+    set({ query: undefined, deliveryCity: undefined, status: undefined, clientId: undefined, representativeId: undefined, warehouseId: undefined, paymentStatus: undefined, paymentClaimed: undefined, needsEnrichment: undefined, sort: undefined, npState: undefined, channel: undefined })
   }
 
   return (
@@ -229,6 +236,12 @@ export function ParcelsListPage() {
           {canSeeMoney && !archive && (
             <Toggle on={paymentStatus === 'UNPAID'} icon={Banknote} onClick={() => set({ paymentStatus: paymentStatus === 'UNPAID' ? undefined : 'UNPAID' })}>
               {t('parcels:filters.unpaid')}
+            </Toggle>
+          )}
+          {canSeeMoney && (paymentClaimed || (claimed?.parcels ?? 0) > 0) && (
+            <Toggle on={paymentClaimed} icon={BellRing} onClick={() => set({ paymentClaimed: paymentClaimed ? undefined : 'true' })}>
+              {t('parcels:filters.paymentClaimed')}
+              {(claimed?.parcels ?? 0) > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-xs text-amber-950">{claimed?.parcels}</span>}
             </Toggle>
           )}
           <span className="ml-auto text-sm text-muted-foreground">{t('parcels:list.found', { count: npGroup ? rows.length : (data.totalElements ?? 0) })}</span>

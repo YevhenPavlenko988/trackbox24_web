@@ -34,7 +34,10 @@ export async function run() {
     await shot('01-depart')
     await page.goto(BASE + '/trips?open=true')
     await page.waitForSelector(`table tbody tr:has-text("${move.barcode}")`)
-    ok('the trips list says what a trip of moves carries', (await page.locator(`table tbody tr:has-text("${move.barcode}")`).innerText()).includes('2 м.'))
+    const moveRows = page.locator(`table tbody tr:has-text("${move.barcode}")`)
+    ok('the trips list says what a trip of moves carries', (await moveRows.first().innerText()).includes('2 м.'))
+    // the next leg of the route shows the same move as one it carries later
+    ok('the next leg shows the move as coming later', (await moveRows.count()) === 2 && (await moveRows.nth(1).innerText()).includes('далі'))
     await shot('01b-trips-list')
     await page.goto(BASE + `/trips/${first.id}`)
     await page.waitForSelector('text=Усе завантажено')

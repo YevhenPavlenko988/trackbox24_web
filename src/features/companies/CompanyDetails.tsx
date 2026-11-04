@@ -11,6 +11,7 @@ import { CompanyDialog } from './CompanyDialog'
 import { NpKeyDialog } from './NpKeyDialog'
 import { NpSenderDialog } from './NpSenderDialog'
 import { CompanyModules } from './CompanyModules'
+import { PaymentSettingsCard } from '@/features/payments/PaymentSettingsCard'
 import { ReferralSettingsCard } from '@/features/referral/ReferralSettingsCard'
 import { useSetCompanyNpKey, useUpdateCompany } from './queries'
 
@@ -116,6 +117,7 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
       <CompanyModules company={company} />
       {/* the company sets its own program rules: a manager of it */}
       {company.referralEnabled && isManager && <ReferralSettingsCard />}
+      {company.onlinePaymentsEnabled && isManager && <PaymentSettingsCard />}
 
       <CompanyDialog open={editing} onOpenChange={setEditing} company={company} onSubmit={(body) => update.mutateAsync(body)} />
       <NpSenderDialog company={company} open={senderOpen} onOpenChange={setSenderOpen} />

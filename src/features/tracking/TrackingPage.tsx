@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ExternalLink, Loader2, Search, Send, Truck } from 'lucide-react'
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { NpNumber } from '@/components/common/NpNumber'
 import { PARCEL_STATUS_STYLES } from '@/features/parcels/statusStyles'
 import { isApiError } from '@/lib/api/problem'
@@ -10,6 +10,7 @@ import type { PublicTrackingResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { telegramWebUrl } from './telegram'
+import { PaymentReturn, PayOnline } from './PayOnline'
 import { PointsCheck } from './PointsCheck'
 import { normalizeTrackingCode, npTrackingUrl, TRACKING_CODE, trackParcel } from './api'
 
@@ -22,6 +23,8 @@ export function TrackingPage() {
   const { t } = useTranslation('tracking')
   const { code: rawCode } = useParams()
   const navigate = useNavigate()
+  // back from the provider's payment page
+  const paymentToken = useSearchParams()[0].get('payment')
   const code = rawCode ? normalizeTrackingCode(rawCode) : undefined
   const valid = code != null && TRACKING_CODE.test(code)
   const [input, setInput] = useState(code ?? '')
@@ -117,6 +120,12 @@ export function TrackingPage() {
           <div className="mt-8 space-y-3" aria-busy="true">
             <div className="h-28 animate-pulse rounded-2xl bg-navy/5" />
             <div className="h-40 animate-pulse rounded-2xl bg-navy/5" />
+          </div>
+        )}
+
+        {paymentToken && (
+          <div className="mt-6">
+            <PaymentReturn token={paymentToken} />
           </div>
         )}
 
@@ -220,6 +229,8 @@ function Result({ data }: { data: PublicTrackingResponse }) {
         {data.telegramUrl && <p className="mt-2 text-sm text-navy/55">{t('telegramHint')}</p>}
         {/* «Реферальна програма»: the recipient or the sender sees their points after typing their phone */}
         {data.pointsAvailable && (data.barcode ?? data.npTtn) && <PointsCheck code={(data.barcode ?? data.npTtn)!} />}
+        {/* «Онлайн-оплата»: the client's phone opens what is due, by card through the carrier's provider or by transfer */}
+        {data.paymentAvailable && (data.barcode ?? data.npTtn) && <PayOnline code={(data.barcode ?? data.npTtn)!} />}
       </section>
 
       {items.length > 0 && (
@@ -231,11 +242,11 @@ function Result({ data }: { data: PublicTrackingResponse }) {
           </p>
           <ul className="mt-4 divide-y divide-navy/10">
             {items.map((it) => (
-              <li key={it.number} className="flex items-center gap-3 py-2.5">
+              <li key={it.number} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
                 <span className="w-16 shrink-0 font-mono text-sm text-navy/55">
                   {it.number} / {items.length}
                 </span>
-                <span className="min-w-0 flex-1 break-words">{it.description || t('itemNoDescription')}</span>
+                <span className="min-w-0 flex-1 basis-28 break-words">{it.description || t('itemNoDescription')}</span>
                 <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-sm font-semibold', it.status && PARCEL_STATUS_STYLES[it.status])}>{it.label}</span>
               </li>
             ))}

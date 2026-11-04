@@ -244,6 +244,9 @@ export function ParcelsTable({
                     {p.paymentMethod && ` · ${t(`common:paymentMethod.${p.paymentMethod}`)}`}
                   </span>
                 )}
+                {p.paymentClaimedAt && p.paymentStatus !== 'PAID' && (
+                  <span className="mt-0.5 w-fit rounded bg-amber-100 px-1.5 text-xs font-medium text-amber-900">{t('parcels:online.claimedBadge')}</span>
+                )}
               </div>
             ),
           },

@@ -163,6 +163,32 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/payments/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Налаштування онлайн-оплати компанії
+         * @description MANAGER. Модуль «Онлайн-оплата» має бути увімкнено (інакше 403). Секрети (токен mono, приватний ключ LiqPay,
+         *     SecretKey WayForPay) не повертаються — лише чи збережені.
+         */
+        get: operations["get_3"];
+        /**
+         * Зберегти налаштування онлайн-оплати
+         * @description MANAGER. Провайдер (MONO, LIQPAY, WAYFORPAY) з ключами і / або реквізити: IBAN (з отримувачем і ЄДРПОУ / РНОКПП — для
+         *     QR НБУ), картка, посилання на оплату. Порожній секрет — лишити збережений. IBAN, картка й коди перевіряються.
+         */
+        put: operations["save"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parcels/{id}": {
         parameters: {
             query?: never;
@@ -171,7 +197,7 @@ export interface paths {
             cookie?: never;
         };
         /** Посилка за ID */
-        get: operations["get_3"];
+        get: operations["get_4"];
         /**
          * Редагувати / збагатити дані посилки
          * @description Ручне доповнення даних, отриманих з НП. Часткове оновлення: поля, яких немає в запиті (або null), не змінюються. `needsEnrichment: false` знімає прапорець.
@@ -518,7 +544,7 @@ export interface paths {
          * Компанія за ID
          * @description Менеджер бачить тільки свою компанію.
          */
-        get: operations["get_4"];
+        get: operations["get_5"];
         /**
          * Оновити реквізити компанії
          * @description Менеджер може змінювати тільки свою компанію.
@@ -637,6 +663,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/online-payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Увімкнути / вимкнути модуль «Онлайн-оплата»
+         * @description ADMIN або SALES. Увімкнено — менеджер підключає свій еквайринг (plata by mono, LiqPay, WayForPay) чи реквізити з QR
+         *     (`/api/payments/settings`), а клієнт оплачує посилку чи переїзд зі сторінки відстеження. Гроші йдуть одразу перевізнику.
+         *     Потрібне публічне відстеження.
+         */
+        put: operations["setOnlinePaymentsEnabled"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/nova-poshta": {
         parameters: {
             query?: never;
@@ -748,7 +796,7 @@ export interface paths {
             cookie?: never;
         };
         /** Клієнт за ID */
-        get: operations["get_5"];
+        get: operations["get_6"];
         /** Оновити клієнта */
         put: operations["update_6"];
         post?: never;
@@ -770,7 +818,7 @@ export interface paths {
             cookie?: never;
         };
         /** Машина за ID */
-        get: operations["get_6"];
+        get: operations["get_7"];
         /** Оновити машину */
         put: operations["update_7"];
         post?: never;
@@ -1307,6 +1355,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/tracking/{code}/payment": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Що й як оплатити
+         * @description Без авторизації. Повний телефон клієнта посилки (для переїзду — і відправника) відкриває суму до сплати й
+         *     способи: картка через провайдера перевізника (суми у валютах рахунку) і / або реквізити з QR НБУ. Не той
+         *     телефон — 404; забагато спроб (5 на годину для посилки чи адреси) — 429; перевізник не підключив оплату — 400.
+         */
+        post: operations["options"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/tracking/{code}/payment/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * «Я оплатив» за реквізитами
+         * @description Без авторизації. Клієнт переказав гроші сам; посилка чи переїзд отримує позначку для менеджера, той підтверджує
+         *     чи відхиляє (`/api/online-payments/{id}/confirm|reject`).
+         */
+        post: operations["claim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/tracking/{code}/payment/checkout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Перейти до оплати карткою
+         * @description Без авторизації. Створює рахунок у провайдера перевізника на суму до сплати у вибраній валюті й повертає
+         *     сторінку оплати. Після оплати провайдер повертає клієнта на сторінку відстеження з `?payment=<token>`.
+         */
+        post: operations["checkout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/public/payments/{provider}/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Callback провайдера
+         * @description Для plata by mono (`mono`, підпис `X-Sign`), LiqPay (`liqpay`, форма `data` + `signature`) і WayForPay
+         *     (`wayforpay`, JSON з `merchantSignature`; відповідь — підписане «accept»). Не той підпис — 403.
+         */
+        post: operations["callback"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/demo-requests": {
         parameters: {
             query?: never;
@@ -1321,6 +1454,26 @@ export interface paths {
          * @description Без авторизації. Заявка стає угодою в CRM (етап «Нова заявка», задача «Зв'язатися») і надходить команді в Telegram. З однієї IP-адреси — до 5 заявок на годину.
          */
         post: operations["submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/payments/settings/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Перевірити ключі провайдера
+         * @description MANAGER. Звертається до провайдера зі збереженими ключами; не ті — 400 з поясненням.
+         */
+        post: operations["check"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1479,7 +1632,7 @@ export interface paths {
          * @description LOAD — місця в машині, WAREHOUSE — на складі (`warehouseId` — на конкретному), DELIVER — видані.
          *     `missing` — місця, яких бракує, з описом і де вони зараз. Нічого не змінює.
          */
-        get: operations["check"];
+        get: operations["check_1"];
         put?: never;
         /**
          * Закінчили сканування
@@ -1599,6 +1752,47 @@ export interface paths {
          * @description Статус НП і дані, яких ще немає (заповнене вручну не перезаписується). Зазвичай це робить фонове завдання кожні 15 хв.
          */
         post: operations["refreshNovaPoshta"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/online-payments/{id}/reject": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Відхилити повідомлення про переказ
+         * @description MANAGER. Грошей не знайшли: позначка «Клієнт повідомив про оплату» зникає.
+         */
+        post: operations["reject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/online-payments/{id}/confirm": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Підтвердити переказ клієнта
+         * @description MANAGER. Клієнт повідомив, що переказав за реквізитами (CLAIMED), і гроші надійшли: посилка стає оплаченою
+         *     («Переказ на рахунок»), до переїзду додається оплата.
+         */
+        post: operations["confirm"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2198,7 +2392,7 @@ export interface paths {
          * Маршрут
          * @description Плечі по порядку, стан, лічильники вантажу.
          */
-        get: operations["get_7"];
+        get: operations["get_8"];
         put?: never;
         post?: never;
         /**
@@ -2332,6 +2526,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/public/payments/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Стан оплати після повернення від провайдера
+         * @description Без авторизації; за кодом оплати з `?payment=`. Лише статус і код посилки.
+         */
+        get: operations["status"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/parcels/{id}/seats/register.xlsx": {
         parameters: {
             query?: never;
@@ -2344,6 +2558,26 @@ export interface paths {
          * @description Заголовок (звідки, куди, статус) і рядок на кожне місце: штрих-код, опис, статус, склад, коли й ким змінено, кількість фото.
          */
         get: operations["register_1"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/parcels/{id}/online-payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Онлайн-оплати посилки чи переїзду
+         * @description MANAGER або VIEWER: рахунки клієнта у провайдера й повідомлення про переказ, від нових.
+         */
+        get: operations["list_7"];
         put?: never;
         post?: never;
         delete?: never;
@@ -2426,6 +2660,27 @@ export interface paths {
          * @description Видалені записи компанії: сам запис, хто й коли видалив; нові видалення зверху. Відновлення — POST /{id}/restore.
          */
         get: operations["deleted_4"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/online-payments/claimed-count": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Скільки клієнтів чекають підтвердження переказу
+         * @description Посилки (`parcels`) і переїзди (`moves`), де клієнт натиснув «Я оплатив», а менеджер ще не відповів; для лічильника
+         *     в меню. Представнику без доступу до грошей — нулі.
+         */
+        get: operations["claimedCount"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3085,7 +3340,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
             /**
              * @description Сума
              * @example 70
@@ -3570,7 +3825,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
             /**
              * @description ПІБ відправника
              * @example Петренко Олег
@@ -3863,6 +4118,12 @@ export interface components {
              * @example false
              */
             referralDiscountOff?: boolean;
+            /**
+             * Format: date-time
+             * @description Клієнт на сторінці відстеження повідомив, що оплатив за реквізитами: менеджер підтверджує чи відхиляє (`/api/online-payments`)
+             * @example 2026-11-04T10:15:00Z
+             */
+            paymentClaimedAt?: string;
         };
         ParcelSeatResponse: {
             /**
@@ -3909,6 +4170,148 @@ export interface components {
              * @example Диван
              */
             description?: string;
+        };
+        PaymentSettingsRequest: {
+            /**
+             * @description Оплата карткою через: MONO, LIQPAY або WAYFORPAY; немає — без оплати карткою
+             * @example MONO
+             * @enum {string}
+             */
+            provider?: "MONO" | "LIQPAY" | "WAYFORPAY" | "REQUISITES";
+            /** @description Токен plata by mono (X-Token з кабінету); порожньо — лишити збережений */
+            monoToken?: string;
+            /**
+             * @description Публічний ключ LiqPay
+             * @example i00000000000
+             */
+            liqpayPublicKey?: string;
+            /** @description Приватний ключ LiqPay; порожньо — лишити збережений */
+            liqpayPrivateKey?: string;
+            /**
+             * @description Мерчант WayForPay (merchantAccount)
+             * @example trackbox24_com
+             */
+            wfpMerchantAccount?: string;
+            /** @description SecretKey WayForPay; порожньо — лишити збережений */
+            wfpSecretKey?: string;
+            /**
+             * @description Домен мерчанта WayForPay, як у кабінеті
+             * @example trackbox24.com
+             */
+            wfpDomain?: string;
+            /**
+             * @description Показувати клієнту реквізити (рахунок і QR, картку чи посилання)
+             * @example true
+             */
+            requisitesEnabled?: boolean;
+            /**
+             * @description Отримувач: назва компанії чи ПІБ ФОП
+             * @example ФОП Петренко Олена Іванівна
+             */
+            recipientName?: string;
+            /**
+             * @description IBAN рахунку в гривні
+             * @example UA213223130000026007233566001
+             */
+            iban?: string;
+            /**
+             * @description ЄДРПОУ або РНОКПП отримувача
+             * @example 3123456789
+             */
+            taxId?: string;
+            /**
+             * @description Банк
+             * @example Monobank
+             */
+            bankName?: string;
+            /**
+             * @description Номер картки для переказу
+             * @example 4441111122223333
+             */
+            cardNumber?: string;
+            /**
+             * @description Посилання на оплату картки: банка monobank, «переказ за посиланням» банку
+             * @example https://send.monobank.ua/jar/abc123
+             */
+            cardLink?: string;
+        };
+        PaymentSettingsResponse: {
+            /**
+             * @description Оплата карткою через: MONO, LIQPAY або WAYFORPAY; немає — без оплати карткою
+             * @example MONO
+             * @enum {string}
+             */
+            provider?: "MONO" | "LIQPAY" | "WAYFORPAY" | "REQUISITES";
+            /**
+             * @description Токен plata by mono збережено
+             * @example true
+             */
+            monoTokenSet?: boolean;
+            /**
+             * @description Публічний ключ LiqPay
+             * @example i00000000000
+             */
+            liqpayPublicKey?: string;
+            /**
+             * @description Приватний ключ LiqPay збережено
+             * @example false
+             */
+            liqpayPrivateKeySet?: boolean;
+            /**
+             * @description Мерчант WayForPay
+             * @example trackbox24_com
+             */
+            wfpMerchantAccount?: string;
+            /**
+             * @description SecretKey WayForPay збережено
+             * @example false
+             */
+            wfpSecretKeySet?: boolean;
+            /**
+             * @description Домен мерчанта WayForPay
+             * @example trackbox24.com
+             */
+            wfpDomain?: string;
+            /**
+             * @description Реквізити показуються клієнту
+             * @example true
+             */
+            requisitesEnabled?: boolean;
+            /**
+             * @description Отримувач
+             * @example ФОП Петренко Олена Іванівна
+             */
+            recipientName?: string;
+            /**
+             * @description IBAN
+             * @example UA213223130000026007233566001
+             */
+            iban?: string;
+            /**
+             * @description ЄДРПОУ або РНОКПП
+             * @example 3123456789
+             */
+            taxId?: string;
+            /**
+             * @description Банк
+             * @example Monobank
+             */
+            bankName?: string;
+            /**
+             * @description Номер картки
+             * @example 4441111122223333
+             */
+            cardNumber?: string;
+            /**
+             * @description Посилання на оплату картки
+             * @example https://send.monobank.ua/jar/abc123
+             */
+            cardLink?: string;
+            /**
+             * @description Клієнт уже може платити: є провайдер із ключами або реквізити
+             * @example true
+             */
+            ready?: boolean;
         };
         ParcelUpdateRequest: {
             /**
@@ -4139,7 +4542,7 @@ export interface components {
             /** @example 200 */
             amount?: number;
             /** @enum {string} */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
             /** @example Готівка */
             methodLabel?: string;
             /** Format: date */
@@ -4289,7 +4692,7 @@ export interface components {
              * @example UA_CARD
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
             /**
              * @description Для PAID: валюта, в якій заплатили, якщо не у валюті ціни («Курси валют»)
              * @example USD
@@ -4715,7 +5118,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS";
             /**
              * @description Назва
              * @example Фото посилок
@@ -4803,7 +5206,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -4905,7 +5308,7 @@ export interface components {
             utmTerm?: string;
             utmContent?: string;
             /** @description Опції, що цікавлять */
-            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -4994,7 +5397,7 @@ export interface components {
              * @example BASE
              * @enum {string}
              */
-            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS";
             /**
              * @description Назва
              * @example Базовий тариф
@@ -5036,7 +5439,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            option?: "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL";
+            option?: "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS";
             /**
              * @description Назва
              * @example Фото посилок
@@ -5163,6 +5566,11 @@ export interface components {
              * @example false
              */
             referralEnabled?: boolean;
+            /**
+             * @description Модуль «Онлайн-оплата»: клієнт оплачує посилку чи переїзд зі сторінки відстеження (вмикає команда TrackBox24)
+             * @example false
+             */
+            onlinePaymentsEnabled?: boolean;
             /**
              * @description Чи збережено резервний API-ключ НП компанії (сам ключ не повертається)
              * @example true
@@ -5734,7 +6142,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
             /**
              * @description Для видачі: валюта, в якій клієнт заплатив, якщо не у валюті ціни («Курси валют»): UAH, EUR, USD, PLN. Сума перераховується за курсом компанії на цю мить і зберігається з посилкою
              * @example UAH
@@ -5803,7 +6211,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
             /**
              * @description Для видачі: валюта, в якій клієнт заплатив, якщо не у валюті ціни («Курси валют»): UAH, EUR, USD, PLN. Сума перераховується за курсом компанії на цю мить і зберігається з посилкою
              * @example UAH
@@ -5903,6 +6311,127 @@ export interface components {
              * @enum {string}
              */
             currency?: "UAH" | "EUR" | "USD" | "PLN";
+        };
+        PhoneRequest: {
+            /**
+             * @description Повний телефон клієнта
+             * @example +380501234567
+             */
+            phone: string;
+        };
+        Card: {
+            /**
+             * @description Назва провайдера
+             * @example plata by mono
+             */
+            provider?: string;
+            /** @description Валюти рахунку з сумою в кожній; перша — основна */
+            options?: components["schemas"]["Option"][];
+        };
+        Option: {
+            /**
+             * @example UAH
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /** @example 1552.79 */
+            amount?: number;
+        };
+        PublicPaymentResponse: {
+            /**
+             * @description DUE — є що сплатити; PAID — уже оплачено; CLAIMED — клієнт повідомив про переказ, чекає перевізника; NONE — ціни ще немає
+             * @example DUE
+             * @enum {string}
+             */
+            state?: "DUE" | "PAID" | "CLAIMED" | "NONE";
+            /**
+             * @description PARCEL або MOVE
+             * @example PARCEL
+             * @enum {string}
+             */
+            kind?: "PARCEL" | "MOVE";
+            /**
+             * @description Наш код
+             * @example PT0123456789
+             */
+            code?: string;
+            /**
+             * @description До сплати у валюті посилки чи переїзду
+             * @example 30
+             */
+            amount?: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /** @description Оплата карткою: провайдер і суми рахунку в доступних валютах; немає — карткою не можна */
+            card?: components["schemas"]["Card"];
+            /** @description Реквізити перевізника для переказу; немає — не показуються */
+            requisites?: components["schemas"]["Requisites"];
+            /**
+             * Format: date-time
+             * @description Коли клієнт повідомив про переказ
+             * @example 2026-11-04T10:15:00Z
+             */
+            claimedAt?: string;
+        };
+        Requisites: {
+            /** @example ФОП Петренко Олена Іванівна */
+            recipientName?: string;
+            /** @example UA213223130000026007233566001 */
+            iban?: string;
+            /** @example 3123456789 */
+            taxId?: string;
+            /** @example Monobank */
+            bankName?: string;
+            /** @example 4441111122223333 */
+            cardNumber?: string;
+            /**
+             * @description Посилання перевізника на оплату картки
+             * @example https://send.monobank.ua/jar/abc123
+             */
+            cardLink?: string;
+            /**
+             * @description Сума в гривнях для переказу; немає — курсу немає, сума — у валюті посилки
+             * @example 1552.79
+             */
+            amountUah?: number;
+            /**
+             * @description Призначення платежу
+             * @example Оплата доставки PT0123456789
+             */
+            purpose?: string;
+            /**
+             * @description QR НБУ (https://bank.gov.ua/qr/…): відкриває банківський застосунок із заповненим переказом; лише з IBAN
+             * @example https://bank.gov.ua/qr/QkNEDQowMDIN…
+             */
+            qrUrl?: string;
+        };
+        CheckoutRequest: {
+            /**
+             * @description Повний телефон клієнта
+             * @example +380501234567
+             */
+            phone: string;
+            /**
+             * @description Валюта рахунку з `card.options`; немає — перша
+             * @example UAH
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+        };
+        PublicCheckoutResponse: {
+            /**
+             * @description Сторінка оплати провайдера: перейти на неї
+             * @example https://pay.monobank.ua/2311xxxx
+             */
+            url?: string;
+            /**
+             * @description Код оплати: з ним клієнт повертається на сторінку відстеження (`?payment=`)
+             * @example 3f9c2a…
+             */
+            token?: string;
         };
         DemoRequest: {
             /**
@@ -6052,7 +6581,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
             /**
              * @description Оплата при прийомі в іншій валюті, ніж ціна («Курси валют»): UAH, EUR, USD, PLN
              * @example UAH
@@ -6253,7 +6782,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
             /**
              * Format: date
              * @description Дата оплати; не вказано — сьогодні
@@ -6271,6 +6800,63 @@ export interface components {
              * @enum {string}
              */
             currency?: "UAH" | "EUR" | "USD" | "PLN";
+        };
+        OnlinePaymentResponse: {
+            /**
+             * Format: int64
+             * @example 15
+             */
+            id?: number;
+            /**
+             * @description MONO, LIQPAY, WAYFORPAY або REQUISITES (клієнт переказав сам)
+             * @example MONO
+             * @enum {string}
+             */
+            provider?: "MONO" | "LIQPAY" | "WAYFORPAY" | "REQUISITES";
+            /**
+             * @description CREATED — рахунок створено; PROCESSING; SUCCESS — оплачено; FAILURE; EXPIRED; REVERSED — повернено;
+             *     CLAIMED — клієнт каже, що переказав (чекає менеджера); CONFIRMED; REJECTED
+             * @example SUCCESS
+             * @enum {string}
+             */
+            status?: "CREATED" | "PROCESSING" | "SUCCESS" | "FAILURE" | "EXPIRED" | "REVERSED" | "CLAIMED" | "CONFIRMED" | "REJECTED";
+            /** @example 1552.79 */
+            amount?: number;
+            /**
+             * @example UAH
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Статус словами провайдера
+             * @example success
+             */
+            providerStatus?: string;
+            /**
+             * @description Зараховано на посилку чи рахунок переїзду
+             * @example true
+             */
+            applied?: boolean;
+            /**
+             * @description Чому не зараховано, якщо оплата прийшла, а посилку вже оплачено чи сума інша
+             * @example Посилку вже оплачено — перевірте, чи це не подвійна оплата
+             */
+            note?: string;
+            /**
+             * Format: date-time
+             * @example 2026-11-04T10:00:00Z
+             */
+            createdAt?: string;
+            /**
+             * Format: date-time
+             * @example 2026-11-04T10:02:00Z
+             */
+            paidAt?: string;
+            /**
+             * @description Хто підтвердив чи відхилив переказ
+             * @example Олена Менеджер
+             */
+            decidedBy?: string;
         };
         SyncResult: {
             /**
@@ -6419,7 +7005,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            options?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL")[];
+            options?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS")[];
         };
         Manager: {
             /**
@@ -6615,7 +7201,7 @@ export interface components {
              * @example UA_CARD
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
             /**
              * @description Скільки прийнято
              * @example 1552.79
@@ -6948,6 +7534,11 @@ export interface components {
              * @example true
              */
             pointsAvailable?: boolean;
+            /**
+             * @description Перевізник приймає онлайн-оплату: клієнт може оплатити, підтвердивши телефон (`/payment`)
+             * @example true
+             */
+            paymentAvailable?: boolean;
         };
         Step: {
             /**
@@ -6967,6 +7558,19 @@ export interface components {
              * @example 2026-10-20T15:32:00Z
              */
             at?: string;
+        };
+        PublicPaymentStatusResponse: {
+            /**
+             * @description PENDING — ще йде; PAID — оплачено; FAILED — не вдалося; EXPIRED — час рахунку минув
+             * @example PAID
+             * @enum {string}
+             */
+            status?: "PENDING" | "PAID" | "FAILED" | "EXPIRED";
+            /**
+             * @description Код посилки чи переїзду
+             * @example PT0123456789
+             */
+            code?: string;
         };
         PagedModelParcelHistoryResponse: {
             content?: components["schemas"]["ParcelHistoryResponse"][];
@@ -8622,6 +9226,171 @@ export interface operations {
         };
     };
     get_3: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentSettingsResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/payments/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/payments/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/payments/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    save: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentSettingsRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PaymentSettingsResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/payments/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/payments/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/payments/settings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    get_4: {
         parameters: {
             query?: never;
             header?: {
@@ -10838,7 +11607,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL";
+                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS";
             };
             cookie?: never;
         };
@@ -11546,7 +12315,7 @@ export interface operations {
             };
         };
     };
-    get_4: {
+    get_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -12285,6 +13054,114 @@ export interface operations {
             };
         };
     };
+    setOnlinePaymentsEnabled: {
+        parameters: {
+            query: {
+                /**
+                 * @description true — увімкнути, false — вимкнути
+                 * @example true
+                 */
+                value: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/{id}/online-payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/{id}/online-payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/companies/{id}/online-payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/companies/{id}/online-payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     setNovaPoshtaKey: {
         parameters: {
             query?: never;
@@ -12857,7 +13734,7 @@ export interface operations {
             };
         };
     };
-    get_5: {
+    get_6: {
         parameters: {
             query?: never;
             header?: {
@@ -13153,7 +14030,7 @@ export interface operations {
             };
         };
     };
-    get_6: {
+    get_7: {
         parameters: {
             query?: never;
             header?: {
@@ -16249,6 +17126,218 @@ export interface operations {
             };
         };
     };
+    options: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example PT0123456789 */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhoneRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PublicPaymentResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/public/tracking/{code}/payment"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    claim: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example PT0123456789 */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhoneRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PublicPaymentResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/public/tracking/{code}/payment/claim"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    checkout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @example PT0123456789 */
+                code: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckoutRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PublicCheckoutResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/public/tracking/{code}/payment/checkout"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    callback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                provider: string;
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": string;
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/public/payments/{provider}/{token}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     submit: {
         parameters: {
             query?: never;
@@ -16287,6 +17376,90 @@ export interface operations {
             };
         };
     };
+    check: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: string;
+                    };
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/payments/settings/check"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/payments/settings/check"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/payments/settings/check"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     search: {
         parameters: {
             query?: {
@@ -16315,6 +17488,11 @@ export interface operations {
                  * @example UNPAID
                  */
                 paymentStatus?: "UNPAID" | "PAID";
+                /**
+                 * @description true — лише ті, де клієнт повідомив про переказ за реквізитами й чекає підтвердження (`paymentClaimedAt`)
+                 * @example true
+                 */
+                paymentClaimed?: boolean;
                 /**
                  * @description Посилки на цьому складі
                  * @example 2
@@ -17062,7 +18240,7 @@ export interface operations {
             };
         };
     };
-    check: {
+    check_1: {
         parameters: {
             query: {
                 /**
@@ -18013,6 +19191,210 @@ export interface operations {
                      *       "status": 502,
                      *       "detail": "TrackingDocument.getStatusDocuments failed: [API key expired]",
                      *       "instance": "/api/parcels/{id}/nova-poshta/refresh"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    reject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OnlinePaymentResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/online-payments/{id}/reject"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/online-payments/{id}/reject"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/online-payments/{id}/reject"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/online-payments/{id}/reject"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    confirm: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OnlinePaymentResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/online-payments/{id}/confirm"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/online-payments/{id}/confirm"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/online-payments/{id}/confirm"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/online-payments/{id}/confirm"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -21337,7 +22719,7 @@ export interface operations {
             };
         };
     };
-    get_7: {
+    get_8: {
         parameters: {
             query?: never;
             header?: {
@@ -22075,6 +23457,64 @@ export interface operations {
             };
         };
     };
+    status: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                token: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PublicPaymentStatusResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/public/payments/{token}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/public/payments/{token}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     register_1: {
         parameters: {
             query?: never;
@@ -22167,6 +23607,105 @@ export interface operations {
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
                      *       "instance": "/api/parcels/{id}/seats/register.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_7: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["OnlinePaymentResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/parcels/{id}/online-payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/parcels/{id}/online-payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/parcels/{id}/online-payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/parcels/{id}/online-payments"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -22561,6 +24100,87 @@ export interface operations {
                      *       "status": 403,
                      *       "detail": "Access Denied",
                      *       "instance": "/api/parcels/deleted"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    claimedCount: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: number;
+                    };
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/online-payments/claimed-count"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/online-payments/claimed-count"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/online-payments/claimed-count"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

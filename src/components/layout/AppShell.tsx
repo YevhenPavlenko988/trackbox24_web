@@ -12,12 +12,14 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar'
 import { useAccess, type Access } from '@/features/auth/access'
+import { useClaimedCount } from '@/features/payments/queries'
 import { ChangePasswordDialog } from '@/features/auth/ChangePasswordDialog'
 import { useCompanyView } from '@/features/auth/companyView'
 import { useAuth } from '@/features/auth/useAuth'
@@ -65,6 +67,9 @@ export function AppShell() {
           ? company.data?.currencyEnabled === true
           : true
   const items = NAV.filter((item) => item.show(access) && moduleOn(item.module))
+  // «Онлайн-оплата»: clients who said they transferred, waiting for the manager to find the money
+  const claimed = useClaimedCount(access.hasCompanyAccess && access.canSeeMoney && company.data?.onlinePaymentsEnabled === true).data
+  const claimedOf = (to: string) => (to === '/parcels' ? (claimed?.parcels ?? 0) : to === '/moves' ? (claimed?.moves ?? 0) : 0)
   const fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email
 
   const exitCompanyMode = () => {
@@ -89,6 +94,14 @@ export function AppShell() {
                       <item.icon />
                       <span>{t(item.labelKey)}</span>
                     </SidebarMenuButton>
+                    {claimedOf(item.to) > 0 && (
+                      <SidebarMenuBadge
+                        className="bg-amber-400 text-amber-950 peer-hover/menu-button:text-amber-950 peer-data-active/menu-button:text-amber-950"
+                        title={t('nav.paymentClaimed', { count: claimedOf(item.to) })}
+                      >
+                        {claimedOf(item.to)}
+                      </SidebarMenuBadge>
+                    )}
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>

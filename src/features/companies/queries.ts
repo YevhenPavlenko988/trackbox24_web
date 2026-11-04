@@ -14,7 +14,7 @@ import {
   setCompanyPublicTracking,
   setCompanyTelegramBot,
   setCompanyCurrency,
-  setCompanyReferral,
+  setCompanyOnlinePayments, setCompanyReferral,
   setCompanyMoves,
   setCompanyParcels,
   syncNovaPoshta,
@@ -82,6 +82,10 @@ export function useSetCompanyParcels(id: number) {
 
 export function useSetCompanyReferral(id: number) {
   return useCompanyMutation((value: boolean) => setCompanyReferral(id, value))
+}
+
+export function useSetCompanyOnlinePayments(id: number) {
+  return useCompanyMutation((value: boolean) => setCompanyOnlinePayments(id, value))
 }
 
 export function useSetCompanyCurrency(id: number) {

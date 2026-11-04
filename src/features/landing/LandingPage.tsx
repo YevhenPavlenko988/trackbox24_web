@@ -1,5 +1,8 @@
 import {
+  BadgeCheck,
   Banknote,
+  BellRing,
+  QrCode,
   Boxes,
   Camera,
   Clock,
@@ -30,6 +33,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { QRCodeSVG } from 'qrcode.react'
 import { Link } from 'react-router'
 import { ContactLinks } from './ContactLinks'
 import { hasContacts } from './contacts'
@@ -64,6 +68,7 @@ export function LandingPage() {
         <Money />
         <Control />
         <Referral />
+        <Payments />
         <Start />
         <Faq />
         <Cta />
@@ -617,6 +622,66 @@ function Referral() {
               <span>{t('referral.card.due')}</span>
               <span>25 €</span>
             </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function Payments() {
+  const { t } = useTranslation('landing')
+  const items = t('payments.items', { returnObjects: true }) as Item[]
+  const icons: LucideIcon[] = [CreditCard, BadgeCheck, QrCode, BellRing]
+  return (
+    <section id="payments" className="scroll-mt-16 py-16 sm:py-20">
+      <div className={`${wrap} grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]`}>
+        <div>
+          <p className="mb-3 text-xs font-bold tracking-[0.2em] text-brand uppercase">{t('payments.kicker')}</p>
+          <h2 className={`${h2} text-balance`}>{t('payments.title')}</h2>
+          <p className="mt-4 text-lg text-navy/75">{t('payments.text')}</p>
+          <div className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+            {items.map((it, i) => {
+              const Icon = icons[i]
+              return (
+                <div key={it.name} className="flex gap-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
+                    <Icon className="size-4" />
+                  </span>
+                  <div>
+                    <p className="font-bold">{it.name}</p>
+                    <p className="mt-1 text-navy/70">{it.text}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <p className="mt-8 text-navy/60">{t('payments.note')}</p>
+        </div>
+
+        {/* what the client sees on the tracking page: the due sum, the card button and the transfer by QR */}
+        <div className="mx-auto flex w-full max-w-sm flex-col gap-4" aria-hidden>
+          <div className="rounded-3xl border border-navy/10 bg-white p-5 shadow-lg">
+            <p className="text-sm text-navy/60">{t('payments.card.page')}</p>
+            <p className="mt-2 text-lg">
+              {t('payments.card.due')}: <span className="text-3xl font-bold tabular-nums">30 €</span>
+            </p>
+            <div className="mt-4 rounded-xl bg-brand py-3 text-center font-semibold text-white">{t('payments.card.byCard')}</div>
+            <p className="mt-2 text-center text-sm text-navy/55">{t('payments.card.provider')}</p>
+            <div className="mt-5 border-t border-navy/10 pt-4">
+              <p className="font-semibold">{t('payments.card.transfer')}</p>
+              <div className="mt-3 flex items-center gap-4">
+                <QRCodeSVG value="https://trackbox24.com/track" size={96} marginSize={1} className="shrink-0 rounded-md bg-white" />
+                <div className="flex flex-col gap-2 text-sm text-navy/70">
+                  <span>{t('payments.card.scan')}</span>
+                  <span className="w-fit rounded-lg bg-navy px-3 py-1.5 font-semibold text-white">{t('payments.card.claim')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 self-end rounded-2xl bg-emerald-50 px-4 py-3 font-semibold text-emerald-900 shadow-sm">
+            <BadgeCheck className="size-5" />
+            {t('payments.card.done')}
           </div>
         </div>
       </div>
