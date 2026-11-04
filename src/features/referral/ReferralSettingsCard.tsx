@@ -1,15 +1,7 @@
-import { Gift } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -58,7 +50,7 @@ const num = (s?: string) =>
  * The company's own referral program rules, on its page under the modules: what a point is worth, the discount for a
  * client someone recommended, the points to whoever recommended them and for one's own parcels, how they are spent.
  */
-export function ReferralSettingsCard() {
+export function ReferralSettingsCard({ onSaved }: { onSaved?: () => void }) {
   const { t } = useTranslation(["companies", "common"]);
   const query = useReferralSettings();
   const save = useSaveReferralSettings();
@@ -94,6 +86,7 @@ export function ReferralSettingsCard() {
         clientTypes: f.clientTypes as ReferralSettings["clientTypes"],
       });
       toast.success(t("common:common.saved"));
+      onSaved?.();
     } catch (e) {
       showApiError(e);
     }
@@ -142,15 +135,7 @@ export function ReferralSettingsCard() {
   const small = "w-28";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Gift className="size-5 text-rose-600" />
-          {t("companies:referral.title")}
-        </CardTitle>
-        <CardDescription>{t("companies:referral.subtitle")}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-end gap-3">
           <Field className="w-auto">
             <FieldLabel htmlFor="rf-point">
@@ -401,7 +386,6 @@ export function ReferralSettingsCard() {
             {t("common:actions.save")}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

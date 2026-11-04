@@ -11,8 +11,6 @@ import { CompanyDialog } from './CompanyDialog'
 import { NpKeyDialog } from './NpKeyDialog'
 import { NpSenderDialog } from './NpSenderDialog'
 import { CompanyModules } from './CompanyModules'
-import { PaymentSettingsCard } from '@/features/payments/PaymentSettingsCard'
-import { ReferralSettingsCard } from '@/features/referral/ReferralSettingsCard'
 import { useSetCompanyNpKey, useUpdateCompany } from './queries'
 
 /** Deactivated, restricted for non-payment, in the trial, or simply active. */
@@ -44,7 +42,7 @@ export function NpKeyBadge({ configured }: { configured?: boolean }) {
 /** Details card with edit + NP backup key dialogs; used by admin's company page and manager's own-company page. */
 export function CompanyDetails({ company }: { company: CompanyResponse }) {
   const { t } = useTranslation(['companies', 'common', 'novaPoshta'])
-  const { canEdit, isAdmin, companyMode, isManager } = useAccess()
+  const { canEdit, isAdmin, companyMode } = useAccess()
   // Admins may edit company requisites from the companies section, but not while browsing a company read-only.
   const editable = canEdit || (isAdmin && !companyMode)
   const update = useUpdateCompany(company.id!)
@@ -115,9 +113,6 @@ export function CompanyDetails({ company }: { company: CompanyResponse }) {
       </div>
 
       <CompanyModules company={company} />
-      {/* the company sets its own program rules: a manager of it */}
-      {company.referralEnabled && isManager && <ReferralSettingsCard />}
-      {company.onlinePaymentsEnabled && isManager && <PaymentSettingsCard />}
 
       <CompanyDialog open={editing} onOpenChange={setEditing} company={company} onSubmit={(body) => update.mutateAsync(body)} />
       <NpSenderDialog company={company} open={senderOpen} onOpenChange={setSenderOpen} />
