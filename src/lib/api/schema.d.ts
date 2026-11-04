@@ -3106,6 +3106,17 @@ export interface components {
             description?: string;
             /** Format: int32 */
             seats?: number;
+            /**
+             * @description Переїзд їде цим рейсом далі: зараз на попередньому плечі (і переходить на це через склад)
+             * @example false
+             */
+            later?: boolean;
+            /**
+             * Format: int32
+             * @description Для later: номер плеча, де переїзд зараз (немає — ще не на жодному)
+             * @example 1
+             */
+            nowOnLeg?: number;
         };
         TripPayments: {
             /** @description Отримані оплати: по валюті й способу оплати (method немає — спосіб не вказано) */
