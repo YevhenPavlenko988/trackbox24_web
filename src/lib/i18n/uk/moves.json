@@ -6,6 +6,8 @@
   "search": "Код, відправник або телефон",
   "badge": "Переїзд",
   "fields": {
+    "trip": "Рейс",
+    "tripPlanned": "у плані №{{trip}}",
     "code": "Код",
     "name": "Назва",
     "namePlaceholder": "Переїзд Київ → Варшава",

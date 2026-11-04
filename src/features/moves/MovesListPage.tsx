@@ -1,6 +1,6 @@
 import { Plus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { DataTable, type Column } from '@/components/common/DataTable'
 import { LinkButton } from '@/components/common/LinkButton'
 import { Pagination } from '@/components/common/Pagination'
@@ -43,6 +43,27 @@ export function MovesListPage() {
       },
     },
     { key: 'status', header: t('moves:fields.status'), cell: (p) => <ParcelStatusBadge status={p.status} /> },
+    // the trip it is in (or planned into): a leg shows as №14.1
+    {
+      key: 'trip',
+      header: t('moves:fields.trip'),
+      cell: (p) => {
+        const leg = (n?: number) => (n == null ? '' : p.tripLegNumber ? `${n}.${p.tripLegNumber}` : String(n))
+        if (p.tripId && p.tripNumber != null)
+          return (
+            <Link to={`/trips/${p.tripId}`} className="whitespace-nowrap underline underline-offset-4" onClick={(e) => e.stopPropagation()}>
+              №{leg(p.tripNumber)}
+            </Link>
+          )
+        if (p.plannedTripId && p.plannedTripNumber != null)
+          return (
+            <Link to={`/trips/${p.plannedTripId}`} className="whitespace-nowrap text-muted-foreground underline underline-offset-4" onClick={(e) => e.stopPropagation()}>
+              {t('moves:fields.tripPlanned', { trip: leg(p.plannedTripNumber) })}
+            </Link>
+          )
+        return <span className="text-muted-foreground">—</span>
+      },
+    },
     { key: 'createdAt', header: t('moves:fields.createdAt'), cell: (p) => formatDateTime(p.createdAt) },
   ]
 

@@ -54,8 +54,10 @@ export function TripsListPage() {
         <div className="flex flex-col gap-0.5">
           <span>{routeText(s)}</span>
           {(s.moves ?? []).slice(0, 2).map((m) => (
-            <span key={m.id} className="text-xs text-muted-foreground">
+            <span key={m.id} className={m.later ? 'text-xs text-muted-foreground/70 italic' : 'text-xs text-muted-foreground'}>
               {[m.barcode, m.clientName, m.description, t('trips:list.seats', { count: m.seats })].filter(Boolean).join(' · ')}
+              {/* a later leg: the move of the whole way still on an earlier one */}
+              {m.later && ` · ${m.nowOnLeg ? t('trips:list.laterFrom', { leg: `${s.number}.${m.nowOnLeg}` }) : t('trips:list.later')}`}
             </span>
           ))}
           {(s.moves ?? []).length > 2 && <span className="text-xs text-muted-foreground">{t('trips:list.moreMoves', { count: (s.moves ?? []).length - 2 })}</span>}
@@ -113,7 +115,12 @@ export function TripsListPage() {
         <Button size="sm" variant={status || open ? 'outline' : 'default'} onClick={() => set({ status: undefined, open: undefined })}>
           {t('trips:filters.all')}
         </Button>
-        <Button size="sm" variant={open ? 'default' : 'outline'} onClick={() => set({ status: undefined, open: open ? undefined : 'true' })}>
+        <Button
+          size="sm"
+          variant={open ? 'default' : 'outline'}
+          title={t('trips:filters.openHint')}
+          onClick={() => set({ status: undefined, open: open ? undefined : 'true' })}
+        >
           {t('trips:filters.open')}
         </Button>
         {TRIP_STATUSES.map((s) => (
