@@ -1,5 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api/client'
+import { normalizePage } from '@/lib/api/page'
 import { unwrap } from '@/lib/api/problem'
 import type { Currency } from '@/lib/api/types'
 
@@ -30,3 +31,20 @@ export function convertRate(rates: { currency?: Currency; rate?: number }[] | un
   const b = uah(to)
   return a != null && b != null && b > 0 ? a / b : undefined
 }
+
+/** One page (10) of the bank's rate changes or of the company's rate changes, newest first; refreshed with the rates. */
+export function useRateHistory(kind: 'bank' | 'company', currency: Currency, page: number) {
+  return useQuery({
+    queryKey: [...ratesKey, 'history', kind, currency, page],
+    queryFn: async () =>
+      normalizePage(
+        kind === 'bank'
+          ? await unwrap(api.GET('/api/currency/rates/{currency}/history/bank', { params: { path: { currency }, query: { page, size: HISTORY_PAGE } } }))
+          : await unwrap(api.GET('/api/currency/rates/{currency}/history/company', { params: { path: { currency }, query: { page, size: HISTORY_PAGE } } })),
+      ),
+    placeholderData: keepPreviousData,
+    staleTime: 5 * 60_000,
+  })
+}
+
+const HISTORY_PAGE = 10

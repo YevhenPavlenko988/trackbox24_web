@@ -2787,6 +2787,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/currency/rates/{currency}/history/company": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Історія курсу компанії
+         * @description Кожна зміна курсу компанії: курс (null — повернуто курс банку), хто й коли; новіші першими, по 10 за сторінку.
+         */
+        get: operations["companyHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/currency/rates/{currency}/history/bank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Історія курсу банку
+         * @description Лише моменти, коли купівля, продаж чи джерело змінились (щогодинні знімки згорнуто); новіші першими, по 10 за сторінку.
+         */
+        get: operations["bankHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/crm/team": {
         parameters: {
             query?: never;
@@ -4242,7 +4282,7 @@ export interface components {
              */
             cardLink?: string;
             /**
-             * @description Шаблон призначення платежу за реквізитами й у QR: {номер} — номер посилки чи переїзду, {послуга} — «доставки» / «переїзду», {клієнт} — ім'я клієнта; порожньо — без призначення
+             * @description Шаблон призначення платежу за реквізитами й у QR: {номер} — номер посилки чи переїзду, {послуга} — «доставки» / «переїзду», {клієнт} — ім'я клієнта; порожньо — «Власні кошти»
              * @example Оплата {послуга} {номер}
              */
             qrPurpose?: string;
@@ -4326,7 +4366,7 @@ export interface components {
              */
             cardLink?: string;
             /**
-             * @description Шаблон призначення платежу; null — без призначення
+             * @description Шаблон призначення платежу; null — «Власні кошти»
              * @example Оплата {послуга} {номер}
              */
             qrPurpose?: string;
@@ -7745,6 +7785,57 @@ export interface components {
         };
         PagedModelDeletedItemResponseLoaderResponse: {
             content?: components["schemas"]["DeletedItemResponseLoaderResponse"][];
+            page?: components["schemas"]["PageMetadata"];
+        };
+        /** @description Зміна курсу компанії */
+        CompanyRateChangeResponse: {
+            /**
+             * Format: date-time
+             * @description Коли змінено
+             */
+            at?: string;
+            /**
+             * @description Курс компанії, грн за одиницю; null — повернуто курс банку
+             * @example 52
+             */
+            rate?: number;
+            /**
+             * @description Хто змінив
+             * @example Олена Савчук
+             */
+            setBy?: string;
+        };
+        PagedModelCompanyRateChangeResponse: {
+            content?: components["schemas"]["CompanyRateChangeResponse"][];
+            page?: components["schemas"]["PageMetadata"];
+        };
+        /** @description Курс банку з цього моменту (історія: лише коли купівля, продаж чи джерело змінились) */
+        BankRateChangeResponse: {
+            /**
+             * Format: date-time
+             * @description З якого моменту діяв
+             */
+            at?: string;
+            /**
+             * @description Банк купує, грн за одиницю
+             * @example 51.2
+             */
+            buy?: number;
+            /**
+             * @description Банк продає, грн за одиницю
+             * @example 51.8
+             */
+            sell?: number;
+            /**
+             * @example MONOBANK
+             * @enum {string}
+             */
+            source?: "MONOBANK" | "PRIVATBANK" | "COMPANY";
+            /** @example Monobank */
+            sourceLabel?: string;
+        };
+        PagedModelBankRateChangeResponse: {
+            content?: components["schemas"]["BankRateChangeResponse"][];
             page?: components["schemas"]["PageMetadata"];
         };
         PagedModelInvoiceResponse: {
@@ -24694,6 +24785,218 @@ export interface operations {
                      *       "status": 403,
                      *       "detail": "Access Denied",
                      *       "instance": "/api/currency/rates"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    companyHistory: {
+        parameters: {
+            query?: {
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                currency: "UAH" | "EUR" | "USD" | "PLN";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagedModelCompanyRateChangeResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/currency/rates/{currency}/history/company"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/currency/rates/{currency}/history/company"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/currency/rates/{currency}/history/company"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/currency/rates/{currency}/history/company"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    bankHistory: {
+        parameters: {
+            query?: {
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                currency: "UAH" | "EUR" | "USD" | "PLN";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagedModelBankRateChangeResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/currency/rates/{currency}/history/bank"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/currency/rates/{currency}/history/bank"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/currency/rates/{currency}/history/bank"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/currency/rates/{currency}/history/bank"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
