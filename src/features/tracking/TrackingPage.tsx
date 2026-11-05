@@ -68,7 +68,7 @@ export function TrackingPage() {
       <header className="border-b border-navy/10 bg-white">
         <div className="mx-auto flex h-16 w-full max-w-2xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5 text-lg font-bold">
-            <img src="/logo.png" alt="" className="size-8" />
+            <img src="/logo.png" alt="" className="size-8 object-contain" />
             <span>
               Trackbox<span className="text-brand">24</span>
             </span>

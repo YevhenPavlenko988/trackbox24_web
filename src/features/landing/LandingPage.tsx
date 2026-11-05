@@ -76,7 +76,7 @@ export function LandingPage() {
       <footer className="bg-navy-deep py-10 text-white/70">
         <div className={`${wrap} flex flex-col gap-4 text-sm sm:flex-row sm:items-center sm:justify-between`}>
           <div className="flex items-center gap-3">
-            <img src="/logo.png" alt="" className="size-8" />
+            <img src="/logo.png" alt="" className="size-8 object-contain" />
             <div>
               <p className="font-semibold text-white">TrackBox24</p>
               <p>{t('footer.tagline')}</p>
@@ -117,7 +117,7 @@ function Header() {
     <header className="sticky top-0 z-20 border-b border-navy/10 bg-white/90 backdrop-blur">
       <div className={`${wrap} flex h-16 items-center justify-between gap-4`}>
         <a href="#top" className="flex items-center gap-2.5 text-lg font-bold">
-          <img src="/logo.png" alt="" className="size-8" />
+          <img src="/logo.png" alt="" className="size-8 object-contain" />
           <span>
             Trackbox<span className="text-brand">24</span>
           </span>
@@ -199,9 +199,10 @@ function Hero() {
   )
 }
 
+/** A soft light glow around the shots: the cabinet's navy menu must not melt into the navy sections. */
 function BrowserFrame({ src, alt, lazy = false }: { src: string; alt: string; lazy?: boolean }) {
   return (
-    <div className="overflow-hidden rounded-xl bg-white shadow-2xl ring-1 ring-black/20">
+    <div className="overflow-hidden rounded-xl bg-white shadow-[0_0_0_1px_rgb(255_255_255/0.25),0_20px_60px_-10px_rgb(255_255_255/0.25),0_25px_50px_-12px_rgb(0_0_0/0.5)]">
       <div className="flex items-center gap-1.5 border-b border-slate-200 bg-slate-100 px-3 py-2">
         <span className="size-2.5 rounded-full bg-slate-300" />
         <span className="size-2.5 rounded-full bg-slate-300" />
@@ -214,7 +215,7 @@ function BrowserFrame({ src, alt, lazy = false }: { src: string; alt: string; la
 
 function PhoneFrame({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
   return (
-    <div className={`overflow-hidden rounded-[12%/5.5%] bg-navy-deep p-[3%] shadow-2xl ring-1 ring-black/30 ${className}`}>
+    <div className={`overflow-hidden rounded-[12%/5.5%] bg-navy-deep p-[3%] shadow-[0_0_0_1px_rgb(255_255_255/0.25),0_20px_60px_-10px_rgb(255_255_255/0.22),0_25px_50px_-12px_rgb(0_0_0/0.5)] ${className}`}>
       <img src={src} alt={alt} className="block w-full rounded-[9%/4%]" loading="lazy" />
     </div>
   )

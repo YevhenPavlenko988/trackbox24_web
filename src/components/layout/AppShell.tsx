@@ -82,7 +82,7 @@ export function AppShell() {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="flex-row items-center gap-2.5 px-4 py-4 text-lg font-bold text-white">
-          <img src="/logo.png" alt="" className="size-8 shrink-0 rounded-lg bg-white p-0.5" />
+          <img src="/logo.png" alt="" className="size-8 shrink-0 rounded-lg bg-white object-contain p-0.5" />
           <span>
             Trackbox<span className="text-brand">24</span>
           </span>
