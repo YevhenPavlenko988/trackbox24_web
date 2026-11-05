@@ -18,7 +18,7 @@ export function LegalLayout({ title, revision, children }: { title: string; revi
       <header className="border-b border-navy/10">
         <div className="mx-auto flex h-16 w-full max-w-3xl items-center justify-between px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-2.5 text-lg font-bold">
-            <img src="/logo.png" alt="" className="size-8" />
+            <img src="/logo.png" alt="" className="size-8 object-contain" />
             <span>
               Trackbox<span className="text-brand">24</span>
             </span>
