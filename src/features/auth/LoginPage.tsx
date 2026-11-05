@@ -73,7 +73,7 @@ export function LoginPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
       {/* the landing hero in small: who signs in here and what they get */}
-      <aside className="relative hidden flex-col justify-between overflow-hidden bg-navy p-12 text-white lg:flex">
+      <aside className="sticky top-0 hidden h-screen flex-col gap-10 overflow-hidden bg-navy px-12 pt-12 text-white lg:flex">
         <Link
           to="/"
           title={t("auth:toSite")}
@@ -90,11 +90,10 @@ export function LoginPage() {
           </h1>
           <p className="mt-4 text-lg text-white/75">{t("auth:heroText")}</p>
         </div>
-        <img
-          src="/landing/web-parcels.webp"
-          alt=""
-          className="pointer-events-none -mb-24 w-[115%] max-w-none rounded-xl shadow-2xl ring-1 ring-white/10"
-        />
+        {/* the cabinet peeks in from the bottom and is cut off by the screen, however short it is */}
+        <div className="min-h-0 flex-1 overflow-hidden rounded-t-xl shadow-2xl ring-1 ring-white/10">
+          <img src="/landing/web-parcels.webp?v=2" alt="" className="pointer-events-none w-[125%] max-w-none" />
+        </div>
       </aside>
       <div className="flex flex-col items-center justify-center gap-6 bg-background p-4">
         <Link to="/" title={t("auth:toSite")} className="lg:hidden">
