@@ -189,9 +189,9 @@ function Hero() {
           </div>
         </div>
         <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
-          <BrowserFrame src="/landing/web-parcels.webp" alt={t('hero.webShot')} />
+          <BrowserFrame src="/landing/web-parcels.webp?v=2" alt={t('hero.webShot')} />
           <div className="absolute -right-2 -bottom-8 w-[34%] sm:-right-6 sm:-bottom-10">
-            <PhoneFrame src="/landing/mob-scan.webp" alt={t('hero.mobShot')} />
+            <PhoneFrame src="/landing/mob-scan.webp?v=2" alt={t('hero.mobShot')} />
           </div>
         </div>
       </div>
@@ -305,7 +305,7 @@ function NovaPoshta() {
           <h2 className={h2}>{t('np.title')}</h2>
           <p className="mt-4 text-lg text-navy/75">{t('np.text')}</p>
         </div>
-        <PhoneFrame src="/landing/mob-receive.webp" alt={t('np.shot')} className="mx-auto w-56 lg:w-64" />
+        <PhoneFrame src="/landing/mob-receive.webp?v=2" alt={t('np.shot')} className="mx-auto w-56 lg:w-64" />
         <ul className="flex flex-col gap-3">
           {items.map((it, i) => {
             const Icon = icons[i]
@@ -342,9 +342,9 @@ function Moves() {
             <p className="mt-4 text-lg text-navy/75">{t('moves.text')}</p>
           </div>
           <div className="relative mx-auto w-full max-w-xl pb-8 lg:max-w-none">
-            <BrowserFrame src="/landing/web-move.webp" alt={t('moves.webShot')} lazy />
+            <BrowserFrame src="/landing/web-move.webp?v=2" alt={t('moves.webShot')} lazy />
             <div className="absolute -right-2 -bottom-2 w-[30%] sm:-right-4">
-              <PhoneFrame src="/landing/mob-move.webp" alt={t('moves.mobShot')} />
+              <PhoneFrame src="/landing/mob-move.webp?v=2" alt={t('moves.mobShot')} />
             </div>
           </div>
         </div>
@@ -403,7 +403,7 @@ function Driver() {
             })}
           </div>
         </div>
-        <PhoneFrame src="/landing/mob-payments.webp" alt={t('driver.shot')} className="mx-auto w-60 lg:w-72" />
+        <PhoneFrame src="/landing/mob-payments.webp?v=2" alt={t('driver.shot')} className="mx-auto w-60 lg:w-72" />
       </div>
     </section>
   )
