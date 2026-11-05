@@ -14,6 +14,7 @@ import { showApiError } from '@/lib/api/problem'
 import type { CurrencyRateResponse } from '@/lib/api/types'
 import { CURRENCY_SYMBOL, formatDateTime } from '@/lib/format'
 import { useRates, useResetRate, useSetRate } from './queries'
+import { RatesHistory } from './RatesHistory'
 
 const rate = (v?: number) => (v == null ? '—' : v.toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 4 }))
 
@@ -122,6 +123,7 @@ export function RatesPage() {
           {!canEditRates && <p className="mt-3 text-sm text-muted-foreground">{t('currency:readOnly')}</p>}
         </CardContent>
       </Card>
+      <RatesHistory />
       {editing && <RateDialog rate={editing} onClose={() => setEditing(null)} />}
     </>
   )
