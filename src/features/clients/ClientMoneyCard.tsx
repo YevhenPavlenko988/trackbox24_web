@@ -44,7 +44,7 @@ function Figure({ label, hint, amounts, alarming }: { label: string; hint: strin
   return (
     <div className="flex flex-col gap-0.5">
       <span className="text-sm text-muted-foreground">{label}</span>
-      <span className={alarming ? 'text-xl font-semibold text-amber-700' : 'text-xl font-medium'}>
+      <span className={alarming ? 'text-xl font-semibold text-amber-700 dark:text-amber-300' : 'text-xl font-medium'}>
         {amounts.length ? amounts.join(' · ') : t('money.none')}
       </span>
       <span className="text-xs text-muted-foreground">{hint}</span>

@@ -50,7 +50,7 @@ export function MovePaymentCard({ parcel }: { parcel: ParcelResponse }) {
               value: (
                 <Badge
                   variant="outline"
-                  className={status === 'PAID' ? 'border-transparent bg-emerald-100 text-emerald-900' : status === 'PARTIAL' ? 'text-sky-700' : 'text-amber-700'}
+                  className={status === 'PAID' ? 'border-transparent bg-emerald-100 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300' : status === 'PARTIAL' ? 'text-sky-700 dark:text-sky-300' : 'text-amber-700 dark:text-amber-300'}
                 >
                   {t(`moves:bill.status.${status}`)}
                 </Badge>

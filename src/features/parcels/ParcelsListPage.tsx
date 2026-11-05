@@ -183,7 +183,7 @@ export function ParcelsListPage() {
       </Tabs>
 
       {/* filters: the everyday ones in one row, the rare ones under «Ще фільтри», quick toggles and what is on under them */}
-      <div className="mb-3 flex flex-col gap-2.5 rounded-xl border bg-muted/30 p-3">
+      <div className="mb-3 flex flex-col gap-2.5 rounded-xl border bg-card p-3">
         <div className="flex flex-wrap gap-2 [&_[data-slot=select-trigger]]:bg-background">
           {/* the search has the whole first row, so its hint can say everything it looks in; the filters go under it */}
           <div className="relative basis-full">

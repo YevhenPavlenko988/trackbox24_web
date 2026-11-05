@@ -84,7 +84,7 @@ export function NpPaymentSummary({ parcel: p }: { parcel: ParcelResponse }) {
   return (
     <div className="flex flex-col">
       <span>{p.npDeliveryCost ? formatMoney(p.npDeliveryCost) : '—'}</span>
-      {who && <span className={`text-xs ${unpaid ? 'text-amber-700' : 'text-emerald-700'}`}>{who}</span>}
+      {who && <span className={`text-xs ${unpaid ? 'text-amber-700 dark:text-amber-300' : 'text-emerald-700 dark:text-emerald-300'}`}>{who}</span>}
       {(p.npCodToPay ?? 0) > 0 && (
         <span className="text-xs text-muted-foreground">
           {t('fields.npCodAmount')}: {formatMoney(p.npCodToPay)}

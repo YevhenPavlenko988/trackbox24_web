@@ -34,7 +34,7 @@ export function TripPaymentsSummary({ payments }: { payments?: TripPayments }) {
       )}
       {notReceived.length > 0 && (
         <div>
-          <div className="mb-1 font-medium text-amber-700">{t('trips:payments.notReceived')}</div>
+          <div className="mb-1 font-medium text-amber-700 dark:text-amber-300">{t('trips:payments.notReceived')}</div>
           {notReceived.map((l, i) => line(l, t('trips:payments.delivered'), `n${i}`))}
         </div>
       )}
