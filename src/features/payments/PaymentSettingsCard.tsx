@@ -34,6 +34,7 @@ type Form = {
   bankName: string
   cardNumber: string
   cardLink: string
+  qrPurpose: string
 }
 
 const toForm = (s: PaymentSettingsResponse): Form => ({
@@ -52,9 +53,21 @@ const toForm = (s: PaymentSettingsResponse): Form => ({
   bankName: s.bankName ?? '',
   cardNumber: s.cardNumber ?? '',
   cardLink: s.cardLink ?? '',
+  qrPurpose: s.qrPurpose ?? '',
 })
 
 const blank = (s: string) => (s.trim() === '' ? undefined : s.trim())
+
+/** The template as the client will see it, for a sample parcel; the backend fills in the real one. */
+const samplePurpose = (template: string) =>
+  (
+    template
+      .replaceAll('{номер}', 'PT0123456789')
+      .replaceAll('{послуга}', 'доставки')
+      .replaceAll('{клієнт}', 'Коваль Іван')
+      .replace(/\s+/g, ' ')
+      .trim() || 'Власні кошти'
+  ).slice(0, 140)
 
 /**
  * «Онлайн-оплата» on the company page: the carrier's own acquiring (one provider, its keys) and / or the requisites the
@@ -92,6 +105,8 @@ export function PaymentSettingsCard({ onSaved }: { onSaved?: () => void }) {
         bankName: blank(f.bankName),
         cardNumber: blank(f.cardNumber),
         cardLink: blank(f.cardLink),
+        // empty — «Власні кошти»: a bank sends no transfer without a purpose
+        qrPurpose: blank(f.qrPurpose),
       })
       toast.success(t('common:common.saved'))
       onSaved?.()
@@ -227,10 +242,24 @@ export function PaymentSettingsCard({ onSaved }: { onSaved?: () => void }) {
                   {text('pay-card', t('companies:payments.cardNumber'), 'cardNumber', '0000 0000 0000 0000')}
                   {text('pay-link', t('companies:payments.cardLink'), 'cardLink', t('companies:payments.cardLinkPlaceholder'))}
                 </div>
+                <Field>
+                  <FieldLabel htmlFor="pay-purpose">{t('companies:payments.qrPurpose')}</FieldLabel>
+                  <Input
+                    id="pay-purpose"
+                    maxLength={140}
+                    value={f.qrPurpose}
+                    placeholder={t('companies:payments.qrPurposeEmpty')}
+                    onChange={(e) => set('qrPurpose')(e.target.value)}
+                  />
+                  <FieldDescription>
+                    {t('companies:payments.qrPurposeHint')}
+                    <span className="block">{t('companies:payments.qrPurposeSample', { text: samplePurpose(f.qrPurpose) })}</span>
+                  </FieldDescription>
+                </Field>
                 {ibanReady && (
                   <div className="flex items-center gap-4 rounded-lg bg-muted/50 p-3">
                     <QRCodeSVG
-                      value={nbuQrUrl(f.recipientName, f.iban, 1000, f.taxId, 'Оплата доставки PT0000000000')}
+                      value={nbuQrUrl(f.recipientName, f.iban, 1000, f.taxId, samplePurpose(f.qrPurpose))}
                       size={96}
                       marginSize={2}
                       className="shrink-0 rounded bg-white"
