@@ -4241,6 +4241,11 @@ export interface components {
              * @example https://send.monobank.ua/jar/abc123
              */
             cardLink?: string;
+            /**
+             * @description Шаблон призначення платежу за реквізитами й у QR: {номер} — номер посилки чи переїзду, {послуга} — «доставки» / «переїзду», {клієнт} — ім'я клієнта; порожньо — без призначення
+             * @example Оплата {послуга} {номер}
+             */
+            qrPurpose?: string;
         };
         PaymentSettingsResponse: {
             /**
@@ -4320,6 +4325,11 @@ export interface components {
              * @example https://send.monobank.ua/jar/abc123
              */
             cardLink?: string;
+            /**
+             * @description Шаблон призначення платежу; null — без призначення
+             * @example Оплата {послуга} {номер}
+             */
+            qrPurpose?: string;
             /**
              * @description Клієнт уже може платити: є провайдер із ключами або реквізити
              * @example true
