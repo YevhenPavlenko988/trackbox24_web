@@ -56,7 +56,7 @@ export function MovesListPage() {
         <div className="flex flex-col items-start gap-1">
           <ParcelStatusBadge status={p.status} />
           {canSeeMoney && p.paymentClaimedAt && (
-            <span className="rounded bg-amber-100 px-1.5 text-xs font-medium text-amber-900">{t('parcels:online.claimedBadge')}</span>
+            <span className="rounded bg-amber-100 dark:bg-amber-950/40 px-1.5 text-xs font-medium text-amber-900 dark:text-amber-300">{t('parcels:online.claimedBadge')}</span>
           )}
         </div>
       ),

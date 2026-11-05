@@ -11,12 +11,12 @@ import { cn } from '@/lib/utils'
 import { useDecideOnlinePayment, useOnlinePayments } from './queries'
 
 const TONE: Partial<Record<NonNullable<OnlinePaymentResponse['status']>, string>> = {
-  SUCCESS: 'border-transparent bg-emerald-100 text-emerald-900',
-  CONFIRMED: 'border-transparent bg-emerald-100 text-emerald-900',
-  CLAIMED: 'border-transparent bg-amber-100 text-amber-900',
-  FAILURE: 'text-red-700',
-  REJECTED: 'text-red-700',
-  REVERSED: 'text-red-700',
+  SUCCESS: 'border-transparent bg-emerald-100 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300',
+  CONFIRMED: 'border-transparent bg-emerald-100 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300',
+  CLAIMED: 'border-transparent bg-amber-100 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300',
+  FAILURE: 'text-red-700 dark:text-red-300',
+  REJECTED: 'text-red-700 dark:text-red-300',
+  REVERSED: 'text-red-700 dark:text-red-300',
   EXPIRED: 'text-muted-foreground',
 }
 
@@ -51,7 +51,7 @@ export function OnlinePaymentsCard({ parcel, canDecide }: { parcel: ParcelRespon
         {claimed && (
           <div className="flex flex-col gap-3 rounded-lg bg-amber-50 p-3 dark:bg-amber-950/30">
             <p className="flex items-start gap-2 font-medium">
-              <BellRing className="mt-0.5 size-4 shrink-0 text-amber-700" />
+              <BellRing className="mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-300" />
               {t('online.claimed')}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -78,7 +78,7 @@ export function OnlinePaymentsCard({ parcel, canDecide }: { parcel: ParcelRespon
               <span className="min-w-0 flex-1">
                 {t(`online.provider.${p.provider}`)} · <span className="font-medium tabular-nums">{formatMoney(p.amount, p.currency)}</span>
                 {p.decidedBy && <span className="text-muted-foreground"> · {p.decidedBy}</span>}
-                {p.note && <span className="block text-xs text-amber-700">{p.note}</span>}
+                {p.note && <span className="block text-xs text-amber-700 dark:text-amber-300">{p.note}</span>}
               </span>
               <Badge variant="outline" className={cn(TONE[p.status!])}>
                 {t(`online.status.${p.status}`)}

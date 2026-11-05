@@ -80,7 +80,7 @@ export function RatesPage() {
                       <TableCell className="text-right">
                         <div className="flex flex-col items-end">
                           <span className="text-base font-bold tabular-nums">{rate(r.rate)}</span>
-                          <span className={own ? 'text-xs font-medium text-emerald-700' : 'text-xs text-muted-foreground'}>
+                          <span className={own ? 'text-xs font-medium text-emerald-700 dark:text-emerald-300' : 'text-xs text-muted-foreground'}>
                             {t(own ? 'currency:fromCompany' : 'currency:fromBank')}
                           </span>
                         </div>

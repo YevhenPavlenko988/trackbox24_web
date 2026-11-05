@@ -287,7 +287,7 @@ function EditForm({ user, onClose }: { user: UserResponse; onClose: () => void }
             render={({ field }) => (
               <div className="flex flex-col gap-1">
                 <RolesField value={field.value} onChange={field.onChange} error={errors.roles} />
-                {rolesChanged && <FieldDescription className="text-amber-700">{t('users:hints.rolesChange')}</FieldDescription>}
+                {rolesChanged && <FieldDescription className="text-amber-700 dark:text-amber-300">{t('users:hints.rolesChange')}</FieldDescription>}
               </div>
             )}
           />

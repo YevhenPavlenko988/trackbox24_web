@@ -25,6 +25,7 @@ import { useCompanyView } from '@/features/auth/companyView'
 import { useAuth } from '@/features/auth/useAuth'
 import { useCurrentCompany } from '@/features/companies/queries'
 import { RatesChip } from '@/features/currency/RatesChip'
+import { ThemeToggle } from '@/features/theme/theme'
 
 /** {@code module}: shown only when the company has that paid module on. */
 type NavItem = { to: string; labelKey: string; icon: LucideIcon; show: (a: Access) => boolean; module?: 'parcels' | 'moves' | 'currency' }
@@ -80,9 +81,11 @@ export function AppShell() {
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="flex-row items-center gap-2 px-4 py-3 text-lg font-semibold">
-          <img src="/logo.png" alt="" className="size-7 shrink-0" />
-          {t('app.name')}
+        <SidebarHeader className="flex-row items-center gap-2.5 px-4 py-4 text-lg font-bold text-white">
+          <img src="/logo.png" alt="" className="size-8 shrink-0 rounded-lg bg-white p-0.5" />
+          <span>
+            Trackbox<span className="text-brand">24</span>
+          </span>
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
@@ -90,7 +93,11 @@ export function AppShell() {
               <SidebarMenu>
                 {items.map((item) => (
                   <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton isActive={pathname === item.to || pathname.startsWith(item.to + '/')} render={<NavLink to={item.to} />}>
+                    <SidebarMenuButton
+                      isActive={pathname === item.to || pathname.startsWith(item.to + '/')}
+                      className="h-9 data-active:[&_svg]:text-brand"
+                      render={<NavLink to={item.to} />}
+                    >
                       <item.icon />
                       <span>{t(item.labelKey)}</span>
                     </SidebarMenuButton>
@@ -110,14 +117,14 @@ export function AppShell() {
         </SidebarContent>
         <SidebarFooter className="gap-2 px-4 py-3">
           <div className="min-w-0 text-sm">
-            <p className="truncate font-medium">{fullName}</p>
-            <p className="truncate text-xs text-muted-foreground">{roles.map((r) => t(`roles.${r}`)).join(', ')}</p>
+            <p className="truncate font-medium text-white">{fullName}</p>
+            <p className="truncate text-xs text-white/60">{roles.map((r) => t(`roles.${r}`)).join(', ')}</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => setChangingPassword(true)}>
+          <Button variant="ghost" size="sm" className="text-white/80 hover:bg-white/10 hover:text-white" onClick={() => setChangingPassword(true)}>
             <KeyRound />
             {t('nav.changePassword')}
           </Button>
-          <Button variant="outline" size="sm" onClick={logout}>
+          <Button variant="outline" size="sm" className="border-white/25 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={logout}>
             <LogOut />
             {t('nav.logout')}
           </Button>
@@ -125,7 +132,7 @@ export function AppShell() {
       </Sidebar>
       {/* min-w-0: without it this flex child grows to the widest table and the whole page scrolls sideways. */}
       <SidebarInset className="min-w-0">
-        <header className="flex h-12 items-center gap-2 border-b px-4">
+        <header className="sticky top-0 z-10 flex h-12 items-center gap-2 border-b bg-white/90 px-4 backdrop-blur dark:bg-background/90">
           <SidebarTrigger />
           {access.companyMode && (
             <div className="ml-2 flex flex-1 items-center justify-between gap-3 rounded-md bg-amber-100 px-3 py-1 text-sm text-amber-900 dark:bg-amber-900/40 dark:text-amber-100">
@@ -140,11 +147,10 @@ export function AppShell() {
             </div>
           )}
           {/* the company's rates on every page, «Курси валют» only */}
-          {company.data?.currencyEnabled && (
-            <div className="ml-auto">
-              <RatesChip />
-            </div>
-          )}
+          <div className="ml-auto flex items-center gap-2">
+            {company.data?.currencyEnabled && <RatesChip />}
+            <ThemeToggle />
+          </div>
         </header>
         <main className="min-w-0 flex-1 p-6">
           <Outlet />

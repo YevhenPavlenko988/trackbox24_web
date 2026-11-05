@@ -187,14 +187,14 @@ export function ParcelPage() {
     {
       label: t('parcels:payment.status'),
       value: hasPrice ? (
-        <Badge variant={p.paymentStatus === 'PAID' ? 'secondary' : 'outline'} className={p.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-900' : 'text-amber-700'}>
+        <Badge variant={p.paymentStatus === 'PAID' ? 'secondary' : 'outline'} className={p.paymentStatus === 'PAID' ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-300' : 'text-amber-700 dark:text-amber-300'}>
           {t(`parcels:payment.${p.paymentStatus ?? 'UNPAID'}`)}
         </Badge>
       ) : undefined,
     },
     {
       label: t('parcels:online.claimedBadge'),
-      value: p.paymentClaimedAt ? <span className="font-medium text-amber-700">{formatDateTime(p.paymentClaimedAt)}</span> : undefined,
+      value: p.paymentClaimedAt ? <span className="font-medium text-amber-700 dark:text-amber-300">{formatDateTime(p.paymentClaimedAt)}</span> : undefined,
     },
     { label: t('parcels:payment.paidAt'), value: formatDateTime(p.paidAt) },
     { label: t('parcels:payment.paidBy'), value: p.paidBy },
@@ -226,7 +226,7 @@ export function ParcelPage() {
             {p.status === 'IN_NOVA_POSHTA' && <NpStateBadge parcel={p} />}
             {p.warehouseName && <span className="text-sm text-muted-foreground">{p.warehouseName}</span>}
             {p.needsEnrichment && (
-              <Badge variant="outline" className="border-amber-400 text-amber-700">
+              <Badge variant="outline" className="border-amber-400 text-amber-700 dark:text-amber-300">
                 <AlertCircle />
                 {t('parcels:needsEnrichment')}
               </Badge>
@@ -416,7 +416,7 @@ export function ParcelPage() {
                 <CardTitle>{t('parcels:sections.novaPoshta')}</CardTitle>
               </CardHeader>
               <CardContent>
-                {!p.npStatusUpdatedAt && <p className="mb-3 rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{t('parcels:np.noTrackingHint')}</p>}
+                {!p.npStatusUpdatedAt && <p className="mb-3 rounded-md bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-sm text-amber-900 dark:text-amber-300">{t('parcels:np.noTrackingHint')}</p>}
                 <div className="flex flex-col gap-4">
                   <InfoGroup
                     icon={Hash}

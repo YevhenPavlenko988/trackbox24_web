@@ -21,7 +21,7 @@ export function RatesChip() {
       <PopoverTrigger
         render={
           <Button variant="ghost" size="sm" className="gap-2 font-normal tabular-nums" aria-label={t('title')}>
-            <Coins className="text-emerald-600" />
+            <Coins className="text-emerald-600 dark:text-emerald-300" />
             {rates.map((r, i) => (
               <span key={r.currency} className={i > 0 ? 'hidden sm:inline' : undefined}>
                 {CURRENCY_SYMBOL[r.currency!]} {short(r.rate)}

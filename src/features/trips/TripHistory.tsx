@@ -55,7 +55,7 @@ export function TripHistory({ entries, isLoading }: { entries?: TripHistoryRespo
           )}
           {/* the payment taken for the parcel handed over */}
           {e.payment && (
-            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+            <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-emerald-700 dark:text-emerald-300">
               <Banknote className="size-4" />
               {t('history.paid', {
                 method: e.payment.method ? t(`common:paymentMethod.${e.payment.method}`) : t('history.paidNoMethod'),

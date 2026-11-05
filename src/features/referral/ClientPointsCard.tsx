@@ -23,7 +23,7 @@ export function ClientPointsCard({ client }: { client: ClientResponse }) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Gift className="size-5 text-rose-600" />
+          <Gift className="size-5 text-rose-600 dark:text-rose-300" />
           {t("points.title")}
         </CardTitle>
         <CardDescription>
@@ -72,7 +72,7 @@ export function ClientPointsCard({ client }: { client: ClientResponse }) {
                   className={cn(
                     "font-semibold tabular-nums",
                     (e.points ?? 0) > 0
-                      ? "text-emerald-700"
+                      ? "text-emerald-700 dark:text-emerald-300"
                       : "text-muted-foreground",
                   )}
                 >

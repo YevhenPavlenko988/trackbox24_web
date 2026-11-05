@@ -61,7 +61,7 @@ export function NpSenderDialog({ company, open, onOpenChange }: { company: Compa
         {open && (
           <form onSubmit={submit} noValidate>
             <FieldGroup>
-              {!company.novaPoshtaKeyConfigured && <p className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">{t('novaPoshta:sender.needKey')}</p>}
+              {!company.novaPoshtaKeyConfigured && <p className="rounded-md bg-amber-50 dark:bg-amber-950/40 px-3 py-2 text-sm text-amber-900 dark:text-amber-300">{t('novaPoshta:sender.needKey')}</p>}
               <Field data-invalid={!!errors.cityRef}>
                 <FieldLabel htmlFor="nps-city">{t('novaPoshta:sender.city')}</FieldLabel>
                 <NpCityPicker

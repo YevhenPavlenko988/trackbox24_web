@@ -164,7 +164,7 @@ function SetupCard({ title, items, action, footer }: { title: string; items: Set
             const Action = item.action?.icon
             return (
               <li key={item.label} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
-                {filled ? <CircleCheck className="mt-0.5 size-4 shrink-0 text-emerald-600" /> : <CircleAlert className="mt-0.5 size-4 shrink-0 text-amber-600" />}
+                {filled ? <CircleCheck className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-300" /> : <CircleAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-300" />}
                 <div className="flex min-w-0 flex-1 flex-col gap-0.5 text-sm sm:flex-row sm:gap-4">
                   <span className="text-muted-foreground sm:w-44 sm:shrink-0">{item.label}</span>
                   <span className="min-w-0 break-words">

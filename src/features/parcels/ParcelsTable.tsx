@@ -94,7 +94,7 @@ export function ParcelsTable({
               {p.needsEnrichment && (
                 <Tooltip>
                   <TooltipTrigger render={<span />}>
-                    <AlertCircle className="size-4 text-amber-600" />
+                    <AlertCircle className="size-4 text-amber-600 dark:text-amber-300" />
                   </TooltipTrigger>
                   <TooltipContent>{t('parcels:needsEnrichment')}</TooltipContent>
                 </Tooltip>
@@ -239,13 +239,13 @@ export function ParcelsTable({
               <div className="flex flex-col">
                 <span>{formatMoney(p.deliveryPrice, p.deliveryPriceCurrency)}</span>
                 {p.deliveryPrice != null && (
-                  <span className={p.paymentStatus === 'PAID' ? 'text-xs text-emerald-700' : 'text-xs text-amber-700'}>
+                  <span className={p.paymentStatus === 'PAID' ? 'text-xs text-emerald-700 dark:text-emerald-300' : 'text-xs text-amber-700 dark:text-amber-300'}>
                     {t(`parcels:payment.${p.paymentStatus ?? 'UNPAID'}`)}
                     {p.paymentMethod && ` · ${t(`common:paymentMethod.${p.paymentMethod}`)}`}
                   </span>
                 )}
                 {p.paymentClaimedAt && p.paymentStatus !== 'PAID' && (
-                  <span className="mt-0.5 w-fit rounded bg-amber-100 px-1.5 text-xs font-medium text-amber-900">{t('parcels:online.claimedBadge')}</span>
+                  <span className="mt-0.5 w-fit rounded bg-amber-100 dark:bg-amber-950/40 px-1.5 text-xs font-medium text-amber-900 dark:text-amber-300">{t('parcels:online.claimedBadge')}</span>
                 )}
               </div>
             ),
