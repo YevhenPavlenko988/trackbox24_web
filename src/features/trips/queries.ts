@@ -1,6 +1,6 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { loadParcelIntoTrip } from '@/features/parcels/api'
-import { parcelKeys } from '@/features/parcels/queries'
+import { isDetailOf, parcelKeys } from '@/features/parcels/queries'
 import type { PageParams } from '@/lib/api/page'
 import type { ParcelResponse, TripCompleteRequest, TripDepartRequest, TripRequest } from '@/lib/api/types'
 import {
@@ -91,8 +91,15 @@ export function useCompleteTrip(id: number) {
 }
 
 export function useDeleteTrip() {
-  const invalidate = useInvalidateTrips()
-  return useMutation({ mutationFn: (id: number) => deleteTrip(id), onSuccess: invalidate })
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => deleteTrip(id),
+    onSuccess: (_, id) => {
+      // not the deleted trip's own queries: its open page would ask for it again and get 404
+      queryClient.invalidateQueries({ queryKey: tripKeys.all, predicate: (q) => !isDetailOf(q.queryKey, id) })
+      queryClient.invalidateQueries({ queryKey: parcelKeys.all })
+    },
+  })
 }
 
 export function useRestoreTrip() {
