@@ -30,6 +30,11 @@ import {
   type ParcelListParams,
 } from './api'
 
+/** A query of the detail page of the parcel (or trip) {@code id}: {@code [kind, 'detail', id, ...]}. */
+export function isDetailOf(queryKey: readonly unknown[], id: number) {
+  return queryKey[1] === 'detail' && queryKey[2] === id
+}
+
 export const parcelKeys = {
   all: ['parcels'] as const,
   list: (params: ParcelListParams) => ['parcels', 'list', params] as const,
@@ -71,8 +76,9 @@ export function useDeleteParcel() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => deleteParcel(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: parcelKeys.all })
+    onSuccess: (_, id) => {
+      // not the deleted parcel's own queries: its open page would ask for it again and get 404
+      queryClient.invalidateQueries({ queryKey: parcelKeys.all, predicate: (q) => !isDetailOf(q.queryKey, id) })
       queryClient.invalidateQueries({ queryKey: clientKeys.all })
     },
   })
