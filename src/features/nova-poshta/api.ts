@@ -6,6 +6,18 @@ export type NpCity = components['schemas']['City']
 /** A Nova Poshta branch or a parcel locker, told apart by `postomat`. */
 export type NpBranch = components['schemas']['Warehouse']
 export type NpStreet = components['schemas']['Street']
+
+/**
+ * The weight a branch takes, as Nova Poshta limits it: the whole shipment («до 10 кг» branches, lockers)
+ * or each seat; nothing when it takes any weight.
+ */
+export type NpWeightLimit = { kg: number; perSeat: boolean }
+
+export function npWeightLimit(branch?: NpBranch): NpWeightLimit | undefined {
+  if (branch?.maxWeightKg != null) return { kg: branch.maxWeightKg, perSeat: false }
+  if (branch?.maxSeatWeightKg != null) return { kg: branch.maxSeatWeightKg, perSeat: true }
+  return undefined
+}
 /** `deliveryType` of a shipment that goes to a branch or to a locker; both are searched in the same directory. */
 export type NpBranchType = 'WAREHOUSE' | 'POSTOMAT'
 

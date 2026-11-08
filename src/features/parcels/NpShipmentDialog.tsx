@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -11,7 +12,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { npWeightLimit, type NpBranch } from '@/features/nova-poshta/api'
 import { NpBranchPicker, NpCityPicker, NpStreetPicker } from '@/features/nova-poshta/NpRefPicker'
+import { useNpBranches } from '@/features/nova-poshta/queries'
 import { useMutationError } from '@/lib/api/problem'
 import type { NpCargoType, NpDeliveryType, NpPayerType, NpPaymentMethod, ParcelResponse } from '@/lib/api/types'
 import { useUpdateNpShipment, useUpdateParcel } from './queries'
@@ -94,6 +97,16 @@ export function NpShipmentDialog({ parcel, open, onOpenChange }: { parcel: Parce
   const cityRef = form.watch('cityRef')
   const toAddress = deliveryType === 'ADDRESS'
   const documents = form.watch('cargoType') === 'DOCUMENTS'
+  const branchRef = form.watch('branchRef')
+  const branchType = deliveryType === 'POSTOMAT' ? 'POSTOMAT' : 'WAREHOUSE'
+  // The branch picked now, or the saved one found in the city's list the picker loads anyway.
+  const [picked, setPicked] = useState<NpBranch>()
+  const cityBranches = useNpBranches(cityRef || undefined, '', branchType, open && !toAddress && !!branchRef)
+  const branch = picked?.ref === branchRef ? picked : cityBranches.data?.find((b) => b.ref === branchRef)
+  const limit = toAddress ? undefined : npWeightLimit(branch)
+  const weight = parseNumber(form.watch('weightKg'))
+  // A per-seat limit can be checked against the weight only when the parcel is a single seat.
+  const tooHeavy = !!limit && weight != null && weight > limit.kg && (!limit.perSeat || (parcel.seatsAmount ?? 1) <= 1)
 
   const submit = form.handleSubmit(async (v) => {
     try {
@@ -269,13 +282,21 @@ export function NpShipmentDialog({ parcel, open, onOpenChange }: { parcel: Parce
                   <NpBranchPicker
                     id="np-branch"
                     cityRef={cityRef || undefined}
-                    type={deliveryType === 'POSTOMAT' ? 'POSTOMAT' : 'WAREHOUSE'}
-                    value={{ ref: form.watch('branchRef') || undefined, name: form.watch('branchName') || undefined }}
-                    onChange={(v) => {
+                    type={branchType}
+                    value={{ ref: branchRef || undefined, name: form.watch('branchName') || undefined }}
+                    onChange={(v, b) => {
+                      setPicked(b)
                       form.setValue('branchRef', v.ref ?? '')
                       form.setValue('branchName', v.name ?? '')
                     }}
                   />
+                  {tooHeavy ? (
+                    <p role="alert" className="text-sm text-amber-700 dark:text-amber-300">
+                      {t('novaPoshta:weightLimit.tooHeavy', { weight, kg: limit.kg })}
+                    </p>
+                  ) : (
+                    limit && <FieldDescription>{t(limit.perSeat ? 'novaPoshta:weightLimit.perSeat' : 'novaPoshta:weightLimit.total', { kg: limit.kg })}</FieldDescription>
+                  )}
                 </Field>
               )}
 

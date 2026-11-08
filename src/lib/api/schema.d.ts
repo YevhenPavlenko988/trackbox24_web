@@ -7753,6 +7753,8 @@ export interface components {
             name?: string;
             number?: string;
             postomat?: boolean;
+            maxWeightKg?: number;
+            maxSeatWeightKg?: number;
         };
         Street: {
             ref?: string;
