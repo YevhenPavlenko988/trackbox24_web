@@ -6,7 +6,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { useDebounce } from '@/hooks/use-debounce'
 import { isApiError } from '@/lib/api/problem'
-import type { NpBranchType } from './api'
+import { npWeightLimit, type NpBranch, type NpBranchType } from './api'
 import { MIN_QUERY, useNpBranches, useNpCities, useNpStreets } from './queries'
 
 /** What a picker gives back: Nova Poshta needs the ref, the people reading the parcel need the name. */
@@ -123,7 +123,7 @@ export function NpCityPicker({ id, value, onChange, invalid }: { id?: string; va
   )
 }
 
-/** Branches and lockers of the chosen city; Nova Poshta lists them even with an empty query. */
+/** Branches and lockers of the chosen city; Nova Poshta lists them even with an empty query. Each shows the weight it takes. */
 export function NpBranchPicker({
   id,
   cityRef,
@@ -136,7 +136,8 @@ export function NpBranchPicker({
   cityRef?: string
   type: NpBranchType
   value?: NpRef
-  onChange: (v: NpRef) => void
+  /** With the picked branch itself, for its weight limit. */
+  onChange: (v: NpRef, branch?: NpBranch) => void
   invalid?: boolean
 }) {
   const { t } = useTranslation('novaPoshta')
@@ -150,11 +151,14 @@ export function NpBranchPicker({
       value={value}
       search={search}
       onSearch={setSearch}
-      options={(branches.data ?? []).map((b) => ({ ref: b.ref, label: b.name ?? '' }))}
+      options={(branches.data ?? []).map((b) => {
+        const limit = npWeightLimit(b)
+        return { ref: b.ref, label: b.name ?? '', hint: limit && t(limit.perSeat ? 'weightLimit.perSeat' : 'weightLimit.total', { kg: limit.kg }) }
+      })}
       isPending={branches.isFetching}
       error={branches.error}
       hint={cityRef ? undefined : t('picker.cityFirst')}
-      onPick={(o) => onChange({ ref: o.ref, name: o.label })}
+      onPick={(o) => onChange({ ref: o.ref, name: o.label }, branches.data?.find((b) => b.ref === o.ref))}
       placeholder={type === 'POSTOMAT' ? t('picker.postomat') : t('picker.branch')}
       disabled={!cityRef}
       invalid={invalid}
