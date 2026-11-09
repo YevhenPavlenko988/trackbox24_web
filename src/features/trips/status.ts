@@ -9,11 +9,17 @@ export function canDepart(trip: TripResponse): boolean {
   return acceptsLoading(trip.status) && trip.carId != null && trip.driverId != null
 }
 
-/** Splits `GET /api/trips/{id}/parcels` ("plan and fact") into what the page shows. */
-export function splitTripParcels(tripId: number, parcels: ParcelResponse[]) {
-  const planned = parcels.filter((p) => p.plannedTripId === tripId && p.tripId == null)
+/**
+ * Splits `GET /api/trips/{id}/parcels` ("plan and fact") into what the page shows; `unloaded` were in the car and left it
+ * (to a warehouse, a transfer), the trip lists them by its history. Departure takes what was not loaded out of the plan,
+ * so after it a parcel still planned here and not in the car is one unloaded (it keeps its plan).
+ */
+export function splitTripParcels(tripId: number, parcels: ParcelResponse[], status?: TripStatus) {
+  const stillPlanning = acceptsLoading(status)
+  const planned = parcels.filter((p) => p.plannedTripId === tripId && p.tripId == null && stillPlanning)
   const loaded = parcels.filter((p) => p.tripId === tripId)
-  return { planned, loaded }
+  const unloaded = parcels.filter((p) => p.tripId !== tripId && (p.plannedTripId !== tripId || !stillPlanning))
+  return { planned, loaded, unloaded }
 }
 
 /** Loaded without being in the trip's plan; a move is made and loaded on the spot, so it never is. */
