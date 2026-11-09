@@ -66,9 +66,9 @@ export function TripPage() {
   if (query.isError || !query.data) return <NotFoundPage />
   const trip = query.data
   const editable = canEditMoves && acceptsLoading(trip.status)
-  const { planned, loaded } = splitTripParcels(tripId, parcels.data ?? [])
+  const { planned, loaded, unloaded } = splitTripParcels(tripId, parcels.data ?? [], trip.status)
   const progress = seatProgress(loaded)
-  const excludeIds = (parcels.data ?? []).map((p) => p.id!)
+  const excludeIds = [...planned, ...loaded].map((p) => p.id!)
   // Backend rule: only a planned trip with nothing loaded, or a cancelled one, may be deleted.
   const deletable = canEdit && isTripDeletable(trip)
 
@@ -289,6 +289,20 @@ export function TripPage() {
             />
           </CardContent>
         </Card>
+
+        {unloaded.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {t('trips:sections.unloaded')} ({unloaded.length})
+              </CardTitle>
+              <CardDescription>{t('trips:sections.unloadedHint')}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ParcelsTable hideNp hidePlan rows={unloaded} />
+            </CardContent>
+          </Card>
+        )}
 
         <Card>
           <CardHeader>
