@@ -1,5 +1,9 @@
 import {
   BadgeCheck,
+  ChartColumn,
+  HandCoins,
+  Hourglass,
+  Warehouse,
   Banknote,
   BellRing,
   QrCode,
@@ -66,6 +70,7 @@ export function LandingPage() {
         <Driver />
         <Currency />
         <Money />
+        <Reports />
         <Control />
         <Referral />
         <Payments />
@@ -523,6 +528,87 @@ function Money() {
               </div>
             ))}
           </dl>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/** «Звіти»: where the money is (taken, in hand, still due), what the trips earned, what lies and what is stuck. */
+function Reports() {
+  const { t } = useTranslation('landing')
+  const items = t('reports.items', { returnObjects: true }) as Item[]
+  const icons: LucideIcon[] = [ChartColumn, HandCoins, Hourglass, Route, Warehouse, FileSpreadsheet]
+  const hands: [string, string][] = [
+    [t('reports.card.driver1'), '640 €'],
+    [t('reports.card.driver2'), '12 450 грн'],
+  ]
+  const ages: [string, string, number, boolean?][] = [
+    [t('reports.card.age1'), '1 240 €', 100],
+    [t('reports.card.age2'), '380 €', 31],
+    [t('reports.card.age3'), '90 €', 8, true],
+  ]
+  return (
+    <section id="reports" className="scroll-mt-16 py-16 sm:py-20">
+      <div className={`${wrap} grid items-center gap-12 lg:grid-cols-[1.1fr_1fr]`}>
+        <div>
+          <p className="mb-3 text-xs font-bold tracking-[0.2em] text-brand uppercase">{t('reports.kicker')}</p>
+          <h2 className={`${h2} text-balance`}>{t('reports.title')}</h2>
+          <p className="mt-4 text-lg text-navy/75">{t('reports.text')}</p>
+          <div className="mt-8 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+            {items.map((it, i) => {
+              const Icon = icons[i]
+              return (
+                <div key={it.name} className="flex gap-3">
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand">
+                    <Icon className="size-4" />
+                  </span>
+                  <div>
+                    <p className="font-bold">{it.name}</p>
+                    <p className="mt-1 text-navy/70">{it.text}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          <p className="mt-8 text-navy/60">{t('reports.note')}</p>
+        </div>
+
+        {/* the two questions an owner asks first: who holds the cash, and what is still unpaid and for how long */}
+        <div className="mx-auto flex w-full max-w-md flex-col gap-4" aria-hidden>
+          <div className="rounded-2xl bg-navy p-6 text-white shadow-lg">
+            <p className="text-sm text-white/70">{t('reports.card.onHand')}</p>
+            <dl className="mt-3 divide-y divide-white/10 tabular-nums">
+              {hands.map(([who, sum]) => (
+                <div key={who} className="flex items-center justify-between gap-3 py-2.5">
+                  <dt>{who}</dt>
+                  <dd className="flex items-center gap-3">
+                    <span className="text-xl font-bold whitespace-nowrap">{sum}</span>
+                    <span className="rounded-md bg-brand px-2.5 py-1 text-sm font-semibold text-navy">{t('reports.card.take')}</span>
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+          <div className="rounded-2xl bg-sand p-6">
+            <div className="flex items-baseline justify-between gap-3">
+              <p className="font-bold">{t('reports.card.due')}</p>
+              <p className="text-2xl font-bold tabular-nums">1 710 €</p>
+            </div>
+            <div className="mt-4 flex flex-col gap-3">
+              {ages.map(([label, sum, width, late]) => (
+                <div key={label}>
+                  <div className="flex justify-between text-sm">
+                    <span className={late ? 'font-semibold text-red-700' : 'text-navy/70'}>{label}</span>
+                    <span className="font-semibold tabular-nums">{sum}</span>
+                  </div>
+                  <div className="mt-1 h-2 rounded-full bg-white">
+                    <div className={`h-2 rounded-full ${late ? 'bg-red-600' : 'bg-navy'}`} style={{ width: `${width}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </section>
