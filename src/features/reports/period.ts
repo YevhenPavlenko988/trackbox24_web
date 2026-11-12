@@ -4,7 +4,7 @@ import type { Period } from './api'
 export type PeriodPreset = 'today' | 'week' | 'month' | 'lastMonth'
 export const PERIOD_PRESETS: PeriodPreset[] = ['today', 'week', 'month', 'lastMonth']
 
-const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+export const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 /** The days of a preset, counted from {@code now}; the week starts on Monday. */
 export function presetPeriod(preset: PeriodPreset, now = new Date()): Period {

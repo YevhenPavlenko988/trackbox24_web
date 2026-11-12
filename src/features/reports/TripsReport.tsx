@@ -34,7 +34,11 @@ export function TripsReport() {
             <Stat label={t('reports:trips.trips')} value={String(r.total?.trips ?? 0)} testId="trips-count" />
             <Stat label={t('reports:trips.km')} value={km(r.total?.km)} />
             <Stat label={t('reports:trips.revenue')} value={formatMoney(r.total?.revenueReport, rc)} hint={t('reports:trips.revenueHint')} />
-            <Stat label={t('reports:trips.expenses')} value={formatMoney(r.total?.expensesReport, rc)} />
+            <Stat
+              label={t('reports:trips.expenses')}
+              value={formatMoney((r.total?.expensesReport ?? 0) + (r.total?.driverPayReport ?? 0), rc)}
+              hint={r.total?.driverPayReport ? t('reports:trips.expensesHint', { amount: formatMoney(r.total.driverPayReport, rc) }) : undefined}
+            />
             <Stat label={t('reports:trips.profit')} value={formatMoney(r.total?.profitReport, rc)} hint={t('reports:trips.profitHint')} />
             <Stat label={t('reports:trips.perKm')} value={perKm(r.total?.perKm)} />
           </div>
@@ -72,6 +76,7 @@ export function TripsReport() {
                         <TableHead className="text-right">{t('reports:trips.km')}</TableHead>
                         <TableHead className="text-right">{t('reports:trips.revenue')}</TableHead>
                         <TableHead className="text-right">{t('reports:trips.expenses')}</TableHead>
+                        <TableHead className="text-right">{t('reports:trips.driverPay')}</TableHead>
                         <TableHead className="text-right">{t('reports:trips.profit')}</TableHead>
                         <TableHead className="text-right">{t('reports:trips.perKm')}</TableHead>
                       </TableRow>
@@ -111,6 +116,7 @@ export function TripsReport() {
                             )}
                           </TableCell>
                           <TableCell className="text-right tabular-nums">{trip.expensesReport ? formatMoney(trip.expensesReport, rc) : '—'}</TableCell>
+                          <TableCell className="text-right tabular-nums">{trip.driverPayReport ? formatMoney(trip.driverPayReport, rc) : '—'}</TableCell>
                           <TableCell className={cn('text-right font-medium tabular-nums', (trip.profitReport ?? 0) < 0 && 'text-destructive')}>
                             {formatMoney(trip.profitReport, rc)}
                           </TableCell>

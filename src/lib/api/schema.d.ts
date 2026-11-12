@@ -143,6 +143,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/drivers/{userId}/rates/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Змінити ставку водія
+         * @description Тільки MANAGER.
+         */
+        put: operations["updateRate"];
+        post?: never;
+        /**
+         * Видалити ставку водія
+         * @description Тільки MANAGER: тоді діє попередня.
+         */
+        delete: operations["deleteRate"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/referral/settings": {
         parameters: {
             query?: never;
@@ -1445,6 +1469,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/drivers/{userId}/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Задати ставку водія
+         * @description Тільки MANAGER: ставка з дня `validFrom` до наступної (рейси до цього дня лишаються за старою). На той самий день
+         *     — замінює її.
+         */
+        post: operations["addRate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/drivers/{userId}/payouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Виплатити водієві
+         * @description Тільки MANAGER: зарплата, аванс, повернення витраченого з власних. `fromCollectedCash` — водій залишив собі із
+         *     зібраної готівки: стільки менше в нього на руках.
+         */
+        post: operations["payout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/cash/handovers": {
         parameters: {
             query?: never;
@@ -2693,6 +2759,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/drivers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Розрахунок з водіями
+         * @description За дні `from`–`to`: кожному водієві — на початок, нараховано (рейси за ставкою дня виїзду: за рейс, за км, відсоток
+         *     від виручки, за дні в дорозі; місячна ставка — по днях), витрачено з власних на рейси, виплачено, на кінець — у
+         *     валюті його останньої ставки. Водій бачить лише свій.
+         */
+        get: operations["drivers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/drivers.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Розрахунок з водіями, Excel
+         * @description Аркуші «Водії» (підсумки) і «Рядки» (рейси, ставки, витрати, виплати).
+         */
+        get: operations["driversXlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/debts": {
         parameters: {
             query?: never;
@@ -3450,6 +3558,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/drivers/payouts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Видалити виплату
+         * @description Тільки MANAGER: запис, внесений помилково.
+         */
+        delete: operations["deletePayout"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/cash/handovers/{id}": {
         parameters: {
             query?: never;
@@ -4017,6 +4145,82 @@ export interface components {
             reminder?: "LOAD" | "DEPART" | "COMPLETE";
             /** @description Переїзди рейсу (у плані чи в машині): що це за вантаж — для списку рейсів. Посилки сюди не входять. */
             moves?: components["schemas"]["Move"][];
+        };
+        /** @description Ставка водія з дня `validFrom`; задані частини додаються, хоча б одна потрібна */
+        DriverPayRateRequest: {
+            /**
+             * Format: date
+             * @description З якого дня (київського) діє; до наступної ставки
+             * @example 2026-11-01
+             */
+            validFrom: string;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description За кожен рейс
+             * @example 50
+             */
+            perTrip?: number;
+            /**
+             * @description За кілометр (пробіг за одометром)
+             * @example 0.05
+             */
+            perKm?: number;
+            /**
+             * @description Відсоток від виручки рейсу
+             * @example 10
+             */
+            revenuePercent?: number;
+            /**
+             * @description За кожен день у дорозі (від дня виїзду до дня прибуття включно)
+             * @example 20
+             */
+            perDay?: number;
+            /**
+             * @description Місячна ставка (за неповний місяць — пропорційно дням)
+             * @example 800
+             */
+            monthly?: number;
+            /** @example З листопада — плюс відсоток */
+            note?: string;
+        };
+        /** @description Ставка водія: діє з `validFrom` до наступної */
+        DriverPayRateResponse: {
+            /**
+             * Format: int64
+             * @example 4
+             */
+            id?: number;
+            /**
+             * Format: int64
+             * @example 5
+             */
+            userId?: number;
+            /**
+             * Format: date
+             * @example 2026-11-01
+             */
+            validFrom?: string;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /** @example 50 */
+            perTrip?: number;
+            /** @example 0.05 */
+            perKm?: number;
+            /** @example 10 */
+            revenuePercent?: number;
+            /** @example 20 */
+            perDay?: number;
+            /** @example 800 */
+            monthly?: number;
+            /** @example З листопада — плюс відсоток */
+            note?: string;
         };
         ReferralSettingsDto: {
             /**
@@ -6816,6 +7020,59 @@ export interface components {
             /** @description Плечі по порядку, як рейси: машина, водій, звідки → куди, дати; можна жодного — додати потім */
             legs?: components["schemas"]["TripRequest"][];
         };
+        /** @description Виплата водієві: зарплата, аванс, повернення витраченого з власних */
+        DriverPayoutRequest: {
+            /** @example 300 */
+            amount: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * Format: date
+             * @description День виплати; немає — сьогодні
+             * @example 2026-11-12
+             */
+            paidOn?: string;
+            /** @description Водій залишив собі з зібраної готівки — стільки менше на руках */
+            fromCollectedCash?: boolean;
+            /** @example Аванс */
+            note?: string;
+        };
+        /** @description Виплата водієві */
+        DriverPayoutResponse: {
+            /**
+             * Format: int64
+             * @example 9
+             */
+            id?: number;
+            /**
+             * Format: int64
+             * @example 5
+             */
+            userId?: number;
+            /** @example 300 */
+            amount?: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * Format: date
+             * @example 2026-11-12
+             */
+            paidOn?: string;
+            fromCollectedCash?: boolean;
+            /** @example Аванс */
+            note?: string;
+            /**
+             * @description Хто вніс
+             * @example Олена Менеджер
+             */
+            createdByName?: string;
+        };
         CashHandoverRequest: {
             /**
              * Format: int64
@@ -8128,8 +8385,13 @@ export interface components {
              */
             expensesReport?: number;
             /**
+             * @description Оплата водіям за рейси, у валюті звітів
+             * @example 1500
+             */
+            driverPayReport?: number;
+            /**
              * @description Прибуток у валюті звітів
-             * @example 8320
+             * @example 6820
              */
             profitReport?: number;
         };
@@ -8230,8 +8492,13 @@ export interface components {
              */
             expensesReport?: number;
             /**
-             * @description Прибуток: виручка мінус витрати, у валюті звітів
-             * @example 1410.4
+             * @description Оплата водіям за рейс за їхніми ставками, у валюті звітів (без місячних ставок)
+             * @example 300
+             */
+            driverPayReport?: number;
+            /**
+             * @description Прибуток: виручка мінус витрати й оплата водіям, у валюті звітів
+             * @example 1110.4
              */
             profitReport?: number;
         };
@@ -8316,6 +8583,183 @@ export interface components {
              * @example 2026-11-08T00:00:00Z
              */
             npPaidStorageFrom?: string;
+        };
+        /**
+         * @description Розрахунок з одним водієм у валюті його останньої ставки (`currency`): на початок періоду, нараховано, витрачено
+         *     з власних (компанія повертає), виплачено, на кінець. Плюс — компанія винна водієві, мінус — водій отримав більше.
+         */
+        DriverSettlement: {
+            /**
+             * Format: int64
+             * @example 5
+             */
+            userId?: number;
+            /** @example Петренко Олег */
+            name?: string;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /** @description Ставка, що діє сьогодні; немає — не задано */
+            rate?: components["schemas"]["DriverPayRateResponse"];
+            /** @description Усі ставки, від найновішої */
+            rates?: components["schemas"]["DriverPayRateResponse"][];
+            /** @example 120 */
+            opening?: number;
+            /**
+             * @description Нараховано за рейси й місячну ставку
+             * @example 940
+             */
+            accrued?: number;
+            /**
+             * @description Витрачено водієм із власних на рейси
+             * @example 35
+             */
+            expenses?: number;
+            /** @example 800 */
+            paid?: number;
+            /** @example 295 */
+            closing?: number;
+            /**
+             * @description На кінець у валюті звітів
+             * @example 14160
+             */
+            closingReport?: number;
+            /**
+             * Format: int32
+             * @description Рейсів за період
+             * @example 4
+             */
+            trips?: number;
+            /** @description Рядки за період, за датою */
+            lines?: components["schemas"]["SettlementLine"][];
+        };
+        /** @description Розрахунок з водіями за період; водій бачить лише свій */
+        DriversReportResponse: {
+            /**
+             * Format: date
+             * @example 2026-11-01
+             */
+            from?: string;
+            /**
+             * Format: date
+             * @example 2026-11-30
+             */
+            to?: string;
+            /**
+             * @example UAH
+             * @enum {string}
+             */
+            reportCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /** @description Для якоїсь суми немає курсу — вона не врахована */
+            rateMissing?: boolean;
+            /**
+             * @description Нараховано всім за період, у валюті звітів
+             * @example 42000
+             */
+            accruedReport?: number;
+            /**
+             * @description Виплачено всім за період, у валюті звітів
+             * @example 38000
+             */
+            paidReport?: number;
+            /**
+             * @description Винні водіям на кінець, у валюті звітів (мінус — переплачено)
+             * @example 6200
+             */
+            closingReport?: number;
+            drivers?: components["schemas"]["DriverSettlement"][];
+        };
+        /**
+         * @description Один рядок розрахунку з водієм: рейс (`TRIP`, з частинами ставки), місячна ставка (`MONTHLY`), витрата з власних
+         *     (`EXPENSE`), виплата (`PAYOUT`).
+         */
+        SettlementLine: {
+            /**
+             * Format: date
+             * @example 2026-11-03
+             */
+            date?: string;
+            /** @example TRIP */
+            kind?: string;
+            /**
+             * Format: int64
+             * @example 42
+             */
+            tripId?: number;
+            /** @example 14 */
+            tripNumber?: string;
+            /**
+             * @description Маршрут рейсу; витрата — її вид; виплата — примітка
+             * @example Варшава → Київ
+             */
+            label?: string;
+            /** @description Рейс: водій був другим водієм */
+            coDriver?: boolean;
+            /** @description Рейс: на цей день ставки немає — нічого не нараховано */
+            noRate?: boolean;
+            /**
+             * Format: int32
+             * @description Рейс: пробіг за одометром; немає — не вказано (за км не нараховано)
+             * @example 1240
+             */
+            km?: number;
+            /**
+             * Format: int32
+             * @description Рейс: днів у дорозі; місячна ставка — днів місяця, за які нараховано
+             * @example 3
+             */
+            days?: number;
+            /**
+             * Format: int32
+             * @description Місячна ставка: днів у місяці
+             * @example 30
+             */
+            monthDays?: number;
+            /**
+             * @description Рейс: за рейс
+             * @example 50
+             */
+            perTripPart?: number;
+            /**
+             * @description Рейс: за кілометри
+             * @example 62
+             */
+            kmPart?: number;
+            /**
+             * @description Рейс: відсоток від виручки
+             * @example 183.04
+             */
+            percentPart?: number;
+            /**
+             * @description Рейс: за дні в дорозі
+             * @example 60
+             */
+            dayPart?: number;
+            /**
+             * @description Сума у своїй валюті (ставки, витрати, виплати)
+             * @example 355.04
+             */
+            amount?: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description У валюті розрахунку з водієм: нараховане і витрачене з власних — плюс, виплачене — мінус
+             * @example 355.04
+             */
+            balanceAmount?: number;
+            /**
+             * Format: int64
+             * @description Виплата: її id (щоб видалити)
+             * @example 9
+             */
+            payoutId?: number;
+            /** @description Виплата: із зібраної готівки */
+            fromCollectedCash?: boolean;
         };
         /** @description Борги однієї давності в одній валюті */
         DebtBucket: {
@@ -8474,7 +8918,7 @@ export interface components {
              */
             reportAmount?: number;
         };
-        /** @description Готівка на руках у людини в одній валюті зараз: отримала готівкою за весь час мінус витратила з неї в рейсах мінус здала */
+        /** @description Готівка на руках у людини в одній валюті зараз: отримала готівкою за весь час мінус витратила з неї в рейсах мінус залишила собі як оплату мінус здала */
         CashOnHand: {
             /**
              * Format: int64
@@ -8498,6 +8942,11 @@ export interface components {
              * @example 120
              */
             spent?: number;
+            /**
+             * @description Залишено собі з отриманої готівки як оплату (виплата водієві) за весь час
+             * @example 0
+             */
+            paidOut?: number;
             /**
              * @description Здано за весь час
              * @example 2800
@@ -10455,6 +10904,205 @@ export interface operations {
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
                      *       "instance": "/api/trips/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updateRate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DriverPayRateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DriverPayRateResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/drivers/{userId}/rates/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/drivers/{userId}/rates/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/reports/drivers/{userId}/rates/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/reports/drivers/{userId}/rates/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteRate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/drivers/{userId}/rates/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/drivers/{userId}/rates/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/drivers/{userId}/rates/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/reports/drivers/{userId}/rates/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -19210,6 +19858,218 @@ export interface operations {
             };
         };
     };
+    addRate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DriverPayRateRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DriverPayRateResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/drivers/{userId}/rates"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/drivers/{userId}/rates"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/reports/drivers/{userId}/rates"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/reports/drivers/{userId}/rates"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    payout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                userId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DriverPayoutRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DriverPayoutResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/drivers/{userId}/payouts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/drivers/{userId}/payouts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/reports/drivers/{userId}/payouts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/reports/drivers/{userId}/payouts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     handOver: {
         parameters: {
             query?: never;
@@ -25782,6 +26642,170 @@ export interface operations {
             };
         };
     };
+    drivers: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DriversReportResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/drivers"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/drivers"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/drivers"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    driversXlsx: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/drivers.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/drivers.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/drivers.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     debts: {
         parameters: {
             query?: never;
@@ -29237,6 +30261,97 @@ export interface operations {
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
                      *       "instance": "/api/routes/{id}/parcels/{parcelId}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deletePayout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/drivers/payouts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/drivers/payouts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/drivers/payouts/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/reports/drivers/payouts/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

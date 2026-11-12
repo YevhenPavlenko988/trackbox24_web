@@ -1,7 +1,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api/client'
 import { unwrap } from '@/lib/api/problem'
-import type { CashHandoverRequest, Currency } from '@/lib/api/types'
+import type { CashHandoverRequest, Currency, DriverPayoutRequest, DriverPayRateRequest } from '@/lib/api/types'
 
 export type Period = { from: string; to: string }
 
@@ -44,6 +44,15 @@ export function useStuckReport(days: number) {
   })
 }
 
+/** What each driver earned, spent of their own and was paid in the period; a driver gets only their own. */
+export function useDriversReport(period: Period) {
+  return useQuery({
+    queryKey: [...reportsKey, 'drivers', period],
+    queryFn: () => unwrap(api.GET('/api/reports/drivers', { params: { query: period } })),
+    placeholderData: keepPreviousData,
+  })
+}
+
 function useReportMutation<A>(fn: (arg: A) => Promise<unknown>) {
   const queryClient = useQueryClient()
   return useMutation({ mutationFn: fn, onSuccess: () => queryClient.invalidateQueries({ queryKey: reportsKey }) })
@@ -54,6 +63,26 @@ export const useHandOver = () =>
 
 export const useDeleteHandover = () =>
   useReportMutation((id: number) => unwrap(api.DELETE('/api/reports/cash/handovers/{id}', { params: { path: { id } } })))
+
+export const useSaveRate = () =>
+  useReportMutation(({ userId, id, body }: { userId: number; id?: number; body: DriverPayRateRequest }) =>
+    id == null
+      ? unwrap(api.POST('/api/reports/drivers/{userId}/rates', { params: { path: { userId } }, body }))
+      : unwrap(api.PUT('/api/reports/drivers/{userId}/rates/{id}', { params: { path: { userId, id } }, body })),
+  )
+
+export const useDeleteRate = () =>
+  useReportMutation(({ userId, id }: { userId: number; id: number }) =>
+    unwrap(api.DELETE('/api/reports/drivers/{userId}/rates/{id}', { params: { path: { userId, id } } })),
+  )
+
+export const usePayout = () =>
+  useReportMutation(({ userId, body }: { userId: number; body: DriverPayoutRequest }) =>
+    unwrap(api.POST('/api/reports/drivers/{userId}/payouts', { params: { path: { userId } }, body })),
+  )
+
+export const useDeletePayout = () =>
+  useReportMutation((id: number) => unwrap(api.DELETE('/api/reports/drivers/payouts/{id}', { params: { path: { id } } })))
 
 /** The company's report currency; the reports are counted again in it. */
 export function useSetReportCurrency(companyId: number) {
@@ -87,6 +116,10 @@ export async function downloadWarehouses(): Promise<void> {
 
 export async function downloadStuck(days: number): Promise<void> {
   save(await unwrap(api.GET('/api/reports/stuck.xlsx', { params: { query: { days } }, parseAs: 'blob' })), `stuck-${new Date().toISOString().slice(0, 10)}.xlsx`)
+}
+
+export async function downloadDrivers(period: Period): Promise<void> {
+  save(await unwrap(api.GET('/api/reports/drivers.xlsx', { params: { query: period }, parseAs: 'blob' })), `drivers-${period.from}-${period.to}.xlsx`)
 }
 
 function save(blob: Blob, name: string) {
