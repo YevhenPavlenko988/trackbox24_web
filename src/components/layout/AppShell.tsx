@@ -1,4 +1,4 @@
-import { Boxes, Building2, Coins, Contact, Eye, Handshake, HardHat, KeyRound, ListTodo, LogOut, Package, Receipt, Route, Trash2, Truck, Users, UsersRound, Warehouse, X, type LucideIcon } from 'lucide-react'
+import { Boxes, Building2, ChartColumn, Coins, Contact, Eye, Handshake, HardHat, KeyRound, ListTodo, LogOut, Package, Receipt, Route, Trash2, Truck, Users, UsersRound, Warehouse, X, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router'
@@ -28,7 +28,7 @@ import { RatesChip } from '@/features/currency/RatesChip'
 import { ThemeToggle } from '@/features/theme/theme'
 
 /** {@code module}: shown only when the company has that paid module on. */
-type NavItem = { to: string; labelKey: string; icon: LucideIcon; show: (a: Access) => boolean; module?: 'parcels' | 'moves' | 'currency' }
+type NavItem = { to: string; labelKey: string; icon: LucideIcon; show: (a: Access) => boolean; module?: 'parcels' | 'moves' | 'currency' | 'reports' }
 
 const NAV: NavItem[] = [
   { to: '/parcels', labelKey: 'nav.parcels', icon: Package, show: (a) => a.hasCompanyAccess, module: 'parcels' },
@@ -38,6 +38,7 @@ const NAV: NavItem[] = [
   { to: '/loaders', labelKey: 'nav.loaders', icon: HardHat, show: (a) => a.hasCompanyAccess, module: 'moves' },
   { to: '/warehouses', labelKey: 'nav.warehouses', icon: Warehouse, show: (a) => a.hasCompanyAccess },
   { to: '/rates', labelKey: 'nav.rates', icon: Coins, show: (a) => a.hasCompanyAccess, module: 'currency' },
+  { to: '/reports', labelKey: 'nav.reports', icon: ChartColumn, show: (a) => a.fullAccess, module: 'reports' },
   { to: '/users', labelKey: 'nav.users', icon: Users, show: (a) => a.fullAccess },
   { to: '/cars', labelKey: 'nav.cars', icon: Truck, show: (a) => a.fullAccess },
   { to: '/company', labelKey: 'nav.company', icon: Building2, show: (a) => a.fullAccess },
@@ -66,7 +67,9 @@ export function AppShell() {
         ? company.data?.parcelsEnabled !== false
         : module === 'currency'
           ? company.data?.currencyEnabled === true
-          : true
+          : module === 'reports'
+            ? company.data?.reportsEnabled === true
+            : true
   const items = NAV.filter((item) => item.show(access) && moduleOn(item.module))
   // «Онлайн-оплата»: clients who said they transferred, waiting for the manager to find the money
   const claimed = useClaimedCount(access.hasCompanyAccess && access.canSeeMoney && company.data?.onlinePaymentsEnabled === true).data

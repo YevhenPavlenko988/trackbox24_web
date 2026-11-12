@@ -13,6 +13,7 @@ import moves from './uk/moves.json'
 import routes from './uk/routes.json'
 import novaPoshta from './uk/novaPoshta.json'
 import parcels from './uk/parcels.json'
+import reports from './uk/reports.json'
 import trash from './uk/trash.json'
 import tracking from './uk/tracking.json'
 import trips from './uk/trips.json'
@@ -23,7 +24,7 @@ i18n.use(initReactI18next).init({
   lng: 'uk',
   fallbackLng: 'uk',
   defaultNS: 'common',
-  resources: { uk: { common, auth, billing, parcels, clients, companies, crm, users, cars, trips, warehouses, trash, novaPoshta, landing, tracking, moves, routes, currency } },
+  resources: { uk: { common, auth, billing, parcels, clients, companies, crm, users, cars, trips, warehouses, trash, novaPoshta, landing, tracking, moves, routes, currency, reports } },
   interpolation: { escapeValue: false },
 })
 
