@@ -10,19 +10,26 @@ import type { Currency } from '@/lib/api/types'
 import { CURRENCY_SYMBOL, MONEY_ORDER } from '@/lib/format'
 import { useSetReportCurrency } from './api'
 import { CashReport } from './CashReport'
+import { ClientsReport } from './ClientsReport'
 import { DebtsReport } from './DebtsReport'
 import { DriversReport } from './DriversReport'
+import { MovesReport } from './MovesReport'
+import { NpReport } from './NpReport'
 import { StuckReport } from './StuckReport'
 import { TripsReport } from './TripsReport'
+import { VolumesReport } from './VolumesReport'
 import { WarehousesReport } from './WarehousesReport'
 
-const TABS = ['cash', 'debts', 'trips', 'drivers', 'warehouses', 'stuck'] as const
+const TABS = ['cash', 'debts', 'trips', 'drivers', 'clients', 'moves', 'np', 'volumes', 'warehouses', 'stuck'] as const
 
 /** «Звіти»: the cash of a period and who owes; totals in the company's report currency. */
 export function ReportsPage() {
   const { t } = useTranslation(['reports', 'common'])
   const [params, setParams] = useSearchParams()
-  const tab = TABS.find((x) => x === params.get('tab')) ?? 'cash'
+  const company = useCurrentCompany().data
+  // «Переїзди» only where the company does moves
+  const tabs = TABS.filter((x) => x !== 'moves' || company?.movesEnabled)
+  const tab = tabs.find((x) => x === params.get('tab')) ?? 'cash'
 
   return (
     <>
@@ -37,7 +44,7 @@ export function ReportsPage() {
         }}
       >
         <TabsList className="flex-wrap">
-          {TABS.map((x) => (
+          {tabs.map((x) => (
             <TabsTrigger key={x} value={x}>
               {t(`reports:tabs.${x}`)}
             </TabsTrigger>
@@ -54,6 +61,18 @@ export function ReportsPage() {
         </TabsContent>
         <TabsContent value="drivers" className="mt-4">
           <DriversReport />
+        </TabsContent>
+        <TabsContent value="clients" className="mt-4">
+          <ClientsReport />
+        </TabsContent>
+        <TabsContent value="moves" className="mt-4">
+          <MovesReport />
+        </TabsContent>
+        <TabsContent value="np" className="mt-4">
+          <NpReport />
+        </TabsContent>
+        <TabsContent value="volumes" className="mt-4">
+          <VolumesReport />
         </TabsContent>
         <TabsContent value="warehouses" className="mt-4">
           <WarehousesReport />

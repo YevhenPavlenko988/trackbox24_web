@@ -58,6 +58,23 @@ export async function run() {
     await tripRow.first().waitFor()
     ok('the trip is in the trips report', (await tripRow.count()) >= 1)
     await shot('03-trips')
+    // stage 4: clients, moves, Nova Poshta, volumes
+    await page.getByRole('tab', { name: 'Клієнти' }).click()
+    await page.waitForSelector('[data-testid=clients-active]')
+    ok('the clients report counts this run\'s client', Number(await page.textContent('[data-testid=clients-active]')) >= 1)
+    await shot('07-clients')
+    if ((await page.getByRole('tab', { name: 'Переїзди' }).count()) > 0) {
+      await page.getByRole('tab', { name: 'Переїзди' }).click()
+      await page.waitForSelector('[data-testid=moves-count]')
+      await shot('08-moves')
+    }
+    await page.getByRole('tab', { name: 'Нова Пошта' }).click()
+    await page.waitForSelector('[data-testid=np-waybills]')
+    await shot('09-np')
+    await page.getByRole('tab', { name: 'Обсяги' }).click()
+    await page.waitForSelector('[data-testid=volumes-created]')
+    ok('volumes count what was created', Number(await page.textContent('[data-testid=volumes-created]')) >= 2)
+    await shot('10-volumes')
     await page.getByRole('tab', { name: 'Склади' }).click()
     await page.waitForTimeout(800)
     ok('the warehouses report opens', (await page.getByRole('tabpanel').textContent()).length > 0)

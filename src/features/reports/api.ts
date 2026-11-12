@@ -53,6 +53,44 @@ export function useDriversReport(period: Period) {
   })
 }
 
+/** Who ordered in the period, new or back, from which channel; who has gone quiet. */
+export function useClientsReport(period: Period) {
+  return useQuery({
+    queryKey: [...reportsKey, 'clients', period],
+    queryFn: () => unwrap(api.GET('/api/reports/clients', { params: { query: period } })),
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** The moves of the period after the loaders; what the loaders are still owed. */
+export function useMovesReport(period: Period) {
+  return useQuery({
+    queryKey: [...reportsKey, 'moves', period],
+    queryFn: () => unwrap(api.GET('/api/reports/moves', { params: { query: period } })),
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** Nova Poshta's waybills of the period and what is on its paid storage now. */
+export function useNpReport(period: Period) {
+  return useQuery({
+    queryKey: [...reportsKey, 'np', period],
+    queryFn: () => unwrap(api.GET('/api/reports/np', { params: { query: period } })),
+    placeholderData: keepPreviousData,
+  })
+}
+
+export type VolumeGroup = 'DAY' | 'WEEK' | 'MONTH'
+
+/** How much was created and handed over by day, week or month. */
+export function useVolumesReport(period: Period, group?: VolumeGroup) {
+  return useQuery({
+    queryKey: [...reportsKey, 'volumes', period, group],
+    queryFn: () => unwrap(api.GET('/api/reports/volumes', { params: { query: { ...period, group } } })),
+    placeholderData: keepPreviousData,
+  })
+}
+
 function useReportMutation<A>(fn: (arg: A) => Promise<unknown>) {
   const queryClient = useQueryClient()
   return useMutation({ mutationFn: fn, onSuccess: () => queryClient.invalidateQueries({ queryKey: reportsKey }) })
@@ -120,6 +158,20 @@ export async function downloadStuck(days: number): Promise<void> {
 
 export async function downloadDrivers(period: Period): Promise<void> {
   save(await unwrap(api.GET('/api/reports/drivers.xlsx', { params: { query: period }, parseAs: 'blob' })), `drivers-${period.from}-${period.to}.xlsx`)
+}
+
+export async function downloadReport(kind: 'clients' | 'moves' | 'np' | 'volumes', period: Period, group?: VolumeGroup): Promise<void> {
+  const opts = { params: { query: { ...period, group } }, parseAs: 'blob' } as const
+  const blob = await unwrap(
+    kind === 'clients'
+      ? api.GET('/api/reports/clients.xlsx', opts)
+      : kind === 'moves'
+        ? api.GET('/api/reports/moves.xlsx', opts)
+        : kind === 'np'
+          ? api.GET('/api/reports/np.xlsx', opts)
+          : api.GET('/api/reports/volumes.xlsx', opts),
+  )
+  save(blob, `${kind}-${period.from}-${period.to}.xlsx`)
 }
 
 function save(blob: Blob, name: string) {

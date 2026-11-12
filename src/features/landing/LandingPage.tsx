@@ -540,7 +540,7 @@ function Money() {
 function Reports() {
   const { t } = useTranslation('landing')
   const items = t('reports.items', { returnObjects: true }) as Item[]
-  const icons: LucideIcon[] = [ChartColumn, HandCoins, Hourglass, Route, Receipt, Wallet, Warehouse, FileSpreadsheet]
+  const icons: LucideIcon[] = [ChartColumn, HandCoins, Hourglass, Route, Receipt, Wallet, Users, Boxes, Warehouse, FileSpreadsheet]
   const hands: [string, string][] = [
     [t('reports.card.driver1'), '640 €'],
     [t('reports.card.driver2'), '12 450 грн'],
