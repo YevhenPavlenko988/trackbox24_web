@@ -66,6 +66,17 @@ export async function run() {
     await shot('02b-np-filter')
     await page.goto(BASE + '/parcels')
 
+    // what comes to us and what we send are separate tabs, asked for by direction
+    for (const [name, direction] of [['З України', 'INBOUND'], ['В Україну', 'OUTBOUND']]) {
+      const req = page.waitForRequest((r) => r.url().includes('/api/parcels?') && r.url().includes('direction=' + direction))
+      await page.getByRole('tab', { name }).click()
+      await req
+      ok(`«${name}» asks for ${direction}`, page.url().includes('tab='))
+    }
+    await page.waitForTimeout(600)
+    await shot('02c-outbound')
+    await page.goto(BASE + '/parcels')
+
     await page.reload()
     await page.waitForSelector('table tbody tr:has-text("PT")')
     ok('session survives reload', !page.url().includes('/login'))
