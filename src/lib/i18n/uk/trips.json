@@ -109,7 +109,10 @@
     "PARCEL_UNLOADED": "Вивантажено",
     "empty": "Історія порожня",
     "DELETED": "Рейс видалено",
-    "RESTORED": "Рейс відновлено"
+    "RESTORED": "Рейс відновлено",
+    "EXPENSE_ADDED": "Витрату додано",
+    "EXPENSE_CHANGED": "Витрату змінено",
+    "EXPENSE_DELETED": "Витрату видалено"
   },
   "deleteConfirm": {
     "title": "Видалити рейс?",

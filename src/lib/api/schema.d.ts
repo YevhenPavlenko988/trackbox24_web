@@ -8144,7 +8144,7 @@ export interface components {
              * @example PARCEL_LOADED
              * @enum {string}
              */
-            event?: "CREATED" | "UPDATED" | "STATUS_CHANGED" | "PARCEL_PLANNED" | "PARCEL_UNPLANNED" | "PARCEL_LOADED" | "PARCEL_DELIVERED" | "PARCEL_UNLOADED" | "DELETED" | "RESTORED";
+            event?: "CREATED" | "UPDATED" | "STATUS_CHANGED" | "PARCEL_PLANNED" | "PARCEL_UNPLANNED" | "PARCEL_LOADED" | "PARCEL_DELIVERED" | "PARCEL_UNLOADED" | "DELETED" | "RESTORED" | "EXPENSE_ADDED" | "EXPENSE_CHANGED" | "EXPENSE_DELETED";
             /**
              * @description Статус рейсу до події (для STATUS_CHANGED)
              * @example PLANNED
@@ -8586,7 +8586,7 @@ export interface components {
         };
         /**
          * @description Розрахунок з одним водієм у валюті його останньої ставки (`currency`): на початок періоду, нараховано, витрачено
-         *     з власних (компанія повертає), виплачено, на кінець. Плюс — компанія винна водієві, мінус — водій отримав більше.
+         *     з власних (компанія повертає), виплачено, на кінець. Плюс — до виплати водієві, мінус — видано наперед.
          */
         DriverSettlement: {
             /**
@@ -8665,7 +8665,7 @@ export interface components {
              */
             paidReport?: number;
             /**
-             * @description Винні водіям на кінець, у валюті звітів (мінус — переплачено)
+             * @description До виплати водіям на кінець, у валюті звітів (мінус — видано наперед)
              * @example 6200
              */
             closingReport?: number;
