@@ -10,11 +10,12 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAccess } from '@/features/auth/access'
 import { showApiError } from '@/lib/api/problem'
-import type { CashOnHand, CashSum, Currency } from '@/lib/api/types'
+import type { CashEntry, CashOnHand, CashSum, Currency } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
 import { downloadCash, type Period, useCashReport, useDeleteHandover } from './api'
 import { HandoverDialog } from './HandoverDialog'
 import { PeriodBar } from './PeriodBar'
+import { ShareBar } from './ShareBar'
 import { presetPeriod } from './period'
 
 const FIRST_PAYMENTS = 30
@@ -49,6 +50,7 @@ export function CashReport() {
                   {formatMoney(r.reportTotal, rc)}
                 </p>
                 <p className="text-xs text-muted-foreground">{t('reports:cash.totalHint', { currency: rc })}</p>
+                <MethodShares entries={r.entries ?? []} total={r.reportTotal ?? 0} rc={rc} method={method} />
               </div>
               <Sums sums={r.totals ?? []} method={method} />
             </CardContent>
@@ -252,6 +254,29 @@ export function CashReport() {
           }
         }}
       />
+    </div>
+  )
+}
+
+/** How the money came: each method's share of the total in the report currency; cash is what someone holds. */
+function MethodShares({ entries, total, rc, method }: { entries: CashEntry[]; total: number; rc: Currency; method: (m?: string) => string }) {
+  const { t } = useTranslation('reports')
+  if (!entries.length || total <= 0) return null
+  const sums = new Map<string | undefined, number>()
+  for (const e of entries) sums.set(e.method, (sums.get(e.method) ?? 0) + (e.reportAmount ?? 0))
+  const lines = [...sums.entries()].sort((a, b) => b[1] - a[1])
+  return (
+    <div className="mt-5 flex flex-col gap-3 sm:min-w-96">
+      <p className="text-sm font-medium">{t('cash.byMethod')}</p>
+      {lines.map(([m, sum]) => (
+        <ShareBar
+          key={m ?? 'none'}
+          label={method(m)}
+          note={`${Math.round((sum / total) * 100)}%`}
+          value={formatMoney(Math.round(sum * 100) / 100, rc)}
+          share={(sum / total) * 100}
+        />
+      ))}
     </div>
   )
 }
