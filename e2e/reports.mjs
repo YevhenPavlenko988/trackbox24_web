@@ -64,6 +64,19 @@ export async function run() {
     await page.getByRole('tab', { name: 'Застряглі' }).click()
     await page.waitForSelector('[data-testid=stuck-title]')
     ok('the stuck report opens', true)
+
+    // «Витрати»: the manager adds the trip's fuel on its page
+    await page.goto(BASE + '/trips/' + trip.id)
+    const expenses = page.locator('[data-slot=card]', { hasText: 'Витрати (' })
+    await expenses.waitFor()
+    await expenses.getByRole('button', { name: 'Додати витрату' }).click()
+    await page.waitForSelector('[role=dialog]')
+    await page.fill('#ex-amount', '7')
+    await page.locator('[role=dialog]').getByRole('button', { name: 'Зберегти' }).click()
+    await page.waitForSelector('[role=dialog]', { state: 'detached' })
+    await expenses.locator('tr', { hasText: 'Пальне' }).waitFor()
+    ok('the expense is on the trip', (await expenses.textContent()).includes('7 €'), await expenses.locator('[data-slot=card-description]').textContent())
+    await shot('04-expenses')
   } catch (e) {
     return await r.finish(e)
   }

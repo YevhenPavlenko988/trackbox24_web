@@ -12,6 +12,7 @@ import { useAccess } from '@/features/auth/access'
 import { showApiError } from '@/lib/api/problem'
 import type { CashEntry, CashOnHand, CashSum, Currency } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import { downloadCash, type Period, useCashReport, useDeleteHandover } from './api'
 import { HandoverDialog } from './HandoverDialog'
 import { PeriodBar } from './PeriodBar'
@@ -61,7 +62,7 @@ export function CashReport() {
             </Alert>
           )}
 
-          <div className="grid items-start gap-4 xl:grid-cols-2">
+          <div className="grid items-start gap-4">
             <Card>
               <CardHeader>
                 <CardTitle>{t('reports:cash.people')}</CardTitle>
@@ -109,6 +110,7 @@ export function CashReport() {
                       <TableRow>
                         <TableHead>{t('reports:cash.person')}</TableHead>
                         <TableHead className="text-right">{t('reports:cash.taken')}</TableHead>
+                        <TableHead className="text-right">{t('reports:cash.spent')}</TableHead>
                         <TableHead className="text-right">{t('reports:cash.handedOver')}</TableHead>
                         <TableHead className="text-right">{t('reports:cash.left')}</TableHead>
                         {canEdit && <TableHead />}
@@ -119,8 +121,11 @@ export function CashReport() {
                         <TableRow key={`${h.userId}-${h.currency}`}>
                           <TableCell className="font-medium">{h.name}</TableCell>
                           <TableCell className="text-right tabular-nums">{formatMoney(h.taken, h.currency as Currency)}</TableCell>
+                          <TableCell className="text-right tabular-nums">{formatMoney(h.spent, h.currency as Currency)}</TableCell>
                           <TableCell className="text-right tabular-nums">{formatMoney(h.handedOver, h.currency as Currency)}</TableCell>
-                          <TableCell className="text-right font-semibold tabular-nums">{formatMoney(h.onHand, h.currency as Currency)}</TableCell>
+                          <TableCell className={cn('text-right font-semibold tabular-nums', (h.onHand ?? 0) < 0 && 'text-destructive')}>
+                            {formatMoney(h.onHand, h.currency as Currency)}
+                          </TableCell>
                           {canEdit && (
                             <TableCell className="text-right">
                               {(h.onHand ?? 0) > 0 && (

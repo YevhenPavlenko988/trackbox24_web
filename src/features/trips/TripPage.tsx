@@ -34,6 +34,8 @@ import { acceptsLoading, canDepart, isOutsidePlan, isTripDeletable, seatProgress
 import { CancelTripDialog, CompleteDialog, DepartDialog } from './TripActionDialogs'
 import { useNextLegAfterTrip } from '@/features/routes/queries'
 import { TripDialog } from './TripDialog'
+import { useCurrentCompany } from '@/features/companies/queries'
+import { TripExpensesCard } from './TripExpensesCard'
 import { TripHistory } from './TripHistory'
 import { TripLegsCard } from './TripLegsCard'
 import { TripPaymentsSummary } from './TripPaymentsSummary'
@@ -44,6 +46,7 @@ export function TripPage() {
   const tripId = Number(id)
   const { t } = useTranslation(['trips', 'common'])
   const { canEdit, canEditMoves, movesEnabled } = useAccess()
+  const company = useCurrentCompany()
   const query = useTrip(tripId)
   const parcels = useTripParcels(tripId)
   const history = useTripHistory(tripId)
@@ -303,6 +306,8 @@ export function TripPage() {
             </CardContent>
           </Card>
         )}
+
+        {company.data?.reportsEnabled && <TripExpensesCard trip={trip} canEdit={canEdit} />}
 
         <Card>
           <CardHeader>
