@@ -4,10 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatDate, formatWeight } from '@/lib/format'
-import { cn } from '@/lib/utils'
 import { downloadWarehouses, useWarehousesReport } from './api'
 import { ExcelButton } from './PeriodBar'
 import { daysClass } from './period'
+import { ShareBar } from './ShareBar'
 
 /** What lies at each warehouse now, the longest lying first, and what is not planned into any trip. */
 export function WarehousesReport() {
@@ -38,12 +38,16 @@ export function WarehousesReport() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {/* how long it lies: each age's share of the warehouse's parcels */}
+            <div className="grid gap-x-8 gap-y-3 md:grid-cols-2">
               {(w.ages ?? []).map((a) => (
-                <div key={a.age} className={cn('rounded-lg border p-3', a.age === 'OVER_14' && (a.parcels ?? 0) > 0 && 'border-destructive/40')}>
-                  <p className="text-xs text-muted-foreground">{t(`reports:warehouses.age.${a.age}`)}</p>
-                  <p className="text-xl font-semibold tabular-nums">{a.parcels}</p>
-                </div>
+                <ShareBar
+                  key={a.age}
+                  label={t(`reports:warehouses.age.${a.age}`)}
+                  value={t('reports:debts.parcels', { count: a.parcels ?? 0 })}
+                  share={w.parcels ? ((a.parcels ?? 0) / w.parcels) * 100 : 0}
+                  alarm={a.age === 'OVER_14' && (a.parcels ?? 0) > 0}
+                />
               ))}
             </div>
             <Table>

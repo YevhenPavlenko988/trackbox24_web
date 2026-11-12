@@ -139,6 +139,8 @@ function Stat({ label, value, hint, testId }: { label: string; value: string; hi
 
 function Groups({ title, rows, rc, perKm }: { title: string; rows: TripGroupRow[]; rc: Currency; perKm: (v?: number) => string }) {
   const { t } = useTranslation('reports')
+  // the best earner per kilometre is the full bar: who works better shows without reading the numbers
+  const best = Math.max(0, ...rows.map((g) => g.perKm ?? 0))
   return (
     <Card>
       <CardHeader>
@@ -162,7 +164,14 @@ function Groups({ title, rows, rc, perKm }: { title: string; rows: TripGroupRow[
                 <TableCell className="text-right tabular-nums">{g.trips}</TableCell>
                 <TableCell className="text-right tabular-nums">{km(g.km)}</TableCell>
                 <TableCell className="text-right tabular-nums">{formatMoney(g.revenueReport, rc)}</TableCell>
-                <TableCell className="text-right tabular-nums text-muted-foreground">{perKm(g.perKm)}</TableCell>
+                <TableCell className="text-right tabular-nums">
+                  <span className={g.perKm === best && best > 0 ? 'font-semibold' : 'text-muted-foreground'}>{perKm(g.perKm)}</span>
+                  {g.perKm != null && best > 0 && (
+                    <span className="mt-1 ml-auto block h-1.5 w-full max-w-24 rounded-full bg-muted" role="presentation">
+                      <span className="block h-1.5 rounded-full bg-primary" style={{ width: `${Math.max((g.perKm / best) * 100, 4)}%` }} />
+                    </span>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

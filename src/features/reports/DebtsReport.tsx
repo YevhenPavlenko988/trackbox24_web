@@ -9,6 +9,7 @@ import { formatDate, formatMoney, formatPhone } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { downloadDebts, useDebts } from './api'
 import { ExcelButton } from './PeriodBar'
+import { ShareBar } from './ShareBar'
 
 const AGES = ['UP_TO_7', 'UP_TO_30', 'OVER_30'] as const
 /** The backend's buckets: up to 7 days, 8–30, over 30. */
@@ -25,45 +26,47 @@ export function DebtsReport() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent>
+      {/* the total and how old it is: each age's share of the total as a bar, in the report currency */}
+      <Card>
+        <CardContent className="grid gap-6 md:grid-cols-[minmax(0,16rem)_1fr] md:items-center">
+          <div>
             <p className="text-sm text-muted-foreground">{t('reports:debts.total')}</p>
             <p className="text-3xl font-semibold tabular-nums" data-testid="debts-total">
               {formatMoney(r.reportTotal, rc)}
             </p>
             <p className="text-xs text-muted-foreground">{t('reports:debts.totalHint', { currency: rc })}</p>
-          </CardContent>
-        </Card>
-        {AGES.map((age) => {
-          const buckets = (r.buckets ?? []).filter((b) => b.age === age)
-          const rows = (r.rows ?? []).filter((d) => ageOf(d.days) === age)
-          const moves = rows.filter((d) => d.kind === 'MOVE').length
-          const parcels = rows.length - moves
-          const count = rows.length
-          return (
-            <Card key={age} className={cn(age === 'OVER_30' && count > 0 && 'border-destructive/40')}>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">{t(`reports:debts.age.${age}`)}</p>
-                {buckets.length ? (
-                  buckets.map((b) => (
-                    <p key={b.currency} className="text-xl font-semibold tabular-nums">
-                      {formatMoney(b.amount, b.currency as Currency)}
-                    </p>
-                  ))
-                ) : (
-                  <p className="text-xl font-semibold text-muted-foreground">{t('reports:debts.none')}</p>
-                )}
-                {count > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    {[parcels > 0 && t('reports:debts.parcels', { count: parcels }), moves > 0 && t('reports:debts.moves', { count: moves })].filter(Boolean).join(' · ')}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+          </div>
+          <div className="flex flex-col gap-3">
+            {AGES.map((age) => {
+              const buckets = (r.buckets ?? []).filter((b) => b.age === age)
+              const rows = (r.rows ?? []).filter((d) => ageOf(d.days) === age)
+              const inReport = rows.reduce((n, d) => n + (d.reportAmount ?? 0), 0)
+              const share = r.reportTotal ? Math.round((inReport / r.reportTotal) * 100) : 0
+              const moves = rows.filter((d) => d.kind === 'MOVE').length
+              const parcels = rows.length - moves
+              const late = age === 'OVER_30' && rows.length > 0
+              return (
+                <ShareBar
+                  key={age}
+                  label={t(`reports:debts.age.${age}`)}
+                  note={rows.length > 0 && [parcels > 0 && t('reports:debts.parcels', { count: parcels }), moves > 0 && t('reports:debts.moves', { count: moves })].filter(Boolean).join(' · ')}
+                  value={
+                    <>
+                      {rows.length ? formatMoney(Math.round(inReport * 100) / 100, rc) : t('reports:debts.none')}
+                      {buckets.some((b) => b.currency !== rc) && (
+                        <span className="ml-2 text-xs font-normal text-muted-foreground">{buckets.map((b) => formatMoney(b.amount, b.currency as Currency)).join(' + ')}</span>
+                      )}
+                    </>
+                  }
+                  share={share}
+                  present={rows.length > 0}
+                  alarm={late}
+                />
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
       {r.rateMissing && (
         <Alert>
           <AlertDescription>{t('reports:debts.rateMissing', { currency: rc })}</AlertDescription>
