@@ -38,6 +38,8 @@ export type ParcelListParams = PageParams & {
   kind?: ParcelKind
   /** Nova Poshta's state of the incoming waybill or of our own; any of these. */
   npState?: NpState[]
+  /** INBOUND — from Ukraine to us; OUTBOUND — from us to Ukraine. */
+  direction?: 'INBOUND' | 'OUTBOUND'
   query?: string
 }
 
@@ -57,6 +59,7 @@ export async function listParcels(params: ParcelListParams): Promise<Page<Parcel
           channel: params.channel,
           kind: params.kind,
           npState: params.npState?.length ? params.npState : undefined,
+          direction: params.direction,
           query: params.query || undefined,
           page: params.page,
           size: params.size,

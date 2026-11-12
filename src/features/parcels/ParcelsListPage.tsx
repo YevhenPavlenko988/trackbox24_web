@@ -1,4 +1,4 @@
-import { AlertCircle, Archive, Banknote, BellRing, Clock, Inbox, Layers, Plus, RefreshCw, Search, SlidersHorizontal, Warehouse, X, type LucideIcon } from 'lucide-react'
+import { AlertCircle, Archive, ArrowDownLeft, ArrowUpRight, Banknote, BellRing, Clock, Inbox, Layers, Plus, RefreshCw, Search, SlidersHorizontal, Warehouse, X, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -28,13 +28,13 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ParcelsTable } from './ParcelsTable'
 import { isNpStateGroup, NP_FILTER_STATES, npStatesOf } from './npStatus'
 import { useParcels, useSyncNovaPoshta } from './queries'
-import { DEFAULT_PARCEL_TAB, isParcelTab, PARCEL_TABS, TAB_FILTER_STATUSES, TAB_STATUSES, tabForStatus, type ParcelTab } from './tabs'
+import { DEFAULT_PARCEL_TAB, isParcelTab, PARCEL_TABS, TAB_DIRECTION, TAB_FILTER_STATUSES, TAB_STATUSES, tabForStatus, type ParcelTab } from './tabs'
 import { isParcelDeletable } from './status'
 import { DeleteEntityButton } from '@/features/trash/DeleteEntityButton'
 import { ChannelSelect, isChannel } from '@/features/channels/channel'
 
 const PAID_STORAGE_SORT = 'npPaidStorageFrom,asc'
-const TAB_ICONS: Record<ParcelTab, typeof Inbox> = { company: Layers, np: Inbox, archive: Archive }
+const TAB_ICONS: Record<ParcelTab, typeof Inbox> = { company: Layers, inbound: ArrowDownLeft, outbound: ArrowUpRight, np: Inbox, archive: Archive }
 const ALL = '__all__'
 
 export function ParcelsListPage() {
@@ -91,6 +91,7 @@ export function ParcelsListPage() {
   const query = useParcels({
     // One status narrows inside the tab; otherwise the whole tab is asked for at once.
     status: status ? [status] : paymentClaimed ? undefined : TAB_STATUSES[tab],
+    direction: TAB_DIRECTION[tab],
     // moves have their own section
     kind: 'PARCEL',
     query: urlQuery,
@@ -333,6 +334,7 @@ export function ParcelsListPage() {
 
       <ParcelsTable
         rows={rows}
+        alwaysNp={tab === 'inbound' || tab === 'outbound' || tab === 'np' || !!npGroup}
         isLoading={query.isPending}
         selection={canEdit ? { selected, onChange: setSelected } : undefined}
         actions={canEdit ? (p) => (isParcelDeletable(p) ? <DeleteEntityButton entity="parcels" id={p.id!} iconOnly /> : null) : undefined}

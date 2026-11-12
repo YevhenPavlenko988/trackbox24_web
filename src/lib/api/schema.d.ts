@@ -21301,6 +21301,11 @@ export interface operations {
                  * @example RETURNING
                  */
                 npState?: ("CREATED" | "IN_TRANSIT" | "ARRIVED" | "RECEIVED" | "REDIRECTED" | "RETURNING" | "DELIVERY_FAILED" | "NOT_FOUND" | "OTHER")[];
+                /**
+                 * @description INBOUND — з України (вхідна ТТН, представник, вручну); OUTBOUND — в Україну (прийняв водій за кордоном або відправка нашою ЕН НП)
+                 * @example OUTBOUND
+                 */
+                direction?: "INBOUND" | "OUTBOUND";
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */

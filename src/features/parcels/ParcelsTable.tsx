@@ -35,6 +35,7 @@ export function ParcelsTable({
   isLoading,
   hideClient = false,
   hideNp = false,
+  alwaysNp = false,
   hidePlan = false,
   emptyText,
   actions,
@@ -46,6 +47,8 @@ export function ParcelsTable({
   hideClient?: boolean
   /** Nova Poshta state, dates and payment: nothing to add once the parcel is in a trip. */
   hideNp?: boolean
+  /** The Nova Poshta column even when no row on the page has a waybill yet (the tabs about the way parcels travel). */
+  alwaysNp?: boolean
   /** The trip badges: redundant on a trip's own page, where the section already says it. */
   hidePlan?: boolean
   emptyText?: ReactNode
@@ -59,7 +62,7 @@ export function ParcelsTable({
   const { canSeeMoney } = useAccess()
 
   // Nova Poshta's column only where there is something of it (the archive or a trip of our own parcels has none)
-  const showNp = !hideNp && rows.some((p) => p.npTtn || p.npShipment?.waybillNumber)
+  const showNp = !hideNp && (alwaysNp || rows.some((p) => p.npTtn || p.npShipment?.waybillNumber))
 
   const columns: Column<ParcelResponse>[] = [
     {
@@ -143,7 +146,10 @@ export function ParcelsTable({
               // The incoming waybill if there is one, otherwise our own outgoing one (return parcels).
               const source = npStateOf(p) ? p : p.npShipment && npStateOf(p.npShipment) ? p.npShipment : undefined
               if (!source) {
-                return p.npTtn ? <span className="text-xs text-muted-foreground">{t('parcels:np.noTracking')}</span> : <span className="text-muted-foreground">—</span>
+                if (p.npTtn) return <span className="text-xs text-muted-foreground">{t('parcels:np.noTracking')}</span>
+                // our shipment is filled in, the waybill not made yet
+                if (p.npShipment && !p.npShipment.waybillNumber) return <span className="text-xs text-muted-foreground">{t('parcels:np.noWaybillYet')}</span>
+                return <span className="text-muted-foreground">—</span>
               }
               const text = npStatusTextOf(source)
               return (
