@@ -24,6 +24,7 @@ import {
   ListX,
   Menu,
   PackagePlus,
+  Receipt,
   RotateCcw,
   Route,
   ScanLine,
@@ -31,6 +32,7 @@ import {
   TriangleAlert,
   Truck,
   Users,
+  Wallet,
   WifiOff,
   X,
   type LucideIcon,
@@ -538,7 +540,7 @@ function Money() {
 function Reports() {
   const { t } = useTranslation('landing')
   const items = t('reports.items', { returnObjects: true }) as Item[]
-  const icons: LucideIcon[] = [ChartColumn, HandCoins, Hourglass, Route, Warehouse, FileSpreadsheet]
+  const icons: LucideIcon[] = [ChartColumn, HandCoins, Hourglass, Route, Receipt, Wallet, Warehouse, FileSpreadsheet]
   const hands: [string, string][] = [
     [t('reports.card.driver1'), '640 €'],
     [t('reports.card.driver2'), '12 450 грн'],
@@ -547,6 +549,12 @@ function Reports() {
     [t('reports.card.age1'), '1 240 €', 100],
     [t('reports.card.age2'), '380 €', 31],
     [t('reports.card.age3'), '90 €', 8, true],
+  ]
+  // one trip as the owner reads it: what it earned, what it cost, what the drivers got
+  const trip: [string, string][] = [
+    [t('reports.card.revenue'), '1 830 €'],
+    [t('reports.card.expenses'), '− 420 €'],
+    [t('reports.card.drivers'), '− 300 €'],
   ]
   return (
     <section id="reports" className="scroll-mt-16 py-16 sm:py-20">
@@ -574,7 +582,7 @@ function Reports() {
           <p className="mt-8 text-navy/60">{t('reports.note')}</p>
         </div>
 
-        {/* the two questions an owner asks first: who holds the cash, and what is still unpaid and for how long */}
+        {/* the questions an owner asks first: who holds the cash, what is still unpaid and for how long, what a trip left */}
         <div className="mx-auto flex w-full max-w-md flex-col gap-4" aria-hidden>
           <div className="rounded-2xl bg-navy p-6 text-white shadow-lg">
             <p className="text-sm text-white/70">{t('reports.card.onHand')}</p>
@@ -608,6 +616,21 @@ function Reports() {
                 </div>
               ))}
             </div>
+          </div>
+          <div className="rounded-2xl border border-navy/10 bg-white p-6">
+            <p className="font-bold">{t('reports.card.trip')}</p>
+            <dl className="mt-3 flex flex-col gap-1.5 tabular-nums">
+              {trip.map(([label, sum]) => (
+                <div key={label} className="flex justify-between gap-3 text-navy/70">
+                  <dt>{label}</dt>
+                  <dd className="font-semibold text-navy">{sum}</dd>
+                </div>
+              ))}
+              <div className="mt-1 flex items-baseline justify-between gap-3 border-t border-navy/10 pt-2.5">
+                <dt className="font-bold">{t('reports.card.profit')}</dt>
+                <dd className="text-2xl font-bold">1 110 €</dd>
+              </div>
+            </dl>
           </div>
         </div>
       </div>
