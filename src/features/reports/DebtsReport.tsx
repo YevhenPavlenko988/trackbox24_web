@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils'
 import { downloadDebts, useDebts } from './api'
 
 const AGES = ['UP_TO_7', 'UP_TO_30', 'OVER_30'] as const
+/** The backend's buckets: up to 7 days, 8–30, over 30. */
+const ageOf = (days = 0): (typeof AGES)[number] => (days <= 7 ? 'UP_TO_7' : days <= 30 ? 'UP_TO_30' : 'OVER_30')
 
 /** Handed over and not paid: totals by how long ago, then every parcel and move from the oldest. */
 export function DebtsReport() {
@@ -37,7 +39,10 @@ export function DebtsReport() {
         </Card>
         {AGES.map((age) => {
           const buckets = (r.buckets ?? []).filter((b) => b.age === age)
-          const count = buckets.reduce((n, b) => n + (b.count ?? 0), 0)
+          const rows = (r.rows ?? []).filter((d) => ageOf(d.days) === age)
+          const moves = rows.filter((d) => d.kind === 'MOVE').length
+          const parcels = rows.length - moves
+          const count = rows.length
           return (
             <Card key={age} className={cn(age === 'OVER_30' && count > 0 && 'border-destructive/40')}>
               <CardContent>
@@ -51,7 +56,11 @@ export function DebtsReport() {
                 ) : (
                   <p className="text-xl font-semibold text-muted-foreground">{t('reports:debts.none')}</p>
                 )}
-                {count > 0 && <p className="text-xs text-muted-foreground">{t('reports:debts.count', { count })}</p>}
+                {count > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {[parcels > 0 && t('reports:debts.parcels', { count: parcels }), moves > 0 && t('reports:debts.moves', { count: moves })].filter(Boolean).join(' · ')}
+                  </p>
+                )}
               </CardContent>
             </Card>
           )

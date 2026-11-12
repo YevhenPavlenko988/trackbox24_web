@@ -7808,10 +7808,15 @@ export interface components {
         CashEntry: {
             /**
              * Format: date-time
-             * @description Коли оплачено
+             * @description Коли оплачено; для `dateOnly` — полудень дня оплати (за ним рахується курс)
              * @example 2026-11-10T14:20:00Z
              */
             at?: string;
+            /**
+             * @description Оплату внесено лише з датою (оплати переїздів): показувати тільки дату
+             * @example false
+             */
+            dateOnly?: boolean;
             /**
              * @description PARCEL — оплата посилки, MOVE — оплата переїзду
              * @example PARCEL
