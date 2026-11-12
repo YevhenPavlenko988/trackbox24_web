@@ -21,6 +21,29 @@ export function useDebts() {
   return useQuery({ queryKey: [...reportsKey, 'debts'], queryFn: () => unwrap(api.GET('/api/reports/debts')) })
 }
 
+/** The trips that left in the period: carried, earned, driven; by car and by driver. */
+export function useTripsReport(period: Period) {
+  return useQuery({
+    queryKey: [...reportsKey, 'trips', period],
+    queryFn: () => unwrap(api.GET('/api/reports/trips', { params: { query: period } })),
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** What lies at each warehouse now. */
+export function useWarehousesReport() {
+  return useQuery({ queryKey: [...reportsKey, 'warehouses'], queryFn: () => unwrap(api.GET('/api/reports/warehouses')) })
+}
+
+/** Not moving for more than {@code days} days, or on Nova Poshta's paid storage. */
+export function useStuckReport(days: number) {
+  return useQuery({
+    queryKey: [...reportsKey, 'stuck', days],
+    queryFn: () => unwrap(api.GET('/api/reports/stuck', { params: { query: { days } } })),
+    placeholderData: keepPreviousData,
+  })
+}
+
 function useReportMutation<A>(fn: (arg: A) => Promise<unknown>) {
   const queryClient = useQueryClient()
   return useMutation({ mutationFn: fn, onSuccess: () => queryClient.invalidateQueries({ queryKey: reportsKey }) })
@@ -52,6 +75,18 @@ export async function downloadCash(period: Period): Promise<void> {
 
 export async function downloadDebts(): Promise<void> {
   save(await unwrap(api.GET('/api/reports/debts.xlsx', { parseAs: 'blob' })), `debts-${new Date().toISOString().slice(0, 10)}.xlsx`)
+}
+
+export async function downloadTrips(period: Period): Promise<void> {
+  save(await unwrap(api.GET('/api/reports/trips.xlsx', { params: { query: period }, parseAs: 'blob' })), `trips-${period.from}-${period.to}.xlsx`)
+}
+
+export async function downloadWarehouses(): Promise<void> {
+  save(await unwrap(api.GET('/api/reports/warehouses.xlsx', { parseAs: 'blob' })), `warehouses-${new Date().toISOString().slice(0, 10)}.xlsx`)
+}
+
+export async function downloadStuck(days: number): Promise<void> {
+  save(await unwrap(api.GET('/api/reports/stuck.xlsx', { params: { query: { days } }, parseAs: 'blob' })), `stuck-${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
 function save(blob: Blob, name: string) {

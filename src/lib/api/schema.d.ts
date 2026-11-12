@@ -588,7 +588,7 @@ export interface paths {
         get?: never;
         /**
          * Увімкнути / вимкнути модуль «Звіти»
-         * @description ADMIN або SALES. Увімкнено — менеджер бачить «Звіти» (каса за період, готівка на руках і її здача, хто винен),
+         * @description ADMIN або SALES. Увімкнено — менеджер бачить «Звіти» (каса за період, готівка на руках і її здача, очікує оплати),
          *     водії й представники — «Моя каса» в мобільному.
          */
         put: operations["setReportsEnabled"];
@@ -2510,6 +2510,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/warehouses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Склади
+         * @description Що лежить на кожному складі зараз (місця й посилки), скільки днів, чи заплановано в рейс; від найдавнішого.
+         */
+        get: operations["warehouses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/warehouses.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Склади, Excel */
+        get: operations["warehousesXlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/trips": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Рейси за період
+         * @description Рейси, що виїхали в дні `from`–`to` (у дорозі або завершені): завантажено (посилок, переїздів, місць, вага —
+         *     за історією рейсу), видано, пробіг за одометром, виручка (ціни виданого з цього рейсу; переїзд — увесь рахунок;
+         *     посилка з пересадкою рахується один раз, на плечі, що її видало), отримано, виручка на км; разом за машинами й водіями.
+         */
+        get: operations["trips"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/trips.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Рейси за період, Excel */
+        get: operations["tripsXlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/stuck": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Застряглі
+         * @description Не видані й не скасовані посилки й переїзди без зміни статусу понад `days` днів (за замовчуванням 7),
+         *     а також усе, що лежить на платному зберіганні Нової Пошти; від найдовшого простою.
+         */
+        get: operations["stuck"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/stuck.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Застряглі, Excel */
+        get: operations["stuckXlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/reports/debts": {
         parameters: {
             query?: never;
@@ -2518,7 +2632,7 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Хто винен
+         * Очікує оплати
          * @description Видані клієнту й не оплачені: посилки (ціна мінус знижки) і переїзди (залишок рахунку), від найдавнішої видачі;
          *     підсумки за давністю (до 7 днів, 8–30, понад 30) і валютами, разом — у валюті звітів за курсом сьогодні.
          */
@@ -2538,7 +2652,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Хто винен, Excel */
+        /** Очікує оплати, Excel */
         get: operations["debtsXlsx"];
         put?: never;
         post?: never;
@@ -2863,7 +2977,7 @@ export interface paths {
          * Відділення й поштомати міста
          * @description До 50 результатів; query — номер або частина адреси.
          */
-        get: operations["warehouses"];
+        get: operations["warehouses_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5817,7 +5931,7 @@ export interface components {
              */
             onlinePaymentsEnabled?: boolean;
             /**
-             * @description Модуль «Звіти»: каса, готівка на руках, хто винен (вмикає команда TrackBox24)
+             * @description Модуль «Звіти»: каса, готівка на руках, очікує оплати (вмикає команда TrackBox24)
              * @example false
              */
             reportsEnabled?: boolean;
@@ -7706,6 +7820,323 @@ export interface components {
             content?: components["schemas"]["DeletedItemResponseRouteResponse"][];
             page?: components["schemas"]["PageMetadata"];
         };
+        AgeCount: {
+            /**
+             * @description UP_TO_3, UP_TO_7, UP_TO_14, OVER_14
+             * @example UP_TO_3
+             */
+            age?: string;
+            /**
+             * Format: int32
+             * @example 12
+             */
+            parcels?: number;
+        };
+        /** @description Посилка чи переїзд, що лежить на складі (усі або частина місць) */
+        StockRow: {
+            /**
+             * Format: int64
+             * @example 812
+             */
+            parcelId?: number;
+            /** @example PT4522366611 */
+            code?: string;
+            /**
+             * @description PARCEL або MOVE
+             * @example PARCEL
+             */
+            kind?: string;
+            /** @example Коваль Іван */
+            clientName?: string;
+            /**
+             * Format: int32
+             * @description Місць на цьому складі
+             * @example 2
+             */
+            seatsHere?: number;
+            /**
+             * Format: int32
+             * @description Місць усього
+             * @example 3
+             */
+            seatsTotal?: number;
+            /** @example 4.5 */
+            weightKg?: number;
+            /**
+             * Format: date-time
+             * @description Відколи лежить (найраніше місце)
+             * @example 2026-11-02T10:00:00Z
+             */
+            since?: string;
+            /**
+             * Format: int64
+             * @example 10
+             */
+            days?: number;
+            /**
+             * @description У плані рейсу; немає — ще не заплановано
+             * @example 15
+             */
+            plannedTrip?: string;
+        };
+        /** @description Що лежить на одному складі зараз */
+        WarehouseStock: {
+            /**
+             * Format: int64
+             * @example 3
+             */
+            warehouseId?: number;
+            /** @example Склад Київ */
+            name?: string;
+            /**
+             * Format: int32
+             * @example 24
+             */
+            parcels?: number;
+            /**
+             * Format: int32
+             * @example 31
+             */
+            seats?: number;
+            /** @description Посилок за давністю: до 3 днів, 4–7, 8–14, понад 14 */
+            ages?: components["schemas"]["AgeCount"][];
+            /**
+             * Format: int32
+             * @description Не заплановано в жоден рейс
+             * @example 9
+             */
+            unplanned?: number;
+            /** @description Від найдавнішої */
+            rows?: components["schemas"]["StockRow"][];
+        };
+        /** @description Склади: що лежить на кожному зараз і скільки днів */
+        WarehousesResponse: {
+            warehouses?: components["schemas"]["WarehouseStock"][];
+        };
+        /** @description Сума в одній валюті */
+        CurrencyAmount: {
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /** @example 350 */
+            amount?: number;
+        };
+        /** @description Рейси однієї машини чи одного водія за період, разом */
+        TripGroupRow: {
+            /**
+             * Format: int64
+             * @description Машина чи водій; немає — не призначено
+             * @example 7
+             */
+            id?: number;
+            /** @example BC1234AB */
+            name?: string;
+            /**
+             * Format: int32
+             * @example 6
+             */
+            trips?: number;
+            /**
+             * Format: int32
+             * @description Пробіг рейсів із вказаним одометром; немає — одометр не вказано в жодному
+             * @example 7300
+             */
+            km?: number;
+            /**
+             * Format: int32
+             * @example 210
+             */
+            parcels?: number;
+            /**
+             * @description Виручка у валюті звітів
+             * @example 10420
+             */
+            revenueReport?: number;
+            /**
+             * @description Отримано у валюті звітів
+             * @example 9800
+             */
+            receivedReport?: number;
+            /**
+             * @description Виручка на кілометр (лише рейси з пробігом)
+             * @example 1.42
+             */
+            perKm?: number;
+        };
+        /** @description Один рейс за період: що віз, скільки заробив і проїхав */
+        TripRow: {
+            /**
+             * Format: int64
+             * @example 42
+             */
+            tripId?: number;
+            /**
+             * @description Номер, як його бачать люди: «14» або «14.2» для плеча
+             * @example 14
+             */
+            number?: string;
+            /** @example Варшава → Київ */
+            route?: string;
+            /** @example BC1234AB */
+            carPlate?: string;
+            /** @example Петренко Олег */
+            driverName?: string;
+            /** @example Коваль Іван */
+            coDriverName?: string;
+            /**
+             * Format: date-time
+             * @example 2026-11-03T06:00:00Z
+             */
+            departedAt?: string;
+            /**
+             * Format: date-time
+             * @example 2026-11-05T18:00:00Z
+             */
+            arrivedAt?: string;
+            /**
+             * @example COMPLETED
+             * @enum {string}
+             */
+            status?: "PLANNED" | "PREPARING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+            /**
+             * Format: int32
+             * @description Посилок завантажено (за історією рейсу)
+             * @example 38
+             */
+            parcels?: number;
+            /**
+             * Format: int32
+             * @description Переїздів завантажено
+             * @example 2
+             */
+            moves?: number;
+            /**
+             * Format: int32
+             * @description Місць завантажено
+             * @example 61
+             */
+            seats?: number;
+            /**
+             * @description Вага завантаженого, кг
+             * @example 412.5
+             */
+            weightKg?: number;
+            /**
+             * Format: int32
+             * @description Видано клієнтам із цього рейсу (посилок і переїздів)
+             * @example 35
+             */
+            delivered?: number;
+            /**
+             * Format: int32
+             * @description Пробіг за одометром; немає — одометр не вказано
+             * @example 1240
+             */
+            km?: number;
+            /** @description Виручка: ціни виданого з цього рейсу (переїзд — увесь рахунок), за валютами */
+            revenue?: components["schemas"]["CurrencyAmount"][];
+            /**
+             * @description Виручка у валюті звітів за курсом дня виїзду
+             * @example 1830.4
+             */
+            revenueReport?: number;
+            /** @description З виручки вже отримано, за валютами */
+            received?: components["schemas"]["CurrencyAmount"][];
+            /**
+             * @description Отримано у валюті звітів
+             * @example 1500
+             */
+            receivedReport?: number;
+            /**
+             * @description Виручка на кілометр у валюті звітів; немає — без пробігу
+             * @example 1.48
+             */
+            perKm?: number;
+        };
+        /** @description Рейси, що виїхали за період: перевезено, виручка, отримано, пробіг; разом за машинами й водіями */
+        TripsReportResponse: {
+            /**
+             * Format: date
+             * @example 2026-11-01
+             */
+            from?: string;
+            /**
+             * Format: date
+             * @example 2026-11-30
+             */
+            to?: string;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            reportCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Для якоїсь суми не знайшлося курсу
+             * @example false
+             */
+            rateMissing?: boolean;
+            /** @description Усі рейси разом */
+            total?: components["schemas"]["TripGroupRow"];
+            byCar?: components["schemas"]["TripGroupRow"][];
+            byDriver?: components["schemas"]["TripGroupRow"][];
+            /** @description Від найпізнішого виїзду */
+            trips?: components["schemas"]["TripRow"][];
+        };
+        /** @description Застряглі: не видані й не скасовані, без змін статусу довше за поріг, і все на платному зберіганні НП */
+        StuckResponse: {
+            /**
+             * Format: int32
+             * @description Поріг, днів
+             * @example 7
+             */
+            days?: number;
+            /** @description Від найдовшого простою */
+            rows?: components["schemas"]["StuckRow"][];
+        };
+        /** @description Посилка чи переїзд, що давно не рухається */
+        StuckRow: {
+            /**
+             * Format: int64
+             * @example 812
+             */
+            parcelId?: number;
+            /** @example PT4522366611 */
+            code?: string;
+            /** @example PARCEL */
+            kind?: string;
+            /**
+             * @example AT_WAREHOUSE
+             * @enum {string}
+             */
+            status?: "IN_NOVA_POSHTA" | "PICKED_UP_FROM_NOVA_POSHTA" | "RECEIVED_BY_REPRESENTATIVE" | "ACCEPTED_BY_DRIVER" | "AT_WAREHOUSE" | "IN_CAR" | "SENT_VIA_NOVA_POSHTA" | "DELIVERED_TO_CLIENT" | "CANCELLED";
+            /**
+             * @description Де: склад, рейс, представник
+             * @example Склад Київ
+             */
+            where?: string;
+            /** @example Коваль Іван */
+            clientName?: string;
+            /**
+             * Format: date-time
+             * @description Остання зміна статусу
+             * @example 2026-10-28T12:00:00Z
+             */
+            changedAt?: string;
+            /**
+             * Format: int64
+             * @description Днів без змін
+             * @example 15
+             */
+            days?: number;
+            /**
+             * Format: date-time
+             * @description На платному зберіганні Нової Пошти з цього дня
+             * @example 2026-11-08T00:00:00Z
+             */
+            npPaidStorageFrom?: string;
+        };
         /** @description Борги однієї давності в одній валюті */
         DebtBucket: {
             /**
@@ -7782,7 +8213,7 @@ export interface components {
              */
             deliveredBy?: string;
         };
-        /** @description Хто винен: видані й не оплачені посилки та переїзди */
+        /** @description Очікує оплати: видані й не оплачені посилки та переїзди */
         DebtsResponse: {
             /**
              * @example EUR
@@ -24073,6 +24504,491 @@ export interface operations {
             };
         };
     };
+    warehouses: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["WarehousesResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/warehouses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    warehousesXlsx: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/warehouses.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/warehouses.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/warehouses.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    trips: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TripsReportResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    tripsXlsx: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/trips.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/trips.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/trips.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stuck: {
+        parameters: {
+            query?: {
+                /** @example 7 */
+                days?: number;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["StuckResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/stuck"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/stuck"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/stuck"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    stuckXlsx: {
+        parameters: {
+            query?: {
+                days?: number;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/stuck.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/stuck.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/stuck.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     debts: {
         parameters: {
             query?: never;
@@ -25596,7 +26512,7 @@ export interface operations {
             };
         };
     };
-    warehouses: {
+    warehouses_1: {
         parameters: {
             query: {
                 /** @description Ref міста */

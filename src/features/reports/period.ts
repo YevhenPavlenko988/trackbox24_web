@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import type { Period } from './api'
 
 export type PeriodPreset = 'today' | 'week' | 'month' | 'lastMonth'
@@ -30,3 +31,7 @@ export function presetOf(period: Period, now = new Date()): PeriodPreset | undef
     return q.from === period.from && q.to === period.to
   })
 }
+
+/** Days lying: amber after a week, red after two. */
+export const daysClass = (days = 0, amber = 7, red = 14) =>
+  cn('text-right tabular-nums', days > red ? 'font-semibold text-destructive' : days > amber && 'text-amber-700 dark:text-amber-400')

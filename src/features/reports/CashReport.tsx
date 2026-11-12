@@ -1,4 +1,4 @@
-import { FileSpreadsheet, HandCoins, Trash2 } from 'lucide-react'
+import { HandCoins, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
@@ -6,7 +6,6 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAccess } from '@/features/auth/access'
@@ -15,7 +14,8 @@ import type { CashOnHand, CashSum, Currency } from '@/lib/api/types'
 import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
 import { downloadCash, type Period, useCashReport, useDeleteHandover } from './api'
 import { HandoverDialog } from './HandoverDialog'
-import { PERIOD_PRESETS, presetOf, presetPeriod } from './period'
+import { PeriodBar } from './PeriodBar'
+import { presetPeriod } from './period'
 
 const FIRST_PAYMENTS = 30
 
@@ -29,34 +29,13 @@ export function CashReport() {
   const [taking, setTaking] = useState<CashOnHand | null>(null)
   const [removing, setRemoving] = useState<{ id: number; name?: string; amount: string } | null>(null)
   const [allPayments, setAllPayments] = useState(false)
-  const preset = presetOf(period)
   const r = query.data
   const rc = (r?.reportCurrency ?? 'UAH') as Currency
   const method = (m?: string) => (m ? t(`common:paymentMethod.${m}`) : t('reports:cash.methodNone'))
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-end gap-2">
-        <div className="flex flex-wrap gap-1" role="group">
-          {PERIOD_PRESETS.map((p) => (
-            <Button key={p} size="sm" variant={preset === p ? 'default' : 'outline'} onClick={() => setPeriod(presetPeriod(p))}>
-              {t(`reports:period.${p}`)}
-            </Button>
-          ))}
-        </div>
-        <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          {t('reports:period.from')}
-          <Input type="date" className="w-40" value={period.from} max={period.to} onChange={(e) => e.target.value && setPeriod({ ...period, from: e.target.value })} />
-        </label>
-        <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          {t('reports:period.to')}
-          <Input type="date" className="w-40" value={period.to} min={period.from} onChange={(e) => e.target.value && setPeriod({ ...period, to: e.target.value })} />
-        </label>
-        <Button size="sm" variant="outline" className="ml-auto" onClick={() => downloadCash(period).catch(showApiError)}>
-          <FileSpreadsheet />
-          {t('reports:excel')}
-        </Button>
-      </div>
+      <PeriodBar period={period} onChange={setPeriod} onExcel={() => downloadCash(period)} />
 
       {query.isPending || !r ? (
         <Skeleton className="h-60 w-full" />

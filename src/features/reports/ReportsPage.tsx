@@ -11,12 +11,17 @@ import { CURRENCY_SYMBOL, MONEY_ORDER } from '@/lib/format'
 import { useSetReportCurrency } from './api'
 import { CashReport } from './CashReport'
 import { DebtsReport } from './DebtsReport'
+import { StuckReport } from './StuckReport'
+import { TripsReport } from './TripsReport'
+import { WarehousesReport } from './WarehousesReport'
+
+const TABS = ['cash', 'debts', 'trips', 'warehouses', 'stuck'] as const
 
 /** «Звіти»: the cash of a period and who owes; totals in the company's report currency. */
 export function ReportsPage() {
   const { t } = useTranslation(['reports', 'common'])
   const [params, setParams] = useSearchParams()
-  const tab = params.get('tab') === 'debts' ? 'debts' : 'cash'
+  const tab = TABS.find((x) => x === params.get('tab')) ?? 'cash'
 
   return (
     <>
@@ -25,20 +30,32 @@ export function ReportsPage() {
         value={tab}
         onValueChange={(v) => {
           const next = new URLSearchParams(params)
-          if (v === 'debts') next.set('tab', 'debts')
-          else next.delete('tab')
+          if (v === 'cash') next.delete('tab')
+          else next.set('tab', String(v))
           setParams(next, { replace: true })
         }}
       >
-        <TabsList>
-          <TabsTrigger value="cash">{t('reports:tabs.cash')}</TabsTrigger>
-          <TabsTrigger value="debts">{t('reports:tabs.debts')}</TabsTrigger>
+        <TabsList className="flex-wrap">
+          {TABS.map((x) => (
+            <TabsTrigger key={x} value={x}>
+              {t(`reports:tabs.${x}`)}
+            </TabsTrigger>
+          ))}
         </TabsList>
         <TabsContent value="cash" className="mt-4">
           <CashReport />
         </TabsContent>
         <TabsContent value="debts" className="mt-4">
           <DebtsReport />
+        </TabsContent>
+        <TabsContent value="trips" className="mt-4">
+          <TripsReport />
+        </TabsContent>
+        <TabsContent value="warehouses" className="mt-4">
+          <WarehousesReport />
+        </TabsContent>
+        <TabsContent value="stuck" className="mt-4">
+          <StuckReport />
         </TabsContent>
       </Tabs>
     </>
