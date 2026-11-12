@@ -44,12 +44,26 @@ export async function run() {
     ok('nothing left in hand', (await row.count()) === 0)
     ok('the handover is listed', (await card('Здача каси').locator('tr', { hasText: name }).count()) === 1)
 
-    await page.getByRole('tab', { name: 'Хто винен' }).click()
+    await page.getByRole('tab', { name: 'Очікує оплати' }).click()
     await page.waitForSelector('[data-testid=debts-total]')
     const debt = page.locator('tr', { hasText: unpaid.barcode })
     await debt.waitFor()
     ok('the unpaid parcel is a debt', (await debt.textContent()).includes('333'), await debt.textContent())
     await shot('02-debts')
+
+    // the trip of this run left this month: it is in «Рейси»
+    await page.getByRole('tab', { name: 'Рейси' }).click()
+    await page.waitForSelector('[data-testid=trips-count]')
+    const tripRow = page.locator('tr', { hasText: 'RPT' + u.slice(0, 4) })
+    await tripRow.first().waitFor()
+    ok('the trip is in the trips report', (await tripRow.count()) >= 1)
+    await shot('03-trips')
+    await page.getByRole('tab', { name: 'Склади' }).click()
+    await page.waitForTimeout(800)
+    ok('the warehouses report opens', (await page.getByRole('tabpanel').textContent()).length > 0)
+    await page.getByRole('tab', { name: 'Застряглі' }).click()
+    await page.waitForSelector('[data-testid=stuck-title]')
+    ok('the stuck report opens', true)
   } catch (e) {
     return await r.finish(e)
   }

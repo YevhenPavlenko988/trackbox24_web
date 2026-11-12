@@ -1,16 +1,14 @@
-import { FileSpreadsheet } from 'lucide-react'
 import { Link } from 'react-router'
 import { useTranslation } from 'react-i18next'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { showApiError } from '@/lib/api/problem'
 import type { Currency } from '@/lib/api/types'
 import { formatDate, formatMoney, formatPhone } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { downloadDebts, useDebts } from './api'
+import { ExcelButton } from './PeriodBar'
 
 const AGES = ['UP_TO_7', 'UP_TO_30', 'OVER_30'] as const
 /** The backend's buckets: up to 7 days, 8–30, over 30. */
@@ -78,10 +76,7 @@ export function DebtsReport() {
             <CardTitle>{t('reports:debts.list')}</CardTitle>
             <CardDescription>{t('reports:debts.listHint')}</CardDescription>
           </div>
-          <Button size="sm" variant="outline" onClick={() => downloadDebts().catch(showApiError)}>
-            <FileSpreadsheet />
-            {t('reports:excel')}
-          </Button>
+          <ExcelButton onClick={downloadDebts} />
         </CardHeader>
         <CardContent>
           {!r.rows?.length ? (
