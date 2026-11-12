@@ -4115,7 +4115,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /**
              * @description Сума
              * @example 70
@@ -4676,7 +4676,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /**
              * @description ПІБ відправника
              * @example Петренко Олег
@@ -5415,7 +5415,7 @@ export interface components {
             /** @example 200 */
             amount?: number;
             /** @enum {string} */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /** @example Готівка */
             methodLabel?: string;
             /** Format: date */
@@ -5565,7 +5565,7 @@ export interface components {
              * @example UA_CARD
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /**
              * @description Для PAID: валюта, в якій заплатили, якщо не у валюті ціни («Курси валют»)
              * @example USD
@@ -7026,7 +7026,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /**
              * @description Для видачі: валюта, в якій клієнт заплатив, якщо не у валюті ціни («Курси валют»): UAH, EUR, USD, PLN. Сума перераховується за курсом компанії на цю мить і зберігається з посилкою
              * @example UAH
@@ -7095,7 +7095,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /**
              * @description Для видачі: валюта, в якій клієнт заплатив, якщо не у валюті ціни («Курси валют»): UAH, EUR, USD, PLN. Сума перераховується за курсом компанії на цю мить і зберігається з посилкою
              * @example UAH
@@ -7636,7 +7636,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            paymentMethod?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /**
              * @description Оплата при прийомі в іншій валюті, ніж ціна («Курси валют»): UAH, EUR, USD, PLN
              * @example UAH
@@ -7837,7 +7837,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /**
              * Format: date
              * @description Дата оплати; не вказано — сьогодні
@@ -8256,7 +8256,7 @@ export interface components {
              * @example UA_CARD
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /**
              * @description Скільки прийнято
              * @example 1552.79
@@ -9512,7 +9512,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /**
              * @description Скільки отримано у валюті оплати
              * @example 1557
@@ -9620,7 +9620,7 @@ export interface components {
              * @example CASH
              * @enum {string}
              */
-            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER" | "NP_COD";
             /** @example 1250 */
             amount?: number;
             /**
@@ -21296,6 +21296,11 @@ export interface operations {
                  * @example MOVE
                  */
                 kind?: "PARCEL" | "MOVE";
+                /**
+                 * @description Стан у Новій Пошті — вхідної ТТН або нашої ЕН відправки; кілька — `npState=A&npState=B`
+                 * @example RETURNING
+                 */
+                npState?: ("CREATED" | "IN_TRANSIT" | "ARRIVED" | "RECEIVED" | "REDIRECTED" | "RETURNING" | "DELIVERY_FAILED" | "NOT_FOUND" | "OTHER")[];
                 /** @description Zero-based page index (0..N) */
                 page?: number;
                 /** @description The size of the page to be returned */

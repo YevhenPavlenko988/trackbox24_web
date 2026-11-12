@@ -226,7 +226,7 @@ export function CashReport() {
                           <span className="block text-xs text-muted-foreground">{t(e.kind === 'MOVE' ? 'reports:cash.move' : 'reports:cash.parcel')}</span>
                         </TableCell>
                         <TableCell>{e.clientName ?? '—'}</TableCell>
-                        <TableCell>{e.userName ?? t('reports:cash.online')}</TableCell>
+                        <TableCell>{e.userName ?? (e.method === 'NP_COD' ? t('reports:cash.byNp') : t('reports:cash.online'))}</TableCell>
                         <TableCell>{method(e.method)}</TableCell>
                         <TableCell className="text-right tabular-nums">{formatMoney(e.amount, e.currency as Currency)}</TableCell>
                         <TableCell className="text-right text-muted-foreground tabular-nums">{e.reportAmount == null ? '—' : formatMoney(e.reportAmount, rc)}</TableCell>
