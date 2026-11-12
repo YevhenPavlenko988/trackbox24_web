@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAccess } from '@/features/auth/access'
 import { showApiError } from '@/lib/api/problem'
 import type { CashOnHand, CashSum, Currency } from '@/lib/api/types'
-import { formatDateTime, formatMoney } from '@/lib/format'
+import { formatDate, formatDateTime, formatMoney } from '@/lib/format'
 import { downloadCash, type Period, useCashReport, useDeleteHandover } from './api'
 import { HandoverDialog } from './HandoverDialog'
 import { PERIOD_PRESETS, presetOf, presetPeriod } from './period'
@@ -228,7 +228,7 @@ export function CashReport() {
                   <TableBody>
                     {(allPayments ? r.entries : r.entries.slice(0, FIRST_PAYMENTS)).map((e, i) => (
                       <TableRow key={`${e.kind}-${e.parcelId}-${i}`}>
-                        <TableCell className="whitespace-nowrap">{formatDateTime(e.at)}</TableCell>
+                        <TableCell className="whitespace-nowrap">{e.dateOnly ? formatDate(e.at) : formatDateTime(e.at)}</TableCell>
                         <TableCell>
                           <Link to={`/${e.kind === 'MOVE' ? 'moves' : 'parcels'}/${e.parcelId}`} className="font-mono hover:underline">
                             {e.code}
