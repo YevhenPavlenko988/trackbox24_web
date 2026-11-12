@@ -80,6 +80,7 @@ export const router = createBrowserRouter([
               { path: 'trips/:id', lazy: page(() => import('@/features/trips/TripPage'), 'TripPage') },
               { path: 'warehouses', lazy: page(() => import('@/features/warehouses/WarehousesListPage'), 'WarehousesListPage') },
               { path: 'rates', lazy: page(() => import('@/features/currency/RatesPage'), 'RatesPage') },
+              { path: 'reports', lazy: page(() => import('@/features/reports/ReportsPage'), 'ReportsPage') },
               { path: 'trash', lazy: page(() => import('@/features/trash/TrashPage'), 'TrashPage') },
             ],
           },

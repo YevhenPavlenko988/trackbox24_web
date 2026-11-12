@@ -578,6 +578,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/companies/{id}/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Увімкнути / вимкнути модуль «Звіти»
+         * @description ADMIN або SALES. Увімкнено — менеджер бачить «Звіти» (каса за період, готівка на руках і її здача, хто винен),
+         *     водії й представники — «Моя каса» в мобільному.
+         */
+        put: operations["setReportsEnabled"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/companies/{id}/report-currency": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Валюта звітів
+         * @description MANAGER (своя компанія) або ADMIN. У ній «Звіти» показують підсумки: кожна оплата перераховується за курсом свого дня
+         *     (курс компанії, якщо був, інакше банку). Суми в оригінальних валютах показуються поруч.
+         */
+        put: operations["setReportCurrency"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}/referral": {
         parameters: {
             query?: never;
@@ -1022,7 +1064,8 @@ export interface paths {
          * Посилки рейсу: план і факт
          * @description Заплановані й завантажені посилки. `plannedTripId == id` і `tripId == id` — завантажена за планом;
          *     `plannedTripId == id`, `tripId` порожній — запланована, але ще не завантажена (після виїзду таких немає);
-         *     `tripId == id`, `plannedTripId` інший — завантажена поза планом.
+         *     `tripId == id`, `plannedTripId` інший — завантажена поза планом;
+         *     ні `tripId`, ні `plannedTripId` не дорівнюють `id` — була завантажена, потім вивантажена (на склад, пересадка).
          */
         get: operations["parcels"];
         put?: never;
@@ -1333,6 +1376,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/cash/handovers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Здати касу
+         * @description Тільки MANAGER: людина (водій, менеджер) передала готівку в офіс — стільки менше в неї на руках.
+         */
+        post: operations["handOver"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/public/tracking/{code}/points": {
         parameters: {
             query?: never;
@@ -1455,6 +1518,26 @@ export interface paths {
          * @description Без авторизації. Заявка стає угодою в CRM (етап «Нова заявка», задача «Зв'язатися») і надходить команді в Telegram. З однієї IP-адреси — до 5 заявок на годину.
          */
         post: operations["submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/print-timings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Хронометраж друку
+         * @description Застосунок надсилає після кожного друку; нічого не зберігається, лише рядок у лозі.
+         */
+        post: operations["report"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2427,6 +2510,85 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/reports/debts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Хто винен
+         * @description Видані клієнту й не оплачені: посилки (ціна мінус знижки) і переїзди (залишок рахунку), від найдавнішої видачі;
+         *     підсумки за давністю (до 7 днів, 8–30, понад 30) і валютами, разом — у валюті звітів за курсом сьогодні.
+         */
+        get: operations["debts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/debts.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Хто винен, Excel */
+        get: operations["debtsXlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/cash": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Каса за період
+         * @description Дні `from`–`to` включно (київський час); за замовчуванням — з 1 числа поточного місяця до сьогодні.
+         *     Менеджер і глядач — усі або одна людина (`userId`); водій і представник — лише своя каса («Моя каса»), `userId` ігнорується.
+         */
+        get: operations["cash"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/cash.xlsx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Каса за період, Excel
+         * @description Те саме, що `/cash`: аркуш «Каса» (підсумки, за людьми, на руках, здачі) і «Оплати».
+         */
+        get: operations["cashXlsx"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/referral/parcels/{id}/redeem": {
         parameters: {
             query?: never;
@@ -3100,6 +3262,26 @@ export interface paths {
          * @description MANAGER. Знімає й з плану плеча; завантажена лишається в машині.
          */
         delete: operations["unplanParcel_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/reports/cash/handovers/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Видалити здачу каси
+         * @description Тільки MANAGER: запис, внесений помилково.
+         */
+        delete: operations["deleteHandover"];
         options?: never;
         head?: never;
         patch?: never;
@@ -5181,7 +5363,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS" | "REPORTS";
             /**
              * @description Назва
              * @example Фото посилок
@@ -5269,7 +5451,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS" | "REPORTS")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -5371,7 +5553,7 @@ export interface components {
             utmTerm?: string;
             utmContent?: string;
             /** @description Опції, що цікавлять */
-            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS")[];
+            interestedOptions?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS" | "REPORTS")[];
             /**
              * @description Очікуваний тариф, € на місяць
              * @example 49
@@ -5460,7 +5642,7 @@ export interface components {
              * @example BASE
              * @enum {string}
              */
-            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS";
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS" | "REPORTS";
             /**
              * @description Назва
              * @example Базовий тариф
@@ -5502,7 +5684,7 @@ export interface components {
              * @example PHOTOS
              * @enum {string}
              */
-            option?: "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS";
+            option?: "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS" | "REPORTS";
             /**
              * @description Назва
              * @example Фото посилок
@@ -5634,6 +5816,17 @@ export interface components {
              * @example false
              */
             onlinePaymentsEnabled?: boolean;
+            /**
+             * @description Модуль «Звіти»: каса, готівка на руках, хто винен (вмикає команда TrackBox24)
+             * @example false
+             */
+            reportsEnabled?: boolean;
+            /**
+             * @description Валюта звітів: у ній показуються підсумки (за курсом дня кожної оплати); обирає компанія
+             * @example EUR
+             * @enum {string}
+             */
+            reportCurrency?: "UAH" | "EUR" | "USD" | "PLN";
             /**
              * @description Чи збережено резервний API-ключ НП компанії (сам ключ не повертається)
              * @example true
@@ -6351,6 +6544,64 @@ export interface components {
             /** @description Плечі по порядку, як рейси: машина, водій, звідки → куди, дати; можна жодного — додати потім */
             legs?: components["schemas"]["TripRequest"][];
         };
+        CashHandoverRequest: {
+            /**
+             * Format: int64
+             * @description Хто здає готівку (водій, менеджер)
+             * @example 5
+             */
+            holderId: number;
+            /** @example 800 */
+            amount: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * Format: date-time
+             * @description Коли здано; немає — зараз
+             * @example 2026-11-11T09:00:00Z
+             */
+            handedAt?: string;
+            /** @example За рейс №14 */
+            note?: string;
+        };
+        /** @description Здача каси: людина передала готівку в офіс */
+        CashHandoverResponse: {
+            /**
+             * Format: int64
+             * @example 3
+             */
+            id?: number;
+            /**
+             * Format: int64
+             * @description Хто здав
+             * @example 5
+             */
+            holderId?: number;
+            /** @example Петренко Олег */
+            holderName?: string;
+            /** @example 800 */
+            amount?: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * Format: date-time
+             * @example 2026-11-11T09:00:00Z
+             */
+            handedAt?: string;
+            /**
+             * @description Хто прийняв
+             * @example Олена Менеджер
+             */
+            receivedByName?: string;
+            /** @example За рейс №14 */
+            note?: string;
+        };
         PointsCheckRequest: {
             /**
              * @description Повний телефон клієнта посилки
@@ -6536,6 +6787,56 @@ export interface components {
             utmCampaign?: string;
             utmTerm?: string;
             utmContent?: string;
+        };
+        /** @description Хронометраж друку етикетки на телефоні — лише в лог, щоб розібратися з повільним друком */
+        PrintTimingsRequest: {
+            /**
+             * Format: int32
+             * @example 2400
+             */
+            connectMs?: number;
+            /**
+             * Format: int32
+             * @example 5300
+             */
+            sendMs?: number;
+            /**
+             * Format: int32
+             * @example 1200
+             */
+            printMs?: number;
+            /**
+             * Format: int32
+             * @example 1
+             */
+            labels?: number;
+            /**
+             * @description android / ios
+             * @example android
+             */
+            platform?: string;
+            /**
+             * @description Модель телефону
+             * @example SM-A546B
+             */
+            device?: string;
+            /**
+             * @description Модель принтера (ідентифікатор)
+             * @example B3S_P-I104092456
+             */
+            printer?: string;
+            /** @example 1.1.37+64 */
+            appVersion?: string;
+            /**
+             * Format: int32
+             * @example 78
+             */
+            batteryPercent?: number;
+            /**
+             * @description Помилка, якщо друк не вдався
+             * @example timeout
+             */
+            error?: string;
         };
         ParcelCreateRequest: {
             /**
@@ -7078,7 +7379,7 @@ export interface components {
              *       "PHOTOS"
              *     ]
              */
-            options?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS")[];
+            options?: ("PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS" | "REPORTS")[];
         };
         Manager: {
             /**
@@ -7404,6 +7705,266 @@ export interface components {
         PagedModelDeletedItemResponseRouteResponse: {
             content?: components["schemas"]["DeletedItemResponseRouteResponse"][];
             page?: components["schemas"]["PageMetadata"];
+        };
+        /** @description Борги однієї давності в одній валюті */
+        DebtBucket: {
+            /**
+             * @description UP_TO_7 — до 7 днів, UP_TO_30 — 8–30 днів, OVER_30 — понад 30
+             * @example UP_TO_7
+             */
+            age?: string;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /** @example 120 */
+            amount?: number;
+            /**
+             * Format: int32
+             * @example 4
+             */
+            count?: number;
+        };
+        /** @description Видано, але не оплачено */
+        DebtRow: {
+            /**
+             * @description PARCEL — посилка, MOVE — переїзд
+             * @example PARCEL
+             */
+            kind?: string;
+            /**
+             * Format: int64
+             * @example 812
+             */
+            parcelId?: number;
+            /** @example PT4522366611 */
+            code?: string;
+            /**
+             * Format: int64
+             * @example 44
+             */
+            clientId?: number;
+            /** @example Коваль Іван */
+            clientName?: string;
+            /** @example 380671234567 */
+            clientPhone?: string;
+            /**
+             * Format: date-time
+             * @description Коли видано
+             * @example 2026-10-28T12:00:00Z
+             */
+            deliveredAt?: string;
+            /**
+             * Format: int64
+             * @description Скільки днів минуло від видачі
+             * @example 15
+             */
+            days?: number;
+            /**
+             * @description Скільки винні у валюті ціни
+             * @example 30
+             */
+            amount?: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description У валюті звітів за курсом сьогодні
+             * @example 30
+             */
+            reportAmount?: number;
+            /**
+             * @description Хто видав
+             * @example Петренко Олег
+             */
+            deliveredBy?: string;
+        };
+        /** @description Хто винен: видані й не оплачені посилки та переїзди */
+        DebtsResponse: {
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            reportCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /** @description За давністю й валютами */
+            buckets?: components["schemas"]["DebtBucket"][];
+            /**
+             * @description Усе разом у валюті звітів за курсом сьогодні
+             * @example 940
+             */
+            reportTotal?: number;
+            /**
+             * @description Для якогось боргу не знайшлося курсу
+             * @example false
+             */
+            rateMissing?: boolean;
+            /** @description Від найдавнішого */
+            rows?: components["schemas"]["DebtRow"][];
+        };
+        /** @description Одна оплата */
+        CashEntry: {
+            /**
+             * Format: date-time
+             * @description Коли оплачено
+             * @example 2026-11-10T14:20:00Z
+             */
+            at?: string;
+            /**
+             * @description PARCEL — оплата посилки, MOVE — оплата переїзду
+             * @example PARCEL
+             */
+            kind?: string;
+            /**
+             * Format: int64
+             * @example 812
+             */
+            parcelId?: number;
+            /**
+             * @description Наш код посилки чи переїзду
+             * @example PT4522366611
+             */
+            code?: string;
+            /** @example Коваль Іван */
+            clientName?: string;
+            /**
+             * Format: int64
+             * @description Хто отримав; немає — онлайн-оплата
+             * @example 5
+             */
+            userId?: number;
+            /** @example Петренко Олег */
+            userName?: string;
+            /**
+             * @example CASH
+             * @enum {string}
+             */
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            /**
+             * @description Скільки отримано у валюті оплати
+             * @example 1557
+             */
+            amount?: number;
+            /**
+             * @example UAH
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description У валюті звітів за курсом дня оплати; немає — курсу не знайшлося
+             * @example 31.2
+             */
+            reportAmount?: number;
+        };
+        /** @description Готівка на руках у людини в одній валюті зараз: отримала готівкою за весь час мінус здала */
+        CashOnHand: {
+            /**
+             * Format: int64
+             * @example 5
+             */
+            userId?: number;
+            /** @example Петренко Олег */
+            name?: string;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Отримано готівкою за весь час
+             * @example 3200
+             */
+            taken?: number;
+            /**
+             * @description Здано за весь час
+             * @example 2800
+             */
+            handedOver?: number;
+            /**
+             * @description На руках
+             * @example 400
+             */
+            onHand?: number;
+        };
+        /** @description Каса за період: усі отримані оплати посилок і переїздів */
+        CashReportResponse: {
+            /**
+             * Format: date
+             * @example 2026-11-01
+             */
+            from?: string;
+            /**
+             * Format: date
+             * @example 2026-11-30
+             */
+            to?: string;
+            /**
+             * @description Валюта звітів компанії
+             * @example EUR
+             * @enum {string}
+             */
+            reportCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /** @description Разом за валютами й способами */
+            totals?: components["schemas"]["CashSum"][];
+            /**
+             * @description Усе разом у валюті звітів (кожна оплата — за курсом свого дня)
+             * @example 5120.75
+             */
+            reportTotal?: number;
+            /**
+             * @description Для якоїсь оплати не знайшлося курсу: її немає в сумі у валюті звітів
+             * @example false
+             */
+            rateMissing?: boolean;
+            /** @description За людьми, що отримали оплату */
+            people?: components["schemas"]["PersonCash"][];
+            /** @description Готівка на руках зараз (за людьми й валютами), лише ненульова */
+            onHand?: components["schemas"]["CashOnHand"][];
+            /** @description Здачі каси за період */
+            handovers?: components["schemas"]["CashHandoverResponse"][];
+            /** @description Усі оплати періоду, від найновішої */
+            entries?: components["schemas"]["CashEntry"][];
+        };
+        /** @description Отримано в одній валюті одним способом */
+        CashSum: {
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Спосіб оплати; немає — не вказано
+             * @example CASH
+             * @enum {string}
+             */
+            method?: "CASH" | "UA_CARD" | "FOREIGN_CARD" | "ONLINE" | "TRANSFER";
+            /** @example 1250 */
+            amount?: number;
+            /**
+             * Format: int32
+             * @description Скільки оплат
+             * @example 14
+             */
+            count?: number;
+        };
+        /** @description Що отримала одна людина за період */
+        PersonCash: {
+            /**
+             * Format: int64
+             * @description Хто отримав; немає — онлайн-оплата, без людини
+             * @example 5
+             */
+            userId?: number;
+            /** @example Петренко Олег */
+            name?: string;
+            sums?: components["schemas"]["CashSum"][];
+            /**
+             * @description Усе разом у валюті звітів
+             * @example 1830.4
+             */
+            reportTotal?: number;
         };
         RedeemInfoResponse: {
             /**
@@ -11733,7 +12294,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS";
+                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS" | "REPORTS";
             };
             cookie?: never;
         };
@@ -12741,6 +13302,222 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/companies/{id}/telegram-bot"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setReportsEnabled: {
+        parameters: {
+            query: {
+                /**
+                 * @description true — увімкнути, false — вимкнути
+                 * @example true
+                 */
+                value: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/{id}/reports"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/{id}/reports"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/companies/{id}/reports"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/companies/{id}/reports"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setReportCurrency: {
+        parameters: {
+            query: {
+                /**
+                 * @description UAH, EUR, USD або PLN
+                 * @example EUR
+                 */
+                currency: "UAH" | "EUR" | "USD" | "PLN";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/companies/{id}/report-currency"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/companies/{id}/report-currency"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/companies/{id}/report-currency"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/companies/{id}/report-currency"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -17204,6 +17981,92 @@ export interface operations {
             };
         };
     };
+    handOver: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CashHandoverRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashHandoverResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/cash/handovers"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/cash/handovers"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/reports/cash/handovers"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     points: {
         parameters: {
             query?: never;
@@ -17499,6 +18362,90 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    report: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrintTimingsRequest"];
+            };
+        };
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/print-timings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/print-timings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/print-timings"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
             };
         };
     };
@@ -23121,6 +24068,336 @@ export interface operations {
             };
         };
     };
+    debts: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["DebtsResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/debts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/debts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/debts"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    debtsXlsx: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/debts.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/debts.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/debts.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cash: {
+        parameters: {
+            query?: {
+                /** @example 2026-11-01 */
+                from?: string;
+                /** @example 2026-11-30 */
+                to?: string;
+                /**
+                 * @description Лише ця людина
+                 * @example 5
+                 */
+                userId?: number;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CashReportResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/cash"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/cash"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/cash"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    cashXlsx: {
+        parameters: {
+            query?: {
+                from?: string;
+                to?: string;
+                userId?: number;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": string;
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/cash.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/cash.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/cash.xlsx"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     redeemInfo: {
         parameters: {
             query?: never;
@@ -26246,6 +27523,97 @@ export interface operations {
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
                      *       "instance": "/api/routes/{id}/parcels/{parcelId}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteHandover: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/reports/cash/handovers/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/reports/cash/handovers/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/reports/cash/handovers/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/reports/cash/handovers/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

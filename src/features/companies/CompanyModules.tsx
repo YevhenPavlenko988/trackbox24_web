@@ -1,4 +1,4 @@
-import { Boxes, Camera, Coins, CreditCard, Gift, Globe, Package, Send, Settings2, type LucideIcon } from 'lucide-react'
+import { Boxes, Camera, ChartColumn, Coins, CreditCard, Gift, Globe, Package, Send, Settings2, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -15,7 +15,7 @@ import { ReferralSettingsCard } from '@/features/referral/ReferralSettingsCard'
 import { showApiError } from '@/lib/api/problem'
 import type { CompanyOption, CompanyResponse } from '@/lib/api/types'
 import { cn } from '@/lib/utils'
-import { useSetCompanyCurrency, useSetCompanyMoves, useSetCompanyOnlinePayments, useSetCompanyReferral, useSetCompanyParcels, useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
+import { useSetCompanyCurrency, useSetCompanyMoves, useSetCompanyOnlinePayments, useSetCompanyReferral, useSetCompanyReports, useSetCompanyParcels, useSetCompanyPhotos, useSetCompanyPublicTracking, useSetCompanyTelegramBot } from './queries'
 
 type Mutation = { mutateAsync: (value: boolean) => Promise<unknown>; isPending: boolean }
 
@@ -28,6 +28,7 @@ const ICONS: Record<CompanyOption, { icon: LucideIcon; tint: string }> = {
   CURRENCY: { icon: Coins, tint: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
   REFERRAL: { icon: Gift, tint: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300' },
   ONLINE_PAYMENTS: { icon: CreditCard, tint: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300' },
+  REPORTS: { icon: ChartColumn, tint: 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300' },
 }
 
 /**
@@ -53,6 +54,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
     CURRENCY: useSetCompanyCurrency(id),
     REFERRAL: useSetCompanyReferral(id),
     ONLINE_PAYMENTS: useSetCompanyOnlinePayments(id),
+    REPORTS: useSetCompanyReports(id),
   }
   const on: Record<CompanyOption, boolean> = {
     PARCELS: company.parcelsEnabled !== false,
@@ -63,6 +65,7 @@ export function CompanyModules({ company }: { company: CompanyResponse }) {
     CURRENCY: company.currencyEnabled === true,
     REFERRAL: company.referralEnabled === true,
     ONLINE_PAYMENTS: company.onlinePaymentsEnabled === true,
+    REPORTS: company.reportsEnabled === true,
   }
   const toggle = async (option: CompanyOption, value: boolean) => {
     try {
