@@ -77,6 +77,11 @@ export async function run() {
     await expenses.locator('tr', { hasText: 'Пальне' }).waitFor()
     ok('the expense is on the trip', (await expenses.textContent()).includes('7 €'), await expenses.locator('[data-slot=card-description]').textContent())
     await shot('04-expenses')
+    const history = page.locator('li', { hasText: 'Витрату додано' })
+    await history.first().waitFor()
+    ok('the expense is in the trip history', (await history.first().textContent()).includes('Пальне: 7 €'), await history.first().textContent())
+    await history.first().scrollIntoViewIfNeeded()
+    await shot('04b-history')
 
     // «Водії»: the manager sets the driver's rate from the start of the year — the trip earns it; then pays it out
     await page.goto(BASE + '/reports?tab=drivers')

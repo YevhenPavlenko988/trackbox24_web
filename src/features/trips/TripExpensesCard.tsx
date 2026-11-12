@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { parseNumber } from '@/features/parcels/status'
+import { tripKeys } from './queries'
 import { api } from '@/lib/api/client'
 import { showApiError, unwrap } from '@/lib/api/problem'
 import type { Currency, ExpenseKind, ExpensePaidFrom, TripExpenseRequest, TripExpenseResponse, TripResponse } from '@/lib/api/types'
@@ -38,7 +39,8 @@ export function TripExpensesCard({ trip, canEdit }: { trip: TripResponse; canEdi
   const queryClient = useQueryClient()
   const remove = useMutation({
     mutationFn: (id: number) => unwrap(api.DELETE('/api/trips/{tripId}/expenses/{id}', { params: { path: { tripId, id } } })),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['trips', tripId] }),
+    // the list and the trip's history, where the change is written
+    onSuccess: () => Promise.all([queryClient.invalidateQueries({ queryKey: ['trips', tripId] }), queryClient.invalidateQueries({ queryKey: tripKeys.history(tripId) })]),
   })
   const [editing, setEditing] = useState<TripExpenseResponse | 'new' | null>(null)
   const [removing, setRemoving] = useState<TripExpenseResponse | null>(null)
@@ -186,7 +188,7 @@ function ExpenseDialog({ trip, expense, onClose }: { trip: TripResponse; expense
           showApiError(err)
         }
       }
-      await queryClient.invalidateQueries({ queryKey: ['trips', tripId] })
+      await Promise.all([queryClient.invalidateQueries({ queryKey: ['trips', tripId] }), queryClient.invalidateQueries({ queryKey: tripKeys.history(tripId) })])
       toast.success(t('common:common.saved'))
       onClose()
     } catch (err) {
