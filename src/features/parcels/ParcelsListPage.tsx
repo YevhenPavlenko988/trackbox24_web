@@ -2,6 +2,7 @@ import { AlertCircle, Archive, Banknote, BellRing, Clock, Inbox, Layers, Plus, R
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { showApiError } from '@/lib/api/problem'
 import { LinkButton } from '@/components/common/LinkButton'
@@ -25,7 +26,7 @@ import { emptyPage } from '@/lib/api/page'
 import type { ParcelResponse, ParcelStatus, PaymentStatus } from '@/lib/api/types'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ParcelsTable } from './ParcelsTable'
-import { inNpStateGroup, isNpStateGroup, NP_STATE_GROUPS, type NpStateGroup } from './npStatus'
+import { isNpStateGroup, NP_FILTER_STATES, npStatesOf } from './npStatus'
 import { useParcels, useSyncNovaPoshta } from './queries'
 import { DEFAULT_PARCEL_TAB, isParcelTab, PARCEL_TABS, TAB_FILTER_STATUSES, TAB_STATUSES, tabForStatus, type ParcelTab } from './tabs'
 import { isParcelDeletable } from './status'
@@ -80,9 +81,11 @@ export function ParcelsListPage() {
   }, [debouncedCity]) // eslint-disable-line react-hooks/exhaustive-deps
   const needsEnrichment = get('needsEnrichment') === 'true' ? true : undefined
   const paidStorage = sort === PAID_STORAGE_SORT
-  // No backend filter by npState yet: filter the loaded page on the client, with a bigger page so it is useful.
-  const npGroupParam = get('npState')
-  const npGroup: NpStateGroup | undefined = isNpStateGroup(npGroupParam) ? npGroupParam : undefined
+  // Nova Poshta's state of the incoming waybill or of our own; an older link may carry a group of states
+  const npParam = get('npState')
+  const npStates = npStatesOf(npParam)
+  const npGroup = npStates ? npParam : undefined
+  const npLabel = (v?: string) => (!v ? t('parcels:filters.npStateAll') : isNpStateGroup(v) ? t(`parcels:filters.npState.${v}`) : t(`parcels:npState.${v}`))
   const hasFilters = !!(urlQuery || status || clientId || representativeId || warehouseId || paymentStatus || paymentClaimed || deliveryCity || needsEnrichment || sort || npGroup || channel)
 
   const query = useParcels({
@@ -98,13 +101,14 @@ export function ParcelsListPage() {
     paymentClaimed,
     deliveryCity,
     channel,
+    npState: npStates,
     needsEnrichment,
     page,
     size,
     sort,
   })
   const data = query.data ?? emptyPage<ParcelResponse>()
-  const rows = npGroup ? data.content.filter((p) => inNpStateGroup(p, npGroup)) : data.content
+  const rows = data.content
 
   const [rawSelected, setSelected] = useState<Set<string | number>>(new Set())
   const [moving, setMoving] = useState(false)
@@ -117,7 +121,6 @@ export function ParcelsListPage() {
   const chips = [
     deliveryCity && { key: 'city', label: t('parcels:fields.deliveryCity'), value: deliveryCity, clear: () => (setCityInput(''), set({ deliveryCity: undefined })) },
     channel && { key: 'channel', label: t('common:channelField.label'), value: t(`common:channel.${channel}`), clear: () => set({ channel: undefined }) },
-    npGroup && { key: 'np', label: t('parcels:fields.npState'), value: t(`parcels:filters.npState.${npGroup}`), clear: () => set({ npState: undefined }) },
     // the archive shows no «Неоплачені» toggle: an unpaid filter carried over is a chip there
     paymentStatus === 'UNPAID' && archive && { key: 'unpaid', label: t('parcels:payment.title'), value: t('parcels:filters.unpaid'), clear: () => set({ paymentStatus: undefined }) },
     paymentStatus === 'PAID' && { key: 'paid', label: t('parcels:payment.title'), value: t('parcels:filters.paid'), clear: () => set({ paymentStatus: undefined }) },
@@ -191,8 +194,9 @@ export function ParcelsListPage() {
             <Input className="bg-background pl-8" placeholder={t('parcels:filters.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           {TAB_FILTER_STATUSES[tab].length > 1 && (
+            <FilterField label={t('parcels:filters.label.status')} className="min-w-48 flex-[1_1_12rem]">
             <Select value={status ?? ALL} onValueChange={(v) => set({ status: v === ALL || !v ? undefined : String(v) })}>
-              <SelectTrigger className="min-w-48 flex-[1_1_12rem]" data-testid="status-filter">
+              <SelectTrigger className="w-full" data-testid="status-filter">
                 <SelectValue>{status ? t(`common:parcelStatus.${status}`) : t('parcels:filters.allStatuses')}</SelectValue>
               </SelectTrigger>
               <SelectContent>
@@ -204,19 +208,35 @@ export function ParcelsListPage() {
                 ))}
               </SelectContent>
             </Select>
+            </FilterField>
           )}
-          <div className="min-w-52 flex-[1_1_13rem] [&_button]:bg-background">
+          <FilterField label={t('parcels:filters.label.npState')} className="min-w-44 flex-[1_1_11rem]">
+          <Select value={npGroup ?? ALL} onValueChange={(v) => set({ npState: v === ALL || !v ? undefined : String(v) })}>
+            <SelectTrigger className="w-full" data-testid="np-state-filter">
+              <SelectValue>{npLabel(npGroup)}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>{t('parcels:filters.npStateAll')}</SelectItem>
+              {NP_FILTER_STATES.map((v) => (
+                <SelectItem key={v} value={v}>
+                  {t(`parcels:npState.${v}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          </FilterField>
+          <FilterField label={t('parcels:filters.label.client')} className="min-w-52 flex-[1_1_13rem] [&_button]:bg-background">
             <ClientPicker value={clientId} onChange={(v) => set({ clientId: v })} placeholder={t('parcels:filters.client')} />
-          </div>
+          </FilterField>
           {/* who holds it and where: nothing to ask about once it is delivered or cancelled */}
           {!archive && (
             <>
-              <div className="min-w-48 flex-[1_1_12rem]">
+              <FilterField label={t('parcels:filters.label.holder')} className="min-w-48 flex-[1_1_12rem]">
                 <UserSelect role={['REPRESENTATIVE', 'DRIVER']} value={representativeId} onChange={(v) => set({ representativeId: v })} noneLabel={t('parcels:filters.allRepresentatives')} className="w-full" />
-              </div>
-              <div className="min-w-44 flex-[1_1_11rem]">
+              </FilterField>
+              <FilterField label={t('parcels:filters.label.warehouse')} className="min-w-44 flex-[1_1_11rem]">
                 <WarehouseSelect value={warehouseId} onChange={(v) => set({ warehouseId: v })} noneLabel={t('parcels:filters.allWarehouses')} />
-              </div>
+              </FilterField>
             </>
           )}
         </div>
@@ -244,7 +264,7 @@ export function ParcelsListPage() {
               {(claimed?.parcels ?? 0) > 0 && <span className="rounded-full bg-amber-400 px-1.5 text-xs text-amber-950">{claimed?.parcels}</span>}
             </Toggle>
           )}
-          <span className="ml-auto text-sm text-muted-foreground">{t('parcels:list.found', { count: npGroup ? rows.length : (data.totalElements ?? 0) })}</span>
+          <span className="ml-auto text-sm text-muted-foreground">{t('parcels:list.found', { count: data.totalElements ?? 0 })}</span>
           <Popover>
             <PopoverTrigger render={<Button size="sm" variant="outline" className="bg-background" />}>
               <SlidersHorizontal />
@@ -258,23 +278,6 @@ export function ParcelsListPage() {
               <FilterField label={t('common:channelField.label')}>
                 <ChannelSelect className="w-full" value={channel ?? ''} onChange={(v) => set({ channel: v })} noneLabel={t('common:channelField.all')} />
               </FilterField>
-              {tab === 'np' && (
-                <FilterField label={t('parcels:fields.npState')}>
-                  <Select value={npGroup ?? ALL} onValueChange={(v) => set({ npState: v === ALL || !v ? undefined : String(v) })}>
-                    <SelectTrigger data-testid="np-state-filter">
-                      <SelectValue>{npGroup ? t(`parcels:filters.npState.${npGroup}`) : t('parcels:filters.npStateAll')}</SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={ALL}>{t('parcels:filters.npStateAll')}</SelectItem>
-                      {(Object.keys(NP_STATE_GROUPS) as NpStateGroup[]).map((g) => (
-                        <SelectItem key={g} value={g}>
-                          {t(`parcels:filters.npState.${g}`)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </FilterField>
-              )}
               {canSeeMoney && (
                 <FilterField label={t('parcels:payment.title')}>
                   <Select value={paymentStatus ?? ALL} onValueChange={(v) => set({ paymentStatus: v === ALL || !v ? undefined : String(v) })}>
@@ -344,9 +347,9 @@ export function ParcelsListPage() {
 }
 
 /** A labelled field of the «Ще фільтри» popover. */
-function FilterField({ label, children }: { label: ReactNode; children: ReactNode }) {
+function FilterField({ label, children, className }: { label: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <div className="flex flex-col gap-1">
+    <div className={cn('flex flex-col gap-1', className)}>
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
       {children}
     </div>

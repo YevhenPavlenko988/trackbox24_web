@@ -56,6 +56,16 @@ export async function run() {
     ok('all tab lists parcels already collected', true)
     await shot('02-parcels-list')
 
+    // Nova Poshta's state is filtered on the server, on every tab
+    const npReq = page.waitForRequest((r) => r.url().includes('/api/parcels?') && r.url().includes('npState=RETURNING'))
+    await page.click('[data-testid=np-state-filter]')
+    await page.locator('[data-slot=select-item]', { hasText: 'Відмова / повернення' }).click()
+    await npReq
+    ok('the NP state filter asks the server', page.url().includes('npState=RETURNING'))
+    await page.waitForTimeout(600)
+    await shot('02b-np-filter')
+    await page.goto(BASE + '/parcels')
+
     await page.reload()
     await page.waitForSelector('table tbody tr:has-text("PT")')
     ok('session survives reload', !page.url().includes('/login'))

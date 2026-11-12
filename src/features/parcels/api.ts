@@ -6,6 +6,7 @@ import type {
   Channel,
   DeletedItem,
   NpShipmentRequest,
+  NpState,
   ParcelCreateRequest,
   ParcelHistoryResponse,
   ParcelKind,
@@ -35,6 +36,8 @@ export type ParcelListParams = PageParams & {
   channel?: Channel
   /** PARCEL — only parcels, MOVE — only moves; absent — both. */
   kind?: ParcelKind
+  /** Nova Poshta's state of the incoming waybill or of our own; any of these. */
+  npState?: NpState[]
   query?: string
 }
 
@@ -53,6 +56,7 @@ export async function listParcels(params: ParcelListParams): Promise<Page<Parcel
           deliveryCity: params.deliveryCity || undefined,
           channel: params.channel,
           kind: params.kind,
+          npState: params.npState?.length ? params.npState : undefined,
           query: params.query || undefined,
           page: params.page,
           size: params.size,

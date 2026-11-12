@@ -95,6 +95,16 @@ export function inNpStateGroup(p: NpParcel, group: NpStateGroup): boolean {
   return (NP_STATE_GROUPS[group] as NpState[]).includes(state)
 }
 
+/** The states the parcels list filters by, in the order a parcel goes through them. */
+export const NP_FILTER_STATES: NpState[] = ['CREATED', 'IN_TRANSIT', 'ARRIVED', 'DELIVERY_FAILED', 'RECEIVED', 'RETURNING', 'REDIRECTED', 'NOT_FOUND']
+
+/** The `npState` of a link: one state, or one of the older groups («live», «problem»…) as its states. */
+export function npStatesOf(param: string | undefined): NpState[] | undefined {
+  if (!param) return undefined
+  if (isNpStateGroup(param)) return [...NP_STATE_GROUPS[param]].filter((s) => s !== 'OTHER') as NpState[]
+  return (NP_FILTER_STATES as string[]).includes(param) ? [param as NpState] : undefined
+}
+
 /** Nova Poshta already closed this waybill (picked up, redirected, returning, deleted) — not "live" for pickup. */
 export function isGoneFromNp(p: NpParcel): boolean {
   return !inNpStateGroup(p, 'live')
