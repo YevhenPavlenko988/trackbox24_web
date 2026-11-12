@@ -94,6 +94,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/trips/{tripId}/expenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Змінити витрату
+         * @description Менеджер — будь-яку, водій — ту, що вніс сам.
+         */
+        put: operations["update_2"];
+        post?: never;
+        /**
+         * Видалити витрату
+         * @description Менеджер — будь-яку, водій — ту, що вніс сам. Фото чека видаляється теж.
+         */
+        delete: operations["delete_2"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips/{id}": {
         parameters: {
             query?: never;
@@ -107,13 +131,13 @@ export interface paths {
          * Змінити план рейсу
          * @description Тільки MANAGER, до виїзду. Машину й водія можна змінити лише до початку завантаження (PLANNED).
          */
-        put: operations["update_2"];
+        put: operations["update_3"];
         post?: never;
         /**
          * Видалити рейс
          * @description М'яке видалення: запис позначається видаленим і зникає з усіх списків, його можна відновити. Для помилково створеного рейсу: лише запланований, у який нічого не завантажено, або скасований. Заплановані посилки звільняються.
          */
-        delete: operations["delete_2"];
+        delete: operations["delete_3"];
         options?: never;
         head?: never;
         patch?: never;
@@ -204,13 +228,13 @@ export interface paths {
          *     Кількість місць можна змінити, поки жодне місце не завантажено (місця додаються / прибираються з кінця).
          *     Водій змінює посилку, поки вона в нас (ACCEPTED_BY_DRIVER, AT_WAREHOUSE, IN_CAR), разом із ціною доставки; представник — без ціни доставки.
          */
-        put: operations["update_3"];
+        put: operations["update_4"];
         post?: never;
         /**
          * Видалити посилку
          * @description М'яке видалення: запис позначається видаленим і зникає з усіх списків, його можна відновити. Для помилково доданої посилки: лише не завантажену в машину й не видану (у НП, отримана, на складі, скасована). Знімається з плану рейсу, зникає зі списків і сканів; з НП повторно не імпортується. Інакше — скасувати.
          */
-        delete: operations["delete_3"];
+        delete: operations["delete_4"];
         options?: never;
         head?: never;
         patch?: never;
@@ -371,13 +395,13 @@ export interface paths {
         };
         get?: never;
         /** Змінити вантажника */
-        put: operations["update_4"];
+        put: operations["update_5"];
         post?: never;
         /**
          * Видалити вантажника
          * @description У кошик; у роботах, де він був, лишається.
          */
-        delete: operations["delete_4"];
+        delete: operations["delete_5"];
         options?: never;
         head?: never;
         patch?: never;
@@ -549,7 +573,7 @@ export interface paths {
          * Оновити реквізити компанії
          * @description Менеджер може змінювати тільки свою компанію.
          */
-        put: operations["update_5"];
+        put: operations["update_6"];
         post?: never;
         delete?: never;
         options?: never;
@@ -840,13 +864,13 @@ export interface paths {
         /** Клієнт за ID */
         get: operations["get_6"];
         /** Оновити клієнта */
-        put: operations["update_6"];
+        put: operations["update_7"];
         post?: never;
         /**
          * Видалити клієнта
          * @description М'яке видалення: запис позначається видаленим і зникає з усіх списків, його можна відновити. Лише клієнта без посилок у роботі (усі видані або скасовані). Зникає зі списків і пошуку, у старих посилках лишається.
          */
-        delete: operations["delete_5"];
+        delete: operations["delete_6"];
         options?: never;
         head?: never;
         patch?: never;
@@ -862,13 +886,13 @@ export interface paths {
         /** Машина за ID */
         get: operations["get_7"];
         /** Оновити машину */
-        put: operations["update_7"];
+        put: operations["update_8"];
         post?: never;
         /**
          * Видалити машину
          * @description М'яке видалення: запис позначається видаленим і зникає з усіх списків, його можна відновити. Не можна, поки машина в незавершеному рейсі. Зникає зі списків, у старих рейсах лишається.
          */
-        delete: operations["delete_6"];
+        delete: operations["delete_7"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1007,6 +1031,51 @@ export interface paths {
          */
         post: operations["create_2"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{tripId}/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Витрати рейсу
+         * @description Від найранішої. Водій бачить витрати своїх рейсів.
+         */
+        get: operations["list_3"];
+        put?: never;
+        /**
+         * Додати витрату
+         * @description Водій — до свого рейсу, менеджер — до будь-якого; не до скасованого.
+         */
+        post: operations["add"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/trips/{tripId}/expenses/{id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Фото чека
+         * @description JPEG, PNG, HEIC чи WebP; зберігається як WebP з мініатюрою. Нове замінює старе.
+         */
+        post: operations["setReceipt"];
+        /** Прибрати фото чека */
+        delete: operations["deleteReceipt"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1296,7 +1365,7 @@ export interface paths {
          * Маршрути
          * @description Новіші першими, кожен із плечима й тим, де зараз вантаж.
          */
-        get: operations["list_3"];
+        get: operations["list_4"];
         put?: never;
         /**
          * Створити маршрут
@@ -1673,7 +1742,7 @@ export interface paths {
          * Додати місця
          * @description Забуті речі: нові місця з наступними номерами. Лише до завантаження; до 500 місць.
          */
-        post: operations["add"];
+        post: operations["add_1"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1914,7 +1983,7 @@ export interface paths {
          * Вантажники
          * @description За прізвищем; `city` — лише з цього міста.
          */
-        get: operations["list_4"];
+        get: operations["list_5"];
         put?: never;
         /**
          * Додати вантажника
@@ -2205,7 +2274,7 @@ export interface paths {
          * Список компаній
          * @description Тільки ADMIN.
          */
-        get: operations["list_5"];
+        get: operations["list_6"];
         put?: never;
         /**
          * Створити компанію
@@ -2270,7 +2339,7 @@ export interface paths {
             cookie?: never;
         };
         /** Список машин */
-        get: operations["list_6"];
+        get: operations["list_7"];
         put?: never;
         /** Додати машину */
         post: operations["create_8"];
@@ -2484,7 +2553,7 @@ export interface paths {
          * @description MANAGER. У кошик разом із плечима, поки нічого не завантажили (плечі заплановані або скасовані); вантаж
          *     виходить із маршруту й лишається, де був. Відновлення — POST /{id}/restore.
          */
-        delete: operations["delete_7"];
+        delete: operations["delete_8"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2854,7 +2923,7 @@ export interface paths {
          * Онлайн-оплати посилки чи переїзду
          * @description MANAGER або VIEWER: рахунки клієнта у провайдера й повідомлення про переказ, від нових.
          */
-        get: operations["list_7"];
+        get: operations["list_8"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3617,6 +3686,95 @@ export interface components {
              * @example true
              */
             syncEnabled?: boolean;
+        };
+        TripExpenseRequest: {
+            /**
+             * @description FUEL — пальне, TOLL — дороги й віньєтки, PARKING — стоянка, REPAIR — ремонт, FINE — штраф, OTHER — інше
+             * @example FUEL
+             * @enum {string}
+             */
+            kind: "FUEL" | "TOLL" | "PARKING" | "REPAIR" | "FINE" | "OTHER";
+            /** @example 85.4 */
+            amount: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description COLLECTED_CASH — з отриманої готівки (менше на руках), OWN — власні гроші водія, COMPANY — картка чи рахунок компанії
+             * @example COLLECTED_CASH
+             * @enum {string}
+             */
+            paidFrom: "COLLECTED_CASH" | "OWN" | "COMPANY";
+            /**
+             * Format: int64
+             * @description Хто заплатив; немає — водій, що вносить, або основний водій рейсу
+             * @example 5
+             */
+            spentById?: number;
+            /**
+             * Format: date-time
+             * @description Коли; немає — зараз
+             * @example 2026-11-12T08:30:00Z
+             */
+            spentAt?: string;
+            /** @example Shell, Познань */
+            note?: string;
+        };
+        /** @description Витрата рейсу */
+        TripExpenseResponse: {
+            /**
+             * Format: int64
+             * @example 12
+             */
+            id?: number;
+            /**
+             * @example FUEL
+             * @enum {string}
+             */
+            kind?: "FUEL" | "TOLL" | "PARKING" | "REPAIR" | "FINE" | "OTHER";
+            /** @example Пальне */
+            kindLabel?: string;
+            /** @example 85.4 */
+            amount?: number;
+            /**
+             * @example EUR
+             * @enum {string}
+             */
+            currency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @example COLLECTED_CASH
+             * @enum {string}
+             */
+            paidFrom?: "COLLECTED_CASH" | "OWN" | "COMPANY";
+            /** @example З отриманої готівки */
+            paidFromLabel?: string;
+            /**
+             * Format: int64
+             * @example 5
+             */
+            spentById?: number;
+            /** @example Петренко Олег */
+            spentByName?: string;
+            /**
+             * Format: date-time
+             * @example 2026-11-12T08:30:00Z
+             */
+            spentAt?: string;
+            /** @example Shell, Познань */
+            note?: string;
+            /** @description Фото чека (посилання діє обмежений час); немає — без фото */
+            receiptUrl?: string;
+            /** @description Мініатюра фото чека */
+            receiptThumbUrl?: string;
+            /** @example Петренко Олег */
+            createdByName?: string;
+            /**
+             * @description Поточний користувач може змінити чи видалити
+             * @example true
+             */
+            editable?: boolean;
         };
         TripRequest: {
             /**
@@ -7964,6 +8122,16 @@ export interface components {
              * @example 1.42
              */
             perKm?: number;
+            /**
+             * @description Витрати у валюті звітів
+             * @example 2100
+             */
+            expensesReport?: number;
+            /**
+             * @description Прибуток у валюті звітів
+             * @example 8320
+             */
+            profitReport?: number;
         };
         /** @description Один рейс за період: що віз, скільки заробив і проїхав */
         TripRow: {
@@ -8054,6 +8222,18 @@ export interface components {
              * @example 1.48
              */
             perKm?: number;
+            /** @description Витрати рейсу за валютами */
+            expenses?: components["schemas"]["CurrencyAmount"][];
+            /**
+             * @description Витрати у валюті звітів (кожна за курсом свого дня)
+             * @example 420
+             */
+            expensesReport?: number;
+            /**
+             * @description Прибуток: виручка мінус витрати, у валюті звітів
+             * @example 1410.4
+             */
+            profitReport?: number;
         };
         /** @description Рейси, що виїхали за період: перевезено, виручка, отримано, пробіг; разом за машинами й водіями */
         TripsReportResponse: {
@@ -8294,7 +8474,7 @@ export interface components {
              */
             reportAmount?: number;
         };
-        /** @description Готівка на руках у людини в одній валюті зараз: отримала готівкою за весь час мінус здала */
+        /** @description Готівка на руках у людини в одній валюті зараз: отримала готівкою за весь час мінус витратила з неї в рейсах мінус здала */
         CashOnHand: {
             /**
              * Format: int64
@@ -8313,6 +8493,11 @@ export interface components {
              * @example 3200
              */
             taken?: number;
+            /**
+             * @description Витрачено з отриманої готівки на рейси (пальне, дороги…) за весь час
+             * @example 120
+             */
+            spent?: number;
             /**
              * @description Здано за весь час
              * @example 2800
@@ -9782,6 +9967,205 @@ export interface operations {
             };
         };
     };
+    update_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TripExpenseRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TripExpenseResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    delete_2: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     get_2: {
         parameters: {
             query?: never;
@@ -9881,7 +10265,7 @@ export interface operations {
             };
         };
     };
-    update_2: {
+    update_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -9987,7 +10371,7 @@ export interface operations {
             };
         };
     };
-    delete_2: {
+    delete_3: {
         parameters: {
             query?: never;
             header?: never;
@@ -10612,7 +10996,7 @@ export interface operations {
             };
         };
     };
-    update_3: {
+    update_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -10718,7 +11102,7 @@ export interface operations {
             };
         };
     };
-    delete_3: {
+    delete_4: {
         parameters: {
             query?: never;
             header?: never;
@@ -11836,7 +12220,7 @@ export interface operations {
             };
         };
     };
-    update_4: {
+    update_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -11942,7 +12326,7 @@ export interface operations {
             };
         };
     };
-    delete_4: {
+    delete_5: {
         parameters: {
             query?: never;
             header?: never;
@@ -13531,7 +13915,7 @@ export interface operations {
             };
         };
     };
-    update_5: {
+    update_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -15172,7 +15556,7 @@ export interface operations {
             };
         };
     };
-    update_6: {
+    update_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -15278,7 +15662,7 @@ export interface operations {
             };
         };
     };
-    delete_5: {
+    delete_6: {
         parameters: {
             query?: never;
             header?: never;
@@ -15468,7 +15852,7 @@ export interface operations {
             };
         };
     };
-    update_7: {
+    update_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -15574,7 +15958,7 @@ export interface operations {
             };
         };
     };
-    delete_6: {
+    delete_7: {
         parameters: {
             query?: never;
             header?: never;
@@ -16503,6 +16887,415 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/trips"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    list_3: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                tripId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TripExpenseResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/trips/{tripId}/expenses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{tripId}/expenses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{tripId}/expenses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{tripId}/expenses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    add: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TripExpenseRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TripExpenseResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{tripId}/expenses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{tripId}/expenses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{tripId}/expenses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/trips/{tripId}/expenses"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TripExpenseResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}/receipt"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}/receipt"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}/receipt"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}/receipt"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteReceipt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tripId: number;
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["TripExpenseResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}/receipt"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}/receipt"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}/receipt"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/trips/{tripId}/expenses/{id}/receipt"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -17825,7 +18618,7 @@ export interface operations {
             };
         };
     };
-    list_3: {
+    list_4: {
         parameters: {
             query?: {
                 /** @description Zero-based page index (0..N) */
@@ -19537,7 +20330,7 @@ export interface operations {
             };
         };
     };
-    add: {
+    add_1: {
         parameters: {
             query?: never;
             header?: never;
@@ -21011,7 +21804,7 @@ export interface operations {
             };
         };
     };
-    list_4: {
+    list_5: {
         parameters: {
             query?: {
                 /**
@@ -22811,7 +23604,7 @@ export interface operations {
             };
         };
     };
-    list_5: {
+    list_6: {
         parameters: {
             query?: {
                 /** @description Zero-based page index (0..N) */
@@ -23261,7 +24054,7 @@ export interface operations {
             };
         };
     };
-    list_6: {
+    list_7: {
         parameters: {
             query?: {
                 /** @description Zero-based page index (0..N) */
@@ -24327,7 +25120,7 @@ export interface operations {
             };
         };
     };
-    delete_7: {
+    delete_8: {
         parameters: {
             query?: never;
             header?: never;
@@ -25938,7 +26731,7 @@ export interface operations {
             };
         };
     };
-    list_7: {
+    list_8: {
         parameters: {
             query?: never;
             header?: {

@@ -153,3 +153,7 @@ export type WarehouseStock = Schemas['WarehouseStock']
 export type StockRow = Schemas['StockRow']
 export type StuckResponse = Schemas['StuckResponse']
 export type StuckRow = Schemas['StuckRow']
+export type TripExpenseRequest = Schemas['TripExpenseRequest']
+export type TripExpenseResponse = Schemas['TripExpenseResponse']
+export type ExpenseKind = NonNullable<TripExpenseRequest['kind']>
+export type ExpensePaidFrom = NonNullable<TripExpenseRequest['paidFrom']>
