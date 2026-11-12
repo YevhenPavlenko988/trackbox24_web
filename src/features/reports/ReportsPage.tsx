@@ -11,11 +11,12 @@ import { CURRENCY_SYMBOL, MONEY_ORDER } from '@/lib/format'
 import { useSetReportCurrency } from './api'
 import { CashReport } from './CashReport'
 import { DebtsReport } from './DebtsReport'
+import { DriversReport } from './DriversReport'
 import { StuckReport } from './StuckReport'
 import { TripsReport } from './TripsReport'
 import { WarehousesReport } from './WarehousesReport'
 
-const TABS = ['cash', 'debts', 'trips', 'warehouses', 'stuck'] as const
+const TABS = ['cash', 'debts', 'trips', 'drivers', 'warehouses', 'stuck'] as const
 
 /** «Звіти»: the cash of a period and who owes; totals in the company's report currency. */
 export function ReportsPage() {
@@ -50,6 +51,9 @@ export function ReportsPage() {
         </TabsContent>
         <TabsContent value="trips" className="mt-4">
           <TripsReport />
+        </TabsContent>
+        <TabsContent value="drivers" className="mt-4">
+          <DriversReport />
         </TabsContent>
         <TabsContent value="warehouses" className="mt-4">
           <WarehousesReport />

@@ -32,6 +32,8 @@ export function CashReport() {
   const [removing, setRemoving] = useState<{ id: number; name?: string; amount: string } | null>(null)
   const [allPayments, setAllPayments] = useState(false)
   const r = query.data
+  // the column shows only where a driver kept pay out of the cash
+  const anyPaidOut = (r?.onHand ?? []).some((h) => (h.paidOut ?? 0) !== 0)
   const rc = (r?.reportCurrency ?? 'UAH') as Currency
   const method = (m?: string) => (m ? t(`common:paymentMethod.${m}`) : t('reports:cash.methodNone'))
 
@@ -111,6 +113,7 @@ export function CashReport() {
                         <TableHead>{t('reports:cash.person')}</TableHead>
                         <TableHead className="text-right">{t('reports:cash.taken')}</TableHead>
                         <TableHead className="text-right">{t('reports:cash.spent')}</TableHead>
+                        {anyPaidOut && <TableHead className="text-right">{t('reports:cash.paidOut')}</TableHead>}
                         <TableHead className="text-right">{t('reports:cash.handedOver')}</TableHead>
                         <TableHead className="text-right">{t('reports:cash.left')}</TableHead>
                         {canEdit && <TableHead />}
@@ -122,6 +125,7 @@ export function CashReport() {
                           <TableCell className="font-medium">{h.name}</TableCell>
                           <TableCell className="text-right tabular-nums">{formatMoney(h.taken, h.currency as Currency)}</TableCell>
                           <TableCell className="text-right tabular-nums">{formatMoney(h.spent, h.currency as Currency)}</TableCell>
+                          {anyPaidOut && <TableCell className="text-right tabular-nums">{formatMoney(h.paidOut, h.currency as Currency)}</TableCell>}
                           <TableCell className="text-right tabular-nums">{formatMoney(h.handedOver, h.currency as Currency)}</TableCell>
                           <TableCell className={cn('text-right font-semibold tabular-nums', (h.onHand ?? 0) < 0 && 'text-destructive')}>
                             {formatMoney(h.onHand, h.currency as Currency)}
