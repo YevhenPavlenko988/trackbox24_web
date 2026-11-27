@@ -7,7 +7,8 @@
     "info": "Дані",
     "users": "Користувачі",
     "crm": "CRM",
-    "billing": "Оплата"
+    "billing": "Оплата",
+    "contract": "Договір"
   },
   "fields": {
     "name": "Назва",

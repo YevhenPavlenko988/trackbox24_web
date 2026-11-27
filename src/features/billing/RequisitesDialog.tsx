@@ -11,7 +11,7 @@ import { showApiError } from '@/lib/api/problem'
 import type { BillingRequisitesDto } from '@/lib/api/types'
 import { useRequisites, useSetRequisites } from './queries'
 
-const FIELDS = ['name', 'taxId', 'address', 'iban', 'bank', 'email', 'phone'] as const
+const FIELDS = ['name', 'taxId', 'address', 'iban', 'bank', 'email', 'phone', 'edrRecord', 'taxGroup', 'signer', 'city'] as const
 
 /** Our details on the invoices carriers get: who to pay and where; the admin keeps them. */
 export function RequisitesDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
@@ -19,7 +19,7 @@ export function RequisitesDialog({ open, onOpenChange }: { open: boolean; onOpen
   const requisites = useRequisites().data
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{t('requisites.title')}</DialogTitle>
           <DialogDescription>{t('requisites.hint')}</DialogDescription>
@@ -53,7 +53,7 @@ function RequisitesForm({ initial, onDone }: { initial: BillingRequisitesDto; on
 
   return (
     <>
-      <FieldGroup>
+      <FieldGroup className="grid gap-4 sm:grid-cols-2">
         {FIELDS.map((key) => (
           <Field key={key}>
             <FieldLabel htmlFor={`req-${key}`}>{t(`billing:requisites.${key}`)}</FieldLabel>
@@ -66,7 +66,7 @@ function RequisitesForm({ initial, onDone }: { initial: BillingRequisitesDto; on
             />
           </Field>
         ))}
-        <Field>
+        <Field className="sm:col-span-2">
           <FieldLabel htmlFor="req-notes">{t('billing:requisites.notes')}</FieldLabel>
           <Textarea
             id="req-notes"

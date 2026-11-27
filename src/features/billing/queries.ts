@@ -1,11 +1,24 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { companyKeys } from '@/features/companies/queries'
 import { crmKeys } from '@/features/crm/queries'
-import type { BillingItem, BillingPaymentMethodRequest, BillingPaymentRequest, BillingRequisitesDto, InvoicePaymentRequest } from '@/lib/api/types'
+import type {
+  BillingItem,
+  BillingPaymentMethodRequest,
+  BillingPaymentRequest,
+  BillingRequisitesDto,
+  CompanyContractDto,
+  ContractFileKind,
+  InvoicePaymentRequest,
+} from '@/lib/api/types'
 import type { MoneyCurrency } from '@/lib/format'
 import {
   cancelInvoice,
+  addContractFile,
   createPayment,
+  deleteContractFile,
+  getContract,
+  listContractFiles,
+  saveContract,
   deleteCancelledInvoices,
   deleteInvoice,
   deletePayment,
@@ -47,6 +60,8 @@ export const billingKeys = {
   methods: ['billing', 'methods'] as const,
   invoice: (id: number) => ['billing', 'invoice', id] as const,
   requisites: ['billing', 'requisites'] as const,
+  contract: (id: number) => ['billing', 'contract', id] as const,
+  contractFiles: (id: number) => ['billing', 'contract-files', id] as const,
   rate: (id: number, currency: string) => ['billing', 'rate', id, currency] as const,
 }
 
@@ -105,3 +120,11 @@ export const useSetRequisites = () => useBillingMutation((body: BillingRequisite
 /** A failed answer is not retried: the rate is then typed in. */
 export const useInvoiceRate = (id: number, currency: MoneyCurrency, enabled: boolean) =>
   useQuery({ queryKey: billingKeys.rate(id, currency), queryFn: () => invoiceRate(id, currency), enabled, retry: false })
+
+export const useContract = (companyId: number) => useQuery({ queryKey: billingKeys.contract(companyId), queryFn: () => getContract(companyId) })
+export const useSaveContract = (companyId: number) => useBillingMutation((body: CompanyContractDto) => saveContract(companyId, body))
+export const useContractFiles = (companyId: number) =>
+  useQuery({ queryKey: billingKeys.contractFiles(companyId), queryFn: () => listContractFiles(companyId) })
+export const useAddContractFile = (companyId: number) =>
+  useBillingMutation(({ kind, file, name }: { kind: ContractFileKind; file: Blob; name: string }) => addContractFile(companyId, kind, file, name))
+export const useDeleteContractFile = (companyId: number) => useBillingMutation((fileId: number) => deleteContractFile(companyId, fileId))

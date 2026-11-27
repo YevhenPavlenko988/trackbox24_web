@@ -670,6 +670,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/crm/companies/{id}/contract": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Договір з компанією
+         * @description Умови й дані Замовника для документа; ще не збережений — заповнений з картки компанії.
+         */
+        get: operations["contract"];
+        /**
+         * Зберегти договір
+         * @description Ціни в договорі — ціни компанії: їх змінюють окремо (`…/prices/{code}`).
+         */
+        put: operations["saveContract"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/crm/companies/{id}/billing-enabled": {
         parameters: {
             query?: never;
@@ -2485,6 +2509,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/crm/companies/{id}/contract/files": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Файли договору
+         * @description Згенеровані Word і підписані примірники, нові зверху; посилання діють годину.
+         */
+        get: operations["contractFiles"];
+        put?: never;
+        /**
+         * Зберегти файл договору
+         * @description Word, PDF або фото (jpg, png, heic), до 20 МБ. `kind`: GENERATED — згенерований, SIGNED — підписаний.
+         */
+        post: operations["addContractFile"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies": {
         parameters: {
             query?: never;
@@ -4023,6 +4071,23 @@ export interface paths {
          * @description Скасовані рахунки без оплат; ті, за якими є оплати, лишаються. Відповідь — скільки видалено.
          */
         delete: operations["deleteCancelled"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/companies/{id}/contract/files/{fileId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Видалити файл договору */
+        delete: operations["deleteContractFile"];
         options?: never;
         head?: never;
         patch?: never;
@@ -6261,6 +6326,26 @@ export interface components {
              * @example Платник єдиного податку 3 групи, не платник ПДВ
              */
             notes?: string;
+            /**
+             * @description Запис в ЄДР (для договору)
+             * @example від 01.02.2020 № 2 415 000 0000 012345
+             */
+            edrRecord?: string;
+            /**
+             * @description Податковий статус (для договору)
+             * @example платник єдиного податку 3 групи, не платник ПДВ
+             */
+            taxGroup?: string;
+            /**
+             * @description Хто підписує: Прізвище І. П.
+             * @example Петренко О. І.
+             */
+            signer?: string;
+            /**
+             * @description Місто укладення договорів
+             * @example Львів
+             */
+            city?: string;
         };
         BillingPriceRequest: {
             /**
@@ -6736,6 +6821,11 @@ export interface components {
              * @example 150
              */
             amountEur?: number;
+            /**
+             * @description Увімкнено для компанії зараз (базовий — завжди)
+             * @example true
+             */
+            enabled?: boolean;
         };
         InvoiceLineResponse: {
             /**
@@ -6813,6 +6903,113 @@ export interface components {
              * @example 150
              */
             amountEur?: number;
+        };
+        CompanyContractDto: {
+            /**
+             * @description Номер договору
+             * @example 3
+             */
+            number?: string;
+            /**
+             * Format: date
+             * @description Дата підписання
+             * @example 2026-12-01
+             */
+            signedOn?: string;
+            /**
+             * @description Місто укладення
+             * @example Львів
+             */
+            city?: string;
+            /**
+             * Format: int32
+             * @description Діє до 31 грудня цього року, далі продовжується щороку
+             * @example 2027
+             */
+            validUntilYear?: number;
+            /**
+             * Format: int32
+             * @description Тестовий період, днів
+             * @example 14
+             */
+            trialDays?: number;
+            /**
+             * Format: int32
+             * @description Днів на оплату рахунку
+             * @example 7
+             */
+            paymentDays?: number;
+            /**
+             * Format: int32
+             * @description Прострочка, після якої доступ призупиняється, днів
+             * @example 14
+             */
+            suspendAfterDays?: number;
+            /**
+             * Format: int32
+             * @description Повідомлення про розірвання, днів
+             * @example 30
+             */
+            terminationDays?: number;
+            /**
+             * Format: int32
+             * @description Повідомлення про зміну цін, днів
+             * @example 30
+             */
+            priceNoticeDays?: number;
+            /**
+             * @description Замовник: найменування або ПІБ ФОП
+             * @example ТОВ «ЛелекаGo»
+             */
+            clientName?: string;
+            /**
+             * @description ЄДРПОУ або РНОКПП
+             * @example 12345678
+             */
+            clientTaxId?: string;
+            /** @description Адреса */
+            clientAddress?: string;
+            /** @description IBAN */
+            clientIban?: string;
+            /** @description Банк */
+            clientBank?: string;
+            /**
+             * @description Податковий статус
+             * @example не платник ПДВ
+             */
+            clientTaxStatus?: string;
+            /**
+             * Format: email
+             * @description Email для рахунків
+             */
+            clientEmail?: string;
+            /** @description Телефон */
+            clientPhone?: string;
+            /**
+             * @description Посада підписанта
+             * @example директор
+             */
+            signerPosition?: string;
+            /**
+             * @description ПІБ підписанта
+             * @example Петренко Олег Іванович
+             */
+            signerName?: string;
+            /**
+             * @description В особі — посада й ПІБ у родовому відмінку
+             * @example директора Петренка Олега Івановича
+             */
+            signerInPerson?: string;
+            /**
+             * @description Діє на підставі
+             * @example Статуту
+             */
+            signerBasis?: string;
+            /**
+             * Format: date-time
+             * @description Збережено; немає — ще не зберігали, поля з картки компанії
+             */
+            readonly updatedAt?: string;
         };
         CompanyRequest: {
             /**
@@ -8643,6 +8840,43 @@ export interface components {
              * @example 2026-10-28T10:00:00Z
              */
             at?: string;
+        };
+        ContractFileResponse: {
+            /**
+             * Format: int64
+             * @description ID
+             * @example 4
+             */
+            id?: number;
+            /**
+             * @description GENERATED — згенерований Word, SIGNED — підписаний примірник
+             * @example SIGNED
+             * @enum {string}
+             */
+            kind?: "GENERATED" | "SIGNED";
+            /**
+             * @description Назва файлу
+             * @example Договір 3 ЛелекаGo (підписаний).pdf
+             */
+            fileName?: string;
+            /**
+             * Format: int64
+             * @description Розмір, байт
+             * @example 182044
+             */
+            sizeBytes?: number;
+            /** @description Посилання на завантаження, діє годину */
+            url?: string;
+            /**
+             * @description Хто зберіг
+             * @example Олена Петренко
+             */
+            createdBy?: string;
+            /**
+             * Format: date-time
+             * @description Коли
+             */
+            createdAt?: string;
         };
         ChangePasswordRequest: {
             /**
@@ -16231,6 +16465,211 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/crm/companies/{id}/prices/{code}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    contract: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyContractDto"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/companies/{id}/contract"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/companies/{id}/contract"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/companies/{id}/contract"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/companies/{id}/contract"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    saveContract: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyContractDto"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyContractDto"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/companies/{id}/contract"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/companies/{id}/contract"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/companies/{id}/contract"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/companies/{id}/contract"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -26695,6 +27134,216 @@ export interface operations {
             };
         };
     };
+    contractFiles: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContractFileResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/companies/{id}/contract/files"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/companies/{id}/contract/files"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/companies/{id}/contract/files"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/companies/{id}/contract/files"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    addContractFile: {
+        parameters: {
+            query: {
+                kind: "GENERATED" | "SIGNED";
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["ContractFileResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/companies/{id}/contract/files"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/companies/{id}/contract/files"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/companies/{id}/contract/files"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/companies/{id}/contract/files"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     list_6: {
         parameters: {
             query?: {
@@ -33974,6 +34623,98 @@ export interface operations {
                      *       "status": 403,
                      *       "detail": "Access Denied",
                      *       "instance": "/api/crm/invoices/cancelled"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteContractFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                fileId: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/companies/{id}/contract/files/{fileId}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/companies/{id}/contract/files/{fileId}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/companies/{id}/contract/files/{fileId}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/companies/{id}/contract/files/{fileId}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

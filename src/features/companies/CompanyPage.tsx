@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAccess } from '@/features/auth/access'
 import { useCompanyView } from '@/features/auth/companyView'
 import { CompanyBillingSection } from '@/features/billing/CompanyBillingSection'
+import { ContractSection } from '@/features/billing/contract/ContractSection'
 import { CompanyCrmSection } from '@/features/crm/CompanyCrmSection'
 import { UsersSection } from '@/features/users/UsersSection'
 import { useListParams } from '@/hooks/use-list-params'
@@ -86,6 +87,7 @@ export function CompanyPage() {
           {isAdmin && <TabsTrigger value="users">{t('companies:tabs.users')}</TabsTrigger>}
           <TabsTrigger value="crm">{t('companies:tabs.crm')}</TabsTrigger>
           <TabsTrigger value="billing">{t('companies:tabs.billing')}</TabsTrigger>
+          <TabsTrigger value="contract">{t('companies:tabs.contract')}</TabsTrigger>
         </TabsList>
         <TabsContent value="info" className="mt-4">
           <CompanyDetails company={company} />
@@ -98,6 +100,9 @@ export function CompanyPage() {
         </TabsContent>
         <TabsContent value="billing" className="mt-4">
           {tab === 'billing' && <CompanyBillingSection companyId={companyId} />}
+        </TabsContent>
+        <TabsContent value="contract" className="mt-4">
+          {tab === 'contract' && <ContractSection companyId={companyId} />}
         </TabsContent>
       </Tabs>
 

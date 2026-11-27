@@ -9,6 +9,9 @@ import type {
   BillingPaymentResponse,
   BillingPaymentSummaryResponse,
   CompanyBalanceResponse,
+  CompanyContractDto,
+  ContractFileKind,
+  ContractFileResponse,
   BillingPriceResponse,
   BillingRequisitesDto,
   CompanyBillingResponse,
@@ -144,4 +147,32 @@ export function setBillingEnabled(id: number, value: boolean): Promise<CompanyBi
 export async function deleteCancelledInvoices(): Promise<number> {
   const data = (await unwrap(api.DELETE('/api/crm/invoices/cancelled'))) as { deleted?: number }
   return data?.deleted ?? 0
+}
+
+export function getContract(companyId: number): Promise<CompanyContractDto> {
+  return unwrap(api.GET('/api/crm/companies/{id}/contract', { params: { path: { id: companyId } } }))
+}
+
+export function saveContract(companyId: number, body: CompanyContractDto): Promise<CompanyContractDto> {
+  return unwrap(api.PUT('/api/crm/companies/{id}/contract', { params: { path: { id: companyId } }, body }))
+}
+
+export function listContractFiles(companyId: number): Promise<ContractFileResponse[]> {
+  return unwrap(api.GET('/api/crm/companies/{id}/contract/files', { params: { path: { id: companyId } } }))
+}
+
+export function addContractFile(companyId: number, kind: ContractFileKind, file: Blob, name: string): Promise<ContractFileResponse> {
+  const body = new FormData()
+  body.append('file', file, name)
+  return unwrap(
+    api.POST('/api/crm/companies/{id}/contract/files', {
+      params: { path: { id: companyId }, query: { kind } },
+      body: body as unknown as { file: string },
+      bodySerializer: (b) => b as unknown as FormData,
+    }),
+  )
+}
+
+export async function deleteContractFile(companyId: number, fileId: number): Promise<void> {
+  await unwrap(api.DELETE('/api/crm/companies/{id}/contract/files/{fileId}', { params: { path: { id: companyId, fileId } } }))
 }
