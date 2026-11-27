@@ -47,7 +47,7 @@ export async function run() {
 
     // the client's page: what is still owed
     await page.goto(BASE + `/companies/${company.id}?tab=billing`)
-    await page.waitForSelector('[data-testid=company-balance]')
+    await page.waitForFunction(() => /\d/.test(document.querySelector('[data-testid=company-balance]')?.textContent ?? ''))
     const debt = await page.locator('[data-testid=company-balance]').textContent()
     ok('the balance is the debt left', debt.replace(/\s/g, '').startsWith(comma(Math.round((invoice.amountEur - part) * 100) / 100)), debt)
     ok('the debt is named', (await page.locator('dt', { hasText: 'Борг' }).count()) === 1)
@@ -75,6 +75,22 @@ export async function run() {
     await page.waitForSelector('text=Форму оплати додано')
     ok('a new way to pay is added', (await dialog().locator(`input[value="Крипта ${u}"]`).count()) === 1)
     await shot('06-methods')
+
+    // the client's own price instead of the general one
+    await page.goto(BASE + `/companies/${company.id}?tab=billing`)
+    const base = page.locator('[data-testid=company-price-BASE]')
+    await base.locator('input').fill('150')
+    await base.getByRole('button', { name: 'Зберегти' }).click()
+    await page.waitForSelector('text=Ціну збережено')
+    await base.locator('text=своя ціна').waitFor()
+    ok('the own price is marked', (await base.locator('text=своя ціна').count()) === 1)
+    ok('the month costs by it', (await page.locator('text=180 €').count()) >= 1)
+    await base.scrollIntoViewIfNeeded()
+    await shot('07-own-price')
+    await base.getByRole('button', { name: 'Повернути загальну ціну' }).click()
+    await page.waitForSelector('text=Повернуто загальну ціну')
+    await base.locator('text=своя ціна').waitFor({ state: 'detached' })
+    ok('back to the general price', (await page.locator('text=200 €').count()) >= 1)
   } catch (e) {
     return r.finish(e)
   }

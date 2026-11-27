@@ -13,6 +13,7 @@ import type { CompanyBillingResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { formatEur, formatPeriod } from './format'
+import { CompanyPricesCard } from './CompanyPricesCard'
 import { InvoiceLines } from './InvoiceLines'
 import { InvoicesTable } from './InvoicesTable'
 import { PaymentDialog } from './PaymentDialog'
@@ -49,6 +50,7 @@ export function CompanyBillingSection({ companyId }: { companyId: number }) {
           )}
         </CardContent>
       </Card>
+      <CompanyPricesCard companyId={companyId} prices={b.prices ?? []} />
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>{t('company.invoices')}</CardTitle>
@@ -112,12 +114,12 @@ function PaymentsCard({ companyId }: { companyId: number }) {
             <dd className="text-xl font-semibold tabular-nums">{formatEur(balance?.paidEur)}</dd>
           </div>
           <div>
-            <dt className="text-sm text-muted-foreground">{t(b < 0 ? 'company.debt' : b > 0 ? 'company.overpaid' : 'company.settled')}</dt>
+            <dt className="text-sm text-muted-foreground">{balance ? t(b < 0 ? 'company.debt' : b > 0 ? 'company.overpaid' : 'company.settled') : t('company.balance')}</dt>
             <dd
               className={cn('text-xl font-semibold tabular-nums', b < 0 && 'text-destructive', b > 0 && 'text-emerald-700 dark:text-emerald-400')}
               data-testid="company-balance"
             >
-              {formatEur(Math.abs(b))}
+              {balance ? formatEur(Math.abs(b)) : '—'}
             </dd>
           </div>
         </dl>
