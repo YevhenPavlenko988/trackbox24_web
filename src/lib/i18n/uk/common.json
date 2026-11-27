@@ -22,6 +22,7 @@
     "crmDeals": "Угоди",
     "crmTasks": "Задачі",
     "crmInvoices": "Рахунки",
+    "crmPayments": "Оплати",
     "crmTeam": "Команда",
     "paymentClaimed_one": "{{count}} клієнт повідомив про оплату — перевірте надходження",
     "paymentClaimed_few": "{{count}} клієнти повідомили про оплату — перевірте надходження",

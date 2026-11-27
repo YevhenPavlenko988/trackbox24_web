@@ -518,6 +518,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/crm/payments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Виправити оплату
+         * @description Рахунок, який перестав бути покритим, знову чекає оплати.
+         */
+        put: operations["updatePayment"];
+        post?: never;
+        /**
+         * Видалити оплату
+         * @description Внесену помилково; рахунок, який перестав бути покритим, знову чекає оплати.
+         */
+        delete: operations["deletePayment"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/payment-methods/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Змінити форму оплати
+         * @description Перейменувати або приховати; оплати з нею лишаються.
+         */
+        put: operations["updatePaymentMethod"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/crm/deals/{id}": {
         parameters: {
             query?: never;
@@ -2125,6 +2169,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/crm/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Оплати
+         * @description Журнал оплат клієнтів, нові зверху. Фільтри — разом.
+         */
+        get: operations["payments"];
+        put?: never;
+        /**
+         * Внести оплату
+         * @description Оплата клієнта: до рахунку (тоді він оплачений, коли оплати його покривають) або без рахунку — аванс.
+         */
+        post: operations["createPayment"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/payment-methods": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Форми оплати
+         * @description Усі, разом із прихованими, у порядку показу.
+         */
+        get: operations["paymentMethods"];
+        put?: never;
+        /** Додати форму оплати */
+        post: operations["createPaymentMethod"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/crm/invoices/{id}/send": {
         parameters: {
             query?: never;
@@ -2176,8 +2265,9 @@ export interface paths {
         put?: never;
         /**
          * Позначити оплаченим
-         * @description Чернетка або надісланий. Сума без значення — сума рахунку. Закриває задачу про прострочку
-         *     і повертає доступ компанії, якщо більше нічого не прострочено понад 14 днів.
+         * @description Чернетка або надісланий: вносить оплату до журналу. Сума без значення — решта до сплати. Коли оплати покривають
+         *     рахунок, він оплачений: задачу про прострочку закрито, доступ компанії повернуто, якщо більше нічого не
+         *     прострочено понад 14 днів. Менша сума — часткова оплата, рахунок лишається до сплати.
          */
         post: operations["pay"];
         delete?: never;
@@ -3472,6 +3562,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/crm/payments/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Підсумок оплат
+         * @description Кількість і сума за тими самими фільтрами, з розбивкою за формами оплати.
+         */
+        get: operations["paymentsSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/crm/invoices": {
         parameters: {
             query?: never;
@@ -3562,6 +3672,26 @@ export interface paths {
          *     і історія вмикання опцій.
          */
         get: operations["companyBilling"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/companies/{id}/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Баланс компанії
+         * @description Виставлено, сплачено і різниця: борг або переплата.
+         */
+        get: operations["balance_1"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3781,7 +3911,7 @@ export interface paths {
         put?: never;
         post?: never;
         /** Видалити оплату клієнта */
-        delete: operations["deletePayment"];
+        delete: operations["deletePayment_1"];
         options?: never;
         head?: never;
         patch?: never;
@@ -6008,6 +6138,154 @@ export interface components {
              */
             updatedAt?: string;
         };
+        BillingPaymentRequest: {
+            /**
+             * Format: int64
+             * @description Компанія-клієнт
+             * @example 3
+             */
+            companyId: number;
+            /**
+             * Format: int64
+             * @description Рахунок, який оплачено; без — аванс або оплата без рахунку
+             * @example 12
+             */
+            invoiceId?: number;
+            /**
+             * Format: date
+             * @description Дата оплати
+             * @example 2026-11-05
+             */
+            paidOn: string;
+            /**
+             * @description Зараховано, EUR
+             * @example 200
+             */
+            amountEur: number;
+            /**
+             * Format: int64
+             * @description Форма оплати
+             * @example 1
+             */
+            methodId: number;
+            /**
+             * @description Скільки фактично надійшло, якщо не в євро
+             * @example 9800
+             */
+            receivedAmount?: number;
+            /**
+             * @description Валюта фактичної суми
+             * @example UAH
+             * @enum {string}
+             */
+            receivedCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Номер платіжки або квитанції
+             * @example ПН-1043
+             */
+            reference?: string;
+            /**
+             * @description Коментар
+             * @example Переказ з ФОП Коваль
+             */
+            note?: string;
+        };
+        BillingPaymentMethodResponse: {
+            /**
+             * Format: int64
+             * @description ID
+             * @example 1
+             */
+            id?: number;
+            /**
+             * @description Назва
+             * @example Банківський переказ
+             */
+            name?: string;
+            /**
+             * @description Пропонується для нових оплат
+             * @example true
+             */
+            active?: boolean;
+        };
+        BillingPaymentResponse: {
+            /**
+             * Format: int64
+             * @description ID
+             * @example 7
+             */
+            id?: number;
+            /** @description Компанія-клієнт */
+            company?: components["schemas"]["CrmRef"];
+            /**
+             * Format: int64
+             * @description ID рахунку; немає — аванс або оплата без рахунку
+             * @example 12
+             */
+            invoiceId?: number;
+            /**
+             * Format: date
+             * @description Місяць рахунку (перше число)
+             * @example 2026-11-01
+             */
+            invoicePeriod?: string;
+            /**
+             * Format: date
+             * @description Дата оплати
+             * @example 2026-11-05
+             */
+            paidOn?: string;
+            /**
+             * @description Зараховано, EUR
+             * @example 200
+             */
+            amountEur?: number;
+            /** @description Форма оплати; немає — внесено до журналу, невідомо */
+            method?: components["schemas"]["BillingPaymentMethodResponse"];
+            /**
+             * @description Скільки фактично надійшло, якщо не в євро
+             * @example 9800
+             */
+            receivedAmount?: number;
+            /**
+             * @description Валюта фактичної суми
+             * @example UAH
+             * @enum {string}
+             */
+            receivedCurrency?: "UAH" | "EUR" | "USD" | "PLN";
+            /**
+             * @description Номер платіжки або квитанції
+             * @example ПН-1043
+             */
+            reference?: string;
+            /**
+             * @description Коментар
+             * @example Переказ з ФОП Коваль
+             */
+            note?: string;
+            /**
+             * @description Хто вніс; немає — перенесено зі старих рахунків
+             * @example Олена Петренко
+             */
+            createdBy?: string;
+            /**
+             * Format: date-time
+             * @description Коли внесено
+             */
+            createdAt?: string;
+        };
+        BillingPaymentMethodRequest: {
+            /**
+             * @description Назва
+             * @example PayPal
+             */
+            name: string;
+            /**
+             * @description Пропонувати для нових оплат; без — так
+             * @example true
+             */
+            active?: boolean;
+        };
         CrmContactRequest: {
             /**
              * @description Ім'я та прізвище
@@ -7995,10 +8273,15 @@ export interface components {
              */
             paidOn?: string;
             /**
-             * @description Скільки сплачено, EUR
+             * @description Скільки сплачено, EUR (разом усі оплати за рахунком)
              * @example 229.35
              */
             paidAmountEur?: number;
+            /**
+             * @description Залишилось сплатити, EUR (0 — оплачено або скасовано)
+             * @example 0
+             */
+            remainingEur?: number;
             /**
              * @description Коментар до оплати
              * @example Переказ з ФОП Коваль
@@ -8018,15 +8301,26 @@ export interface components {
              */
             paidOn: string;
             /**
-             * @description Скільки сплачено, EUR; без — сума рахунку
+             * @description Скільки сплачено, EUR; без — решта до сплати за рахунком
              * @example 229.35
              */
             amountEur?: number;
             /**
-             * @description Коментар: звідки переказ, номер платежу
+             * @description Коментар: звідки переказ
              * @example Переказ з ФОП Коваль
              */
             note?: string;
+            /**
+             * Format: int64
+             * @description Форма оплати; без — не вказано
+             * @example 1
+             */
+            methodId?: number;
+            /**
+             * @description Номер платіжки або квитанції
+             * @example ПН-1043
+             */
+            reference?: string;
         };
         CrmStageChangeRequest: {
             /**
@@ -10082,6 +10376,40 @@ export interface components {
             content?: components["schemas"]["BankRateChangeResponse"][];
             page?: components["schemas"]["PageMetadata"];
         };
+        PagedModelBillingPaymentResponse: {
+            content?: components["schemas"]["BillingPaymentResponse"][];
+            page?: components["schemas"]["PageMetadata"];
+        };
+        BillingPaymentSummaryResponse: {
+            /**
+             * Format: int64
+             * @description Оплат за фільтром
+             * @example 14
+             */
+            count?: number;
+            /**
+             * @description Разом, EUR
+             * @example 2830
+             */
+            totalEur?: number;
+            /** @description За формами оплати, більші суми зверху */
+            byMethod?: components["schemas"]["ByMethod"][];
+        };
+        ByMethod: {
+            /** @description Форма оплати; немає — невідомо */
+            method?: components["schemas"]["BillingPaymentMethodResponse"];
+            /**
+             * Format: int64
+             * @description Оплат
+             * @example 9
+             */
+            count?: number;
+            /**
+             * @description Сума, EUR
+             * @example 1800
+             */
+            amountEur?: number;
+        };
         PagedModelInvoiceResponse: {
             content?: components["schemas"]["InvoiceResponse"][];
             page?: components["schemas"]["PageMetadata"];
@@ -10123,6 +10451,23 @@ export interface components {
         PagedModelCrmContactResponse: {
             content?: components["schemas"]["CrmContactResponse"][];
             page?: components["schemas"]["PageMetadata"];
+        };
+        CompanyBalanceResponse: {
+            /**
+             * @description Виставлено: надіслані й оплачені рахунки, EUR
+             * @example 600
+             */
+            invoicedEur?: number;
+            /**
+             * @description Сплачено: усі оплати, EUR
+             * @example 400
+             */
+            paidEur?: number;
+            /**
+             * @description Сплачено мінус виставлено: менше нуля — борг, більше — переплата (аванс)
+             * @example -200
+             */
+            balanceEur?: number;
         };
         PagedModelCompanyResponse: {
             content?: components["schemas"]["CompanyResponse"][];
@@ -14467,6 +14812,309 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/crm/prices/{code}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updatePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BillingPaymentResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/payments/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/payments/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/payments/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/payments/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deletePayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/payments/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/payments/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/payments/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/payments/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    updatePaymentMethod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingPaymentMethodRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BillingPaymentMethodResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/payment-methods/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/payment-methods/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/payment-methods/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/payment-methods/{id}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -23907,6 +24555,353 @@ export interface operations {
             };
         };
     };
+    payments: {
+        parameters: {
+            query?: {
+                /** @description Компанія */
+                companyId?: number;
+                /** @description Рахунок */
+                invoiceId?: number;
+                /** @description Форма оплати */
+                methodId?: number;
+                /** @description З дати (включно) */
+                from?: string;
+                /** @description По дату (включно) */
+                to?: string;
+                /** @description Zero-based page index (0..N) */
+                page?: number;
+                /** @description The size of the page to be returned */
+                size?: number;
+                /** @description Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported. */
+                sort?: string[];
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["PagedModelBillingPaymentResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createPayment: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingPaymentRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BillingPaymentResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/payments"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    paymentMethods: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BillingPaymentMethodResponse"][];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/payment-methods"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/payment-methods"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/payment-methods"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    createPaymentMethod: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BillingPaymentMethodRequest"];
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BillingPaymentMethodResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/payment-methods"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/payment-methods"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/payment-methods"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     send: {
         parameters: {
             query?: never;
@@ -30459,6 +31454,91 @@ export interface operations {
             };
         };
     };
+    paymentsSummary: {
+        parameters: {
+            query?: {
+                companyId?: number;
+                invoiceId?: number;
+                methodId?: number;
+                from?: string;
+                to?: string;
+            };
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["BillingPaymentSummaryResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/payments/summary"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/payments/summary"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/payments/summary"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     invoices: {
         parameters: {
             query?: {
@@ -30920,6 +32000,105 @@ export interface operations {
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
                      *       "instance": "/api/crm/companies/{id}/billing"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    balance_1: {
+        parameters: {
+            query?: never;
+            header?: {
+                /**
+                 * @description Тільки для адміна платформи: ID компанії, дані якої переглядаються (лише читання)
+                 * @example 1
+                 */
+                "X-Company-Id"?: number;
+            };
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyBalanceResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/companies/{id}/balance"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/companies/{id}/balance"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/companies/{id}/balance"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/companies/{id}/balance"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -31822,7 +33001,7 @@ export interface operations {
             };
         };
     };
-    deletePayment: {
+    deletePayment_1: {
         parameters: {
             query?: never;
             header?: never;

@@ -15,7 +15,18 @@ export function InvoicesTable({ invoices, isLoading, showCompany = true }: { inv
     { key: 'id', header: t('fields.number'), cell: (i) => <span className="text-muted-foreground tabular-nums">{i.id}</span> },
     { key: 'period', header: t('fields.period'), cell: (i) => <span className="capitalize">{formatPeriod(i.period)}</span> },
     ...(showCompany ? [{ key: 'company', header: t('fields.company'), cell: (i: InvoiceResponse) => <span className="font-medium">{i.company?.name}</span> }] : []),
-    { key: 'amount', header: t('fields.amount'), cell: (i) => <span className="tabular-nums">{formatEur(i.amountEur)}</span> },
+    {
+      key: 'amount',
+      header: t('fields.amount'),
+      cell: (i) => (
+        <span className="tabular-nums">
+          {formatEur(i.amountEur)}
+          {(i.status === 'SENT' || i.status === 'DRAFT') && !!i.paidAmountEur && (
+            <span className="block text-xs text-muted-foreground">{t('invoice.partlyPaid', { amount: formatEur(i.paidAmountEur) })}</span>
+          )}
+        </span>
+      ),
+    },
     { key: 'status', header: t('fields.status'), cell: (i) => <InvoiceStatusBadge invoice={i} /> },
     { key: 'dueOn', header: t('fields.dueOn'), cell: (i) => (i.dueOn ? formatDate(i.dueOn) : '—') },
     { key: 'paidOn', header: t('fields.paidOn'), cell: (i) => (i.paidOn ? formatDate(i.paidOn) : '—') },

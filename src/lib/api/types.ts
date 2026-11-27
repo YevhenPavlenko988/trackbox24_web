@@ -123,6 +123,12 @@ export type InvoiceLineResponse = Schemas['InvoiceLineResponse']
 export type InvoiceStatus = NonNullable<InvoiceResponse['status']>
 export type InvoicePaymentRequest = Schemas['InvoicePaymentRequest']
 export type InvoiceSummaryResponse = Schemas['InvoiceSummaryResponse']
+export type BillingPaymentRequest = Schemas['BillingPaymentRequest']
+export type BillingPaymentResponse = Schemas['BillingPaymentResponse']
+export type BillingPaymentSummaryResponse = Schemas['BillingPaymentSummaryResponse']
+export type BillingPaymentMethodRequest = Schemas['BillingPaymentMethodRequest']
+export type BillingPaymentMethodResponse = Schemas['BillingPaymentMethodResponse']
+export type CompanyBalanceResponse = Schemas['CompanyBalanceResponse']
 export type CrmStageRole = NonNullable<CrmStageResponse['role']>
 
 // «Онлайн-оплата»

@@ -14,7 +14,8 @@ import { formatEur, formatPeriod } from './format'
 import { InvoiceLines } from './InvoiceLines'
 import { InvoiceStatusBadge } from './InvoiceStatusBadge'
 import { PayDialog } from './PayDialog'
-import { useCancelInvoice, useRecalculateInvoice, useSendInvoice } from './queries'
+import { PaymentsTable } from './PaymentsTable'
+import { useCancelInvoice, usePayments, useRecalculateInvoice, useSendInvoice } from './queries'
 
 /** One invoice: its lines, dates and the next step — send a draft, enter the payment, or cancel. */
 export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceResponse | null; onOpenChange: (o: boolean) => void }) {
@@ -24,6 +25,7 @@ export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceRespo
   const recalculate = useRecalculateInvoice()
   const [paying, setPaying] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const payments = usePayments({ invoiceId: invoice?.id, size: 50 }, { enabled: !!invoice?.paidAmountEur })
   if (!invoice) return null
   const id = invoice.id!
   const open = invoice.status === 'DRAFT' || invoice.status === 'SENT'
@@ -61,16 +63,21 @@ export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceRespo
               { label: t('billing:fields.amount'), value: <span className="font-semibold">{formatEur(invoice.amountEur)}</span> },
               ...(invoice.sentAt ? [{ label: t('billing:fields.sentAt'), value: formatDateTime(invoice.sentAt) }] : []),
               ...(invoice.dueOn ? [{ label: t('billing:fields.dueOn'), value: formatDate(invoice.dueOn) }] : []),
-              ...(invoice.paidOn
-                ? [
-                    { label: t('billing:fields.paidOn'), value: formatDate(invoice.paidOn) },
-                    { label: t('billing:fields.paidAmount'), value: formatEur(invoice.paidAmountEur) },
-                  ]
+              ...(invoice.paidOn ? [{ label: t('billing:fields.paidOn'), value: formatDate(invoice.paidOn) }] : []),
+              ...(invoice.paidAmountEur ? [{ label: t('billing:fields.paidAmount'), value: formatEur(invoice.paidAmountEur) }] : []),
+              ...(open && invoice.paidAmountEur
+                ? [{ label: t('billing:fields.remaining'), value: <span className="font-semibold">{formatEur(invoice.remainingEur)}</span> }]
                 : []),
               ...(invoice.paymentNote ? [{ label: t('billing:fields.note'), value: invoice.paymentNote }] : []),
             ]}
           />
           <InvoiceLines lines={invoice.lines ?? []} total={invoice.amountEur} />
+          {!!invoice.paidAmountEur && (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-medium">{t('billing:invoice.payments')}</p>
+              <PaymentsTable payments={payments.data?.content ?? []} isLoading={payments.isPending} showCompany={false} showInvoice={false} />
+            </div>
+          )}
           {invoice.status === 'DRAFT' && <p className="text-sm text-muted-foreground">{t('billing:invoice.sendHint')}</p>}
           {open && (
             <DialogFooter className="flex-wrap gap-2">
