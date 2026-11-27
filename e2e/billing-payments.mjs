@@ -24,7 +24,31 @@ export async function run() {
     await page.waitForSelector('[data-testid=payments-total]')
     ok('menu has «Оплати»', (await page.locator('[data-sidebar=menu-button]:has-text("Оплати")').count()) === 1)
 
+    // our details, then the invoice as a document in hryvnias at the official rate
+    await page.goto(BASE + '/crm/invoices')
+    await page.getByRole('button', { name: 'Реквізити' }).click()
+    await page.fill('#req-name', 'ФОП Тестова Олена Іванівна')
+    await page.fill('#req-taxId', '3012345678')
+    await page.fill('#req-address', 'м. Львів, вул. Тестова, 1')
+    await page.fill('#req-iban', 'UA21 3223 1300 0002 6007 2335 6600 1')
+    await page.fill('#req-bank', 'АТ «Тестбанк»')
+    await page.fill('#req-notes', 'Платник єдиного податку 3 групи, не платник ПДВ')
+    await dialog().getByRole('button', { name: 'Зберегти' }).click()
+    await page.waitForSelector('text=Реквізити збережено')
+    await page.goto(BASE + `/crm/invoices/${invoice.id}/print`)
+    await page.waitForSelector('text=Рахунок на оплату')
+    ok('the document has our IBAN and the client', (await page.locator('text=UA213223130000026007233566001').count()) === 1 && (await page.locator('article', { hasText: companyName }).count()) === 1)
+    // hryvnias by default, at the bank's sell rate
+    await page.waitForSelector('text=Курс продажу')
+    ok('in hryvnias at the bank rate', (await page.locator('article', { hasText: 'грн' }).count()) === 1)
+    await shot('08-invoice-uah')
+    await page.emulateMedia({ media: 'print' })
+    await page.pdf({ path: new URL('./shots/billing-payments/invoice.pdf', import.meta.url).pathname, format: 'A4', printBackground: true })
+    await page.emulateMedia({ media: 'screen' })
+
     // a partial payment, in hryvnias, by cash
+    await page.goto(BASE + '/crm/payments')
+    await page.waitForSelector('[data-testid=payments-total]')
     await page.getByRole('button', { name: 'Внести оплату' }).click()
     await page.click('#payment-company')
     await page.locator('[data-slot=command-input]').fill(companyName)

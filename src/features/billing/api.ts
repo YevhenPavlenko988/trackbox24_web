@@ -10,12 +10,15 @@ import type {
   BillingPaymentSummaryResponse,
   CompanyBalanceResponse,
   BillingPriceResponse,
+  BillingRequisitesDto,
   CompanyBillingResponse,
   InvoicePaymentRequest,
   InvoiceResponse,
   InvoiceStatus,
   InvoiceSummaryResponse,
+  InvoiceRateResponse,
 } from '@/lib/api/types'
+import type { MoneyCurrency } from '@/lib/format'
 
 export function listPrices(): Promise<BillingPriceResponse[]> {
   return unwrap(api.GET('/api/crm/prices'))
@@ -110,4 +113,21 @@ export function savePaymentMethod(id: number | undefined, body: BillingPaymentMe
   return id == null
     ? unwrap(api.POST('/api/crm/payment-methods', { body }))
     : unwrap(api.PUT('/api/crm/payment-methods/{id}', { params: { path: { id } }, body }))
+}
+
+export function getInvoice(id: number): Promise<InvoiceResponse> {
+  return unwrap(api.GET('/api/crm/invoices/{id}', { params: { path: { id } } }))
+}
+
+export function getRequisites(): Promise<BillingRequisitesDto> {
+  return unwrap(api.GET('/api/crm/requisites'))
+}
+
+export function setRequisites(body: BillingRequisitesDto): Promise<BillingRequisitesDto> {
+  return unwrap(api.PUT('/api/crm/requisites', { body }))
+}
+
+/** How much of the currency one euro is for the invoice document: the bank's sell rate when it was sent (now for a draft). */
+export function invoiceRate(id: number, currency: MoneyCurrency): Promise<InvoiceRateResponse> {
+  return unwrap(api.GET('/api/crm/invoices/{id}/rate', { params: { path: { id }, query: { currency } } }))
 }

@@ -1,19 +1,23 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { companyKeys } from '@/features/companies/queries'
 import { crmKeys } from '@/features/crm/queries'
-import type { BillingItem, BillingPaymentMethodRequest, BillingPaymentRequest, InvoicePaymentRequest } from '@/lib/api/types'
+import type { BillingItem, BillingPaymentMethodRequest, BillingPaymentRequest, BillingRequisitesDto, InvoicePaymentRequest } from '@/lib/api/types'
+import type { MoneyCurrency } from '@/lib/format'
 import {
   cancelInvoice,
   createPayment,
   deletePayment,
   generateInvoices,
   getCompanyBalance,
+  getInvoice,
+  getRequisites,
   getCompanyBilling,
   invoiceSummary,
   listInvoices,
   listPaymentMethods,
   listPayments,
   listPrices,
+  invoiceRate,
   payInvoice,
   paymentsSummary,
   recalculateInvoice,
@@ -21,6 +25,7 @@ import {
   sendInvoice,
   setCompanyPrice,
   setPrice,
+  setRequisites,
   setTrial,
   updatePayment,
   type InvoiceFilters,
@@ -37,6 +42,9 @@ export const billingKeys = {
   paymentsSummary: (f: PaymentFilters) => ['billing', 'payments-summary', f] as const,
   balance: (id: number) => ['billing', 'balance', id] as const,
   methods: ['billing', 'methods'] as const,
+  invoice: (id: number) => ['billing', 'invoice', id] as const,
+  requisites: ['billing', 'requisites'] as const,
+  rate: (id: number, currency: string) => ['billing', 'rate', id, currency] as const,
 }
 
 /**
@@ -83,3 +91,10 @@ export const useSavePayment = () =>
 export const useDeletePayment = () => useBillingMutation((id: number) => deletePayment(id))
 export const useSavePaymentMethod = () =>
   useBillingMutation(({ id, body }: { id?: number; body: BillingPaymentMethodRequest }) => savePaymentMethod(id, body))
+
+export const useInvoice = (id: number) => useQuery({ queryKey: billingKeys.invoice(id), queryFn: () => getInvoice(id) })
+export const useRequisites = () => useQuery({ queryKey: billingKeys.requisites, queryFn: getRequisites })
+export const useSetRequisites = () => useBillingMutation((body: BillingRequisitesDto) => setRequisites(body))
+/** A failed answer is not retried: the rate is then typed in. */
+export const useInvoiceRate = (id: number, currency: MoneyCurrency, enabled: boolean) =>
+  useQuery({ queryKey: billingKeys.rate(id, currency), queryFn: () => invoiceRate(id, currency), enabled, retry: false })
