@@ -130,6 +130,8 @@ export type BillingPaymentMethodRequest = Schemas['BillingPaymentMethodRequest']
 export type BillingPaymentMethodResponse = Schemas['BillingPaymentMethodResponse']
 export type CompanyBalanceResponse = Schemas['CompanyBalanceResponse']
 export type CompanyPriceResponse = Schemas['CompanyPriceResponse']
+export type BillingRequisitesDto = Schemas['BillingRequisitesDto']
+export type InvoiceRateResponse = Schemas['InvoiceRateResponse']
 export type CrmStageRole = NonNullable<CrmStageResponse['role']>
 
 // «Онлайн-оплата»

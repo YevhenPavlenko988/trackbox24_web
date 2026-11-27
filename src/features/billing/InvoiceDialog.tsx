@@ -1,9 +1,10 @@
-import { Ban, Calculator, CheckCircle2, Send } from 'lucide-react'
+import { Ban, Calculator, CheckCircle2, FileText, Send } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { LinkButton } from '@/components/common/LinkButton'
 import { DetailsList } from '@/components/common/DetailsList'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -79,6 +80,14 @@ export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceRespo
             </div>
           )}
           {invoice.status === 'DRAFT' && <p className="text-sm text-muted-foreground">{t('billing:invoice.sendHint')}</p>}
+          {invoice.status !== 'CANCELLED' && (
+            <div>
+              <LinkButton variant="outline" to={`/crm/invoices/${id}/print`}>
+                <FileText />
+                {t('billing:document.open')}
+              </LinkButton>
+            </div>
+          )}
           {open && (
             <DialogFooter className="flex-wrap gap-2">
               <Button variant="ghost" className="text-destructive sm:mr-auto" onClick={() => setCancelling(true)}>

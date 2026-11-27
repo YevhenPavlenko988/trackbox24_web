@@ -50,6 +50,8 @@ export const router = createBrowserRouter([
           { path: 'moves/:id/invoice', lazy: page(() => import('@/features/moves/MoveInvoicePage'), 'MoveInvoicePage') },
         ],
       },
+      // the platform team's invoice to a carrier, to print; the backend lets only ADMIN and SALES read it
+      { path: 'crm/invoices/:id/print', lazy: page(() => import('@/features/billing/InvoicePrintPage'), 'InvoicePrintPage') },
       {
         element: <AppShell />,
         children: [

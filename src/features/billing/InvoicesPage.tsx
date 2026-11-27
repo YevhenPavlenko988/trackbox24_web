@@ -1,4 +1,4 @@
-import { FilePlus2, Tags } from 'lucide-react'
+import { FilePlus2, Landmark, Tags } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pagination } from '@/components/common/Pagination'
@@ -15,6 +15,7 @@ import { formatEur } from './format'
 import { GenerateDialog } from './GenerateDialog'
 import { InvoicesTable } from './InvoicesTable'
 import { PricesDialog } from './PricesDialog'
+import { RequisitesDialog } from './RequisitesDialog'
 import { useInvoices, useInvoiceSummary } from './queries'
 
 const FILTERS: Record<string, { status?: InvoiceStatus[]; overdue?: boolean }> = {
@@ -33,6 +34,7 @@ export function InvoicesPage() {
   const filter = get('filter') ?? 'all'
   const [prices, setPrices] = useState(false)
   const [generating, setGenerating] = useState(false)
+  const [requisites, setRequisites] = useState(false)
   const summary = useInvoiceSummary().data
   const filters: InvoiceFilters = { ...FILTERS[filter], page, size }
   const query = useInvoices(filters)
@@ -45,6 +47,10 @@ export function InvoicesPage() {
         description={t('subtitle')}
         actions={
           <>
+            <Button variant="outline" onClick={() => setRequisites(true)}>
+              <Landmark />
+              {t('requisites.title')}
+            </Button>
             <Button variant="outline" onClick={() => setPrices(true)}>
               <Tags />
               {t('actions.prices')}
@@ -96,6 +102,7 @@ export function InvoicesPage() {
 
       <PricesDialog open={prices} onOpenChange={setPrices} />
       <GenerateDialog open={generating} onOpenChange={setGenerating} />
+      <RequisitesDialog open={requisites} onOpenChange={setRequisites} />
     </>
   )
 }
