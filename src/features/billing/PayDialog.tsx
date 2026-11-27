@@ -10,9 +10,9 @@ import { parseNumber } from '@/features/parcels/status'
 import { showApiError } from '@/lib/api/problem'
 import type { InvoiceResponse } from '@/lib/api/types'
 import { formatEur, isoDate } from './format'
-import { usePayInvoice } from './queries'
+import { usePaymentMethods, usePayInvoice } from './queries'
 
-/** A payment received outside the system: when, how much (the invoice amount unless said otherwise), from where. */
+/** A payment of the invoice received outside the system: when, how much (what is left unless said otherwise), how. */
 export function PayDialog({
   invoice,
   open,
@@ -29,10 +29,15 @@ export function PayDialog({
   const [paidOn, setPaidOn] = useState(() => isoDate(new Date()))
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
+  const [reference, setReference] = useState('')
+  const methods = (usePaymentMethods().data ?? []).filter((m) => m.active)
+  const [methodId, setMethodId] = useState<number>()
+  const method = methodId ?? methods[0]?.id
+  const left = invoice.remainingEur ?? invoice.amountEur
 
   const submit = async () => {
     try {
-      await pay.mutateAsync({ id: invoice.id!, body: { paidOn, amountEur: parseNumber(amount), note: note.trim() || undefined } })
+      await pay.mutateAsync({ id: invoice.id!, body: { paidOn, amountEur: parseNumber(amount), methodId: method, reference: reference.trim() || undefined, note: note.trim() || undefined } })
       toast.success(t('billing:toasts.paid'))
       onOpenChange(false)
       onPaid?.()
@@ -54,12 +59,30 @@ export function PayDialog({
           </Field>
           <Field>
             <FieldLabel htmlFor="paid-amount">{t('billing:fields.paidAmount')}, €</FieldLabel>
-            <Input id="paid-amount" inputMode="decimal" placeholder={String(invoice.amountEur ?? '')} value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <FieldDescription>{t('billing:pay.amountHint', { amount: formatEur(invoice.amountEur) })}</FieldDescription>
+            <Input id="paid-amount" inputMode="decimal" placeholder={String(left ?? '').replace('.', ',')} value={amount} onChange={(e) => setAmount(e.target.value)} />
+            <FieldDescription>
+              {left !== invoice.amountEur
+                ? t('billing:pay.amountLeftHint', { amount: formatEur(invoice.amountEur), left: formatEur(left) })
+                : t('billing:pay.amountHint', { amount: formatEur(invoice.amountEur) })}
+            </FieldDescription>
+          </Field>
+          <Field>
+            <FieldLabel>{t('billing:payment.method')}</FieldLabel>
+            <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t('billing:payment.method')}>
+              {methods.map((m) => (
+                <Button key={m.id} type="button" size="sm" role="radio" aria-checked={m.id === method} variant={m.id === method ? 'default' : 'outline'} onClick={() => setMethodId(m.id)}>
+                  {m.name}
+                </Button>
+              ))}
+            </div>
+          </Field>
+          <Field>
+            <FieldLabel htmlFor="paid-reference">{t('billing:payment.reference')}</FieldLabel>
+            <Input id="paid-reference" maxLength={100} placeholder={t('billing:payment.referencePlaceholder')} value={reference} onChange={(e) => setReference(e.target.value)} />
           </Field>
           <Field>
             <FieldLabel htmlFor="paid-note">{t('billing:fields.note')}</FieldLabel>
-            <Textarea id="paid-note" rows={2} maxLength={500} placeholder={t('billing:fields.notePlaceholder')} value={note} onChange={(e) => setNote(e.target.value)} />
+            <Textarea id="paid-note" rows={2} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)} />
           </Field>
         </FieldGroup>
         <DialogFooter>

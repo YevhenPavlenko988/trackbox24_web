@@ -1,20 +1,29 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { companyKeys } from '@/features/companies/queries'
 import { crmKeys } from '@/features/crm/queries'
-import type { BillingItem, InvoicePaymentRequest } from '@/lib/api/types'
+import type { BillingItem, BillingPaymentMethodRequest, BillingPaymentRequest, InvoicePaymentRequest } from '@/lib/api/types'
 import {
   cancelInvoice,
+  createPayment,
+  deletePayment,
   generateInvoices,
+  getCompanyBalance,
   getCompanyBilling,
   invoiceSummary,
   listInvoices,
+  listPaymentMethods,
+  listPayments,
   listPrices,
   payInvoice,
+  paymentsSummary,
   recalculateInvoice,
+  savePaymentMethod,
   sendInvoice,
   setPrice,
   setTrial,
+  updatePayment,
   type InvoiceFilters,
+  type PaymentFilters,
 } from './api'
 
 export const billingKeys = {
@@ -23,6 +32,10 @@ export const billingKeys = {
   company: (id: number) => ['billing', 'company', id] as const,
   invoices: (f: InvoiceFilters) => ['billing', 'invoices', f] as const,
   summary: ['billing', 'summary'] as const,
+  payments: (f: PaymentFilters) => ['billing', 'payments', f] as const,
+  paymentsSummary: (f: PaymentFilters) => ['billing', 'payments-summary', f] as const,
+  balance: (id: number) => ['billing', 'balance', id] as const,
+  methods: ['billing', 'methods'] as const,
 }
 
 /**
@@ -55,3 +68,15 @@ export const useSendInvoice = () => useBillingMutation((id: number) => sendInvoi
 export const useCancelInvoice = () => useBillingMutation((id: number) => cancelInvoice(id))
 export const useRecalculateInvoice = () => useBillingMutation((id: number) => recalculateInvoice(id))
 export const usePayInvoice = () => useBillingMutation(({ id, body }: { id: number; body: InvoicePaymentRequest }) => payInvoice(id, body))
+
+export const usePayments = (f: PaymentFilters, { enabled = true }: { enabled?: boolean } = {}) =>
+  useQuery({ queryKey: billingKeys.payments(f), queryFn: () => listPayments(f), placeholderData: keepPreviousData, enabled })
+export const usePaymentsSummary = (f: PaymentFilters) => useQuery({ queryKey: billingKeys.paymentsSummary(f), queryFn: () => paymentsSummary(f) })
+export const useCompanyBalance = (id: number) => useQuery({ queryKey: billingKeys.balance(id), queryFn: () => getCompanyBalance(id) })
+export const usePaymentMethods = () => useQuery({ queryKey: billingKeys.methods, queryFn: listPaymentMethods })
+
+export const useSavePayment = () =>
+  useBillingMutation(({ id, body }: { id?: number; body: BillingPaymentRequest }) => (id == null ? createPayment(body) : updatePayment(id, body)))
+export const useDeletePayment = () => useBillingMutation((id: number) => deletePayment(id))
+export const useSavePaymentMethod = () =>
+  useBillingMutation(({ id, body }: { id?: number; body: BillingPaymentMethodRequest }) => savePaymentMethod(id, body))

@@ -1,4 +1,4 @@
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -15,7 +15,9 @@ import { cn } from '@/lib/utils'
 import { formatEur, formatPeriod } from './format'
 import { InvoiceLines } from './InvoiceLines'
 import { InvoicesTable } from './InvoicesTable'
-import { useCompanyBilling, useInvoices, useSetTrial } from './queries'
+import { PaymentDialog } from './PaymentDialog'
+import { PaymentsTable } from './PaymentsTable'
+import { useCompanyBalance, useCompanyBilling, useInvoices, usePayments, useSetTrial } from './queries'
 
 /** The money side of a client company: tariff and trial, this month's forecast, its invoices, option history. */
 export function CompanyBillingSection({ companyId }: { companyId: number }) {
@@ -55,6 +57,7 @@ export function CompanyBillingSection({ companyId }: { companyId: number }) {
           <InvoicesTable invoices={invoices.data?.content ?? []} isLoading={invoices.isPending} showCompany={false} />
         </CardContent>
       </Card>
+      <PaymentsCard companyId={companyId} />
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>{t('company.history')}</CardTitle>
@@ -79,6 +82,50 @@ export function CompanyBillingSection({ companyId }: { companyId: number }) {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+/** What the client was billed and paid: the balance up top, then its payments. */
+function PaymentsCard({ companyId }: { companyId: number }) {
+  const { t } = useTranslation('billing')
+  const balance = useCompanyBalance(companyId).data
+  const payments = usePayments({ companyId, size: 100 })
+  const [adding, setAdding] = useState(false)
+  const b = balance?.balanceEur ?? 0
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-2">
+        <CardTitle>{t('company.payments')}</CardTitle>
+        <Button size="sm" onClick={() => setAdding(true)}>
+          <Plus />
+          {t('payment.add')}
+        </Button>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-5">
+        <dl className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <dt className="text-sm text-muted-foreground">{t('company.invoiced')}</dt>
+            <dd className="text-xl font-semibold tabular-nums">{formatEur(balance?.invoicedEur)}</dd>
+          </div>
+          <div>
+            <dt className="text-sm text-muted-foreground">{t('company.paid')}</dt>
+            <dd className="text-xl font-semibold tabular-nums">{formatEur(balance?.paidEur)}</dd>
+          </div>
+          <div>
+            <dt className="text-sm text-muted-foreground">{t(b < 0 ? 'company.debt' : b > 0 ? 'company.overpaid' : 'company.settled')}</dt>
+            <dd
+              className={cn('text-xl font-semibold tabular-nums', b < 0 && 'text-destructive', b > 0 && 'text-emerald-700 dark:text-emerald-400')}
+              data-testid="company-balance"
+            >
+              {formatEur(Math.abs(b))}
+            </dd>
+          </div>
+        </dl>
+        <p className="text-xs text-muted-foreground">{t('company.balanceHint')}</p>
+        <PaymentsTable payments={payments.data?.content ?? []} isLoading={payments.isPending} showCompany={false} />
+      </CardContent>
+      {adding && <PaymentDialog companyId={companyId} onOpenChange={setAdding} />}
+    </Card>
   )
 }
 
