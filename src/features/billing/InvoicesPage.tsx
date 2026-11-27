@@ -1,4 +1,7 @@
-import { FilePlus2, Landmark, Tags } from 'lucide-react'
+import { FilePlus2, Landmark, Tags, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
+import { ConfirmDialog } from '@/components/common/ConfirmDialog'
+import { showApiError } from '@/lib/api/problem'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Pagination } from '@/components/common/Pagination'
@@ -16,7 +19,7 @@ import { GenerateDialog } from './GenerateDialog'
 import { InvoicesTable } from './InvoicesTable'
 import { PricesDialog } from './PricesDialog'
 import { RequisitesDialog } from './RequisitesDialog'
-import { useInvoices, useInvoiceSummary } from './queries'
+import { useDeleteCancelledInvoices, useInvoices, useInvoiceSummary } from './queries'
 
 const FILTERS: Record<string, { status?: InvoiceStatus[]; overdue?: boolean }> = {
   all: {},
@@ -35,6 +38,8 @@ export function InvoicesPage() {
   const [prices, setPrices] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [requisites, setRequisites] = useState(false)
+  const [clearing, setClearing] = useState(false)
+  const clear = useDeleteCancelledInvoices()
   const summary = useInvoiceSummary().data
   const filters: InvoiceFilters = { ...FILTERS[filter], page, size }
   const query = useInvoices(filters)
@@ -95,6 +100,14 @@ export function InvoicesPage() {
         </TabsList>
       </Tabs>
 
+      {filter === 'cancelled' && data.content.length > 0 && (
+        <div className="mb-3 flex justify-end">
+          <Button variant="outline" className="text-destructive" onClick={() => setClearing(true)}>
+            <Trash2 />
+            {t('cancelledClear.action')}
+          </Button>
+        </div>
+      )}
       <InvoicesTable invoices={data.content} isLoading={query.isPending} />
       <div className="mt-4">
         <Pagination page={data} onPageChange={setPage} onSizeChange={setSize} />
@@ -103,6 +116,25 @@ export function InvoicesPage() {
       <PricesDialog open={prices} onOpenChange={setPrices} />
       <GenerateDialog open={generating} onOpenChange={setGenerating} />
       <RequisitesDialog open={requisites} onOpenChange={setRequisites} />
+      <ConfirmDialog
+        open={clearing}
+        onOpenChange={setClearing}
+        title={t('cancelledClear.action')}
+        description={t('cancelledClear.confirm')}
+        confirmLabel={t('cancelledClear.confirmButton')}
+        cancelLabel={t('cancelledClear.keep')}
+        destructive
+        pending={clear.isPending}
+        onConfirm={async () => {
+          try {
+            const count = await clear.mutateAsync(undefined)
+            toast.success(t('cancelledClear.done', { count }))
+            setClearing(false)
+          } catch (e) {
+            showApiError(e)
+          }
+        }}
+      />
     </>
   )
 }

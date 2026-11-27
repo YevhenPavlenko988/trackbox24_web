@@ -12,7 +12,7 @@ export function InvoicesTable({ invoices, isLoading, showCompany = true }: { inv
   const { t } = useTranslation('billing')
   const [selected, setSelected] = useState<InvoiceResponse | null>(null)
   const columns: Column<InvoiceResponse>[] = [
-    { key: 'id', header: t('fields.number'), cell: (i) => <span className="text-muted-foreground tabular-nums">{i.id}</span> },
+    { key: 'id', header: t('fields.number'), cell: (i) => <span className="text-muted-foreground tabular-nums">{i.number ?? '—'}</span> },
     { key: 'period', header: t('fields.period'), cell: (i) => <span className="capitalize">{formatPeriod(i.period)}</span> },
     ...(showCompany ? [{ key: 'company', header: t('fields.company'), cell: (i: InvoiceResponse) => <span className="font-medium">{i.company?.name}</span> }] : []),
     {

@@ -59,9 +59,9 @@ export function invoiceSummary(): Promise<InvoiceSummaryResponse> {
   return unwrap(api.GET('/api/crm/invoices/summary'))
 }
 
-/** @param period `yyyy-MM` */
-export async function generateInvoices(period: string): Promise<number> {
-  const data = (await unwrap(api.POST('/api/crm/invoices/generate', { params: { query: { period } } }))) as { created?: number }
+/** @param period `yyyy-MM`; @param companyId only these companies, none — every billed one */
+export async function generateInvoices(period: string, companyId?: number[]): Promise<number> {
+  const data = (await unwrap(api.POST('/api/crm/invoices/generate', { params: { query: { period, companyId } } }))) as { created?: number }
   return data?.created ?? 0
 }
 
@@ -130,4 +130,18 @@ export function setRequisites(body: BillingRequisitesDto): Promise<BillingRequis
 /** How much of the currency one euro is for the invoice document: the bank's sell rate when it was sent (now for a draft). */
 export function invoiceRate(id: number, currency: MoneyCurrency): Promise<InvoiceRateResponse> {
   return unwrap(api.GET('/api/crm/invoices/{id}/rate', { params: { path: { id }, query: { currency } } }))
+}
+
+export async function deleteInvoice(id: number): Promise<void> {
+  await unwrap(api.DELETE('/api/crm/invoices/{id}', { params: { path: { id } } }))
+}
+
+export function setBillingEnabled(id: number, value: boolean): Promise<CompanyBillingResponse> {
+  return unwrap(api.PUT('/api/crm/companies/{id}/billing-enabled', { params: { path: { id }, query: { value } } }))
+}
+
+/** Every cancelled invoice without payments; how many went. */
+export async function deleteCancelledInvoices(): Promise<number> {
+  const data = (await unwrap(api.DELETE('/api/crm/invoices/cancelled'))) as { deleted?: number }
+  return data?.deleted ?? 0
 }

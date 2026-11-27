@@ -12,7 +12,7 @@ export async function run() {
   const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
   await admin.post(`/api/crm/invoices/generate?period=${month}`)
   const invoice = (await admin.get(`/api/crm/invoices?companyId=${company.id}`)).content[0]
-  await admin.post(`/api/crm/invoices/${invoice.id}/send`)
+  const sent = await admin.post(`/api/crm/invoices/${invoice.id}/send`)
   const part = Math.round(invoice.amountEur * 50) / 100
   const comma = (n) => String(n).replace('.', ',')
 
@@ -36,7 +36,7 @@ export async function run() {
     await dialog().getByRole('button', { name: 'Зберегти' }).click()
     await page.waitForSelector('text=Реквізити збережено')
     await page.goto(BASE + `/crm/invoices/${invoice.id}/print`)
-    await page.waitForSelector('text=Рахунок на оплату')
+    await page.waitForSelector(`text=Рахунок на оплату № ${sent.number}`)
     ok('the document has our IBAN and the client', (await page.locator('text=UA213223130000026007233566001').count()) === 1 && (await page.locator('article', { hasText: companyName }).count()) === 1)
     // hryvnias by default, at the bank's sell rate
     await page.waitForSelector('text=Курс продажу')
@@ -53,7 +53,7 @@ export async function run() {
     await page.click('#payment-company')
     await page.locator('[data-slot=command-input]').fill(companyName)
     await page.locator('[data-slot=command-item]', { hasText: companyName }).click()
-    await r.pickSelect('payment-invoice', `№${invoice.id}`)
+    await r.pickSelect('payment-invoice', `№${sent.number}`)
     ok('the amount is what is left on the invoice', (await page.inputValue('#payment-amount')) === comma(invoice.amountEur), await page.inputValue('#payment-amount'))
     await page.fill('#payment-amount', comma(part))
     await dialog().getByRole('radio', { name: 'Готівка' }).click()
@@ -66,7 +66,7 @@ export async function run() {
     await row.waitFor()
     ok('the client comes first in the row', (await row.locator('td').first().textContent()) === companyName)
     const text = (await row.textContent()).replace(/\s/g, ' ')
-    ok('the ledger shows the payment, the cash and the hryvnias', text.includes('Готівка') && text.includes('1 200') && text.includes('№' + invoice.id), text)
+    ok('the ledger shows the payment, the cash and the hryvnias', text.includes('Готівка') && text.includes('1 200') && text.includes('№' + sent.number), text)
     await shot('02-ledger')
 
     // the client's page: what is still owed
@@ -99,6 +99,49 @@ export async function run() {
     await page.waitForSelector('text=Форму оплати додано')
     ok('a new way to pay is added', (await dialog().locator(`input[value="Крипта ${u}"]`).count()) === 1)
     await shot('06-methods')
+
+    // a test company: billing off; the manual run offers only billed companies; a draft is deleted
+    const testName = `Тестова ${u}`
+    const testCo = await admin.post('/api/companies', { name: testName })
+    await page.goto(BASE + `/companies/${testCo.id}?tab=billing`)
+    await page.locator('[data-testid=billing-enabled]').click()
+    await page.waitForFunction(() => document.querySelector('[data-testid=billing-enabled]')?.getAttribute('aria-checked') === 'false' || document.querySelector('[data-testid=billing-enabled]')?.hasAttribute('data-unchecked'))
+    await page.goto(BASE + '/crm/invoices')
+    await page.getByRole('button', { name: 'Сформувати рахунки' }).click()
+    await dialog().locator('label', { hasText: companyName }).waitFor()
+    ok('the test company is not offered', (await dialog().locator('label', { hasText: testName }).count()) === 0)
+    await shot('09-generate')
+    await page.keyboard.press('Escape')
+    const draftCo = await admin.post('/api/companies', { name: `Чернетка ${u}` })
+    await admin.put(`/api/crm/companies/${draftCo.id}/trial`, { trialEndsOn: null })
+    await admin.post(`/api/crm/invoices/generate?period=${month}&companyId=${draftCo.id}`)
+    await page.goto(BASE + `/companies/${draftCo.id}?tab=billing`)
+    const draftRow = page.locator('tr', { hasText: 'Чернетка' }).first()
+    await draftRow.waitFor()
+    ok('a draft has no number', (await draftRow.locator('td').first().textContent()) === '—')
+    await draftRow.click()
+    await dialog().getByRole('button', { name: 'Видалити рахунок' }).click()
+    await page.locator('[role=alertdialog], [data-slot=dialog-content]').last().getByRole('button', { name: 'Видалити рахунок' }).click()
+    await page.waitForSelector('text=Рахунок видалено')
+    await page.locator('tr', { hasText: 'Чернетка' }).first().waitFor({ state: 'detached', timeout: 5000 }).catch(() => {})
+    ok('the draft is gone', (await page.locator('tr', { hasText: 'Чернетка' }).count()) === 0)
+
+    // cancelling says «Залишити рахунок», not a second «Скасувати»; then all cancelled go at once
+    await admin.post(`/api/crm/invoices/generate?period=${month}&companyId=${draftCo.id}`)
+    await page.goto(BASE + `/companies/${draftCo.id}?tab=billing`)
+    await page.locator('tr', { hasText: 'Чернетка' }).first().click()
+    await dialog().getByRole('button', { name: 'Скасувати рахунок' }).click()
+    const confirm = page.locator('[data-slot=dialog-content]').last()
+    ok('the way back is «Залишити рахунок»', (await confirm.getByRole('button', { name: 'Залишити рахунок' }).count()) === 1)
+    await shot('10-cancel-confirm')
+    await confirm.getByRole('button', { name: 'Скасувати рахунок' }).click()
+    await page.waitForSelector('text=Рахунок скасовано')
+    await page.goto(BASE + '/crm/invoices?filter=cancelled')
+    await page.getByRole('button', { name: 'Видалити всі скасовані' }).click()
+    await page.locator('[data-slot=dialog-content]').last().getByRole('button', { name: 'Видалити', exact: true }).click()
+    await page.waitForSelector('text=Видалено рахунків')
+    await page.locator('tr', { hasText: 'Скасовано' }).first().waitFor({ state: 'detached', timeout: 5000 }).catch(() => {})
+    ok('no cancelled invoices left', (await page.locator('tr', { hasText: 'Скасовано' }).count()) === 0)
 
     // the client's own price instead of the general one
     await page.goto(BASE + `/companies/${company.id}?tab=billing`)

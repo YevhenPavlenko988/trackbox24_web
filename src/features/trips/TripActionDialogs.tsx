@@ -246,7 +246,7 @@ export function CancelTripDialog({ trip, open, onOpenChange }: { trip: TripRespo
         )}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('common:actions.cancel')}
+            {t('trips:cancelDialog.keep')}
           </Button>
           <Button variant="destructive" disabled={cancel.isPending || (mode === 'warehouse' && !warehouseId)} onClick={confirm}>
             {t('trips:actions.cancel')}

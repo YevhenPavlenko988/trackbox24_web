@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Switch } from '@/components/ui/switch'
 import { showApiError } from '@/lib/api/problem'
 import type { CompanyBillingResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime } from '@/lib/format'
@@ -18,7 +19,7 @@ import { InvoiceLines } from './InvoiceLines'
 import { InvoicesTable } from './InvoicesTable'
 import { PaymentDialog } from './PaymentDialog'
 import { PaymentsTable } from './PaymentsTable'
-import { useCompanyBalance, useCompanyBilling, useInvoices, usePayments, useSetTrial } from './queries'
+import { useCompanyBalance, useCompanyBilling, useInvoices, usePayments, useSetBillingEnabled, useSetTrial } from './queries'
 
 /** The money side of a client company: tariff and trial, this month's forecast, its invoices, option history. */
 export function CompanyBillingSection({ companyId }: { companyId: number }) {
@@ -134,6 +135,7 @@ function PaymentsCard({ companyId }: { companyId: number }) {
 function TariffCard({ companyId, billing }: { companyId: number; billing: CompanyBillingResponse }) {
   const { t } = useTranslation(['billing', 'common'])
   const setTrial = useSetTrial(companyId)
+  const setBilling = useSetBillingEnabled(companyId)
   const [trial, setTrialValue] = useState(billing.trialEndsOn ?? '')
   const save = async (value: string | null) => {
     try {
@@ -150,6 +152,19 @@ function TariffCard({ companyId, billing }: { companyId: number; billing: Compan
         <CardTitle>{t('billing:company.tariff')}</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
+        <label className="flex items-start gap-3">
+          <Switch
+            className="mt-0.5"
+            checked={!!billing.billingEnabled}
+            disabled={setBilling.isPending}
+            onCheckedChange={(v) => setBilling.mutateAsync(v).catch(showApiError)}
+            data-testid="billing-enabled"
+          />
+          <span>
+            <span className="block text-sm font-medium">{t('billing:company.billingEnabled')}</span>
+            <span className="block text-xs text-muted-foreground">{t('billing:company.billingEnabledHint')}</span>
+          </span>
+        </label>
         <div>
           <p className="text-sm text-muted-foreground">{t('billing:company.monthly')}</p>
           <p className="text-3xl font-semibold tabular-nums">{formatEur(billing.monthlyEur)}</p>

@@ -15,7 +15,7 @@ import { parseNumber } from '@/features/parcels/status'
 import { CURRENCY_SYMBOL, type MoneyCurrency } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { CompanySelect } from './CompanySelect'
-import { formatEur, formatPeriod, isoDate } from './format'
+import { formatEur, formatPeriod, invoiceNo, isoDate } from './format'
 import { useDeletePayment, useInvoices, usePaymentMethods, useSavePayment } from './queries'
 
 const NO_INVOICE = '__none__'
@@ -238,8 +238,8 @@ export function PaymentDialog({
     </>
   )
 
-  function invoiceLabel(i: { id?: number; period?: string; amountEur?: number; remainingEur?: number; status?: string }) {
+  function invoiceLabel(i: { id?: number; number?: number; period?: string; amountEur?: number; remainingEur?: number; status?: string }) {
     const left = i.status === 'PAID' ? t('billing:status.PAID') : t('billing:payment.left', { amount: formatEur(i.remainingEur) })
-    return `№${i.id} · ${formatPeriod(i.period)} · ${formatEur(i.amountEur)} (${left})`
+    return `${invoiceNo(i)} · ${formatPeriod(i.period)} · ${formatEur(i.amountEur)} (${left})`
   }
 }

@@ -11,3 +11,6 @@ export const formatEur = (value?: number) => formatMoney(value, 'EUR')
 
 /** Local date as `yyyy-MM-dd`, the way the backend takes a LocalDate. */
 export const isoDate = (d: Date) => format(d, 'yyyy-MM-dd')
+
+/** «№7», or «чернетка» for an invoice not sent yet: numbers are given when it goes out. */
+export const invoiceNo = (i?: { number?: number }) => (i?.number != null ? `№${i.number}` : 'чернетка')

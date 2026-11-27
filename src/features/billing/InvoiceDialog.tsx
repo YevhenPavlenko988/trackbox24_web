@@ -1,4 +1,4 @@
-import { Ban, Calculator, CheckCircle2, FileText, Send } from 'lucide-react'
+import { Ban, Calculator, CheckCircle2, FileText, Send, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
@@ -11,12 +11,12 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { showApiError } from '@/lib/api/problem'
 import type { InvoiceResponse } from '@/lib/api/types'
 import { formatDate, formatDateTime } from '@/lib/format'
-import { formatEur, formatPeriod } from './format'
+import { formatEur, formatPeriod, invoiceNo } from './format'
 import { InvoiceLines } from './InvoiceLines'
 import { InvoiceStatusBadge } from './InvoiceStatusBadge'
 import { PayDialog } from './PayDialog'
 import { PaymentsTable } from './PaymentsTable'
-import { useCancelInvoice, usePayments, useRecalculateInvoice, useSendInvoice } from './queries'
+import { useCancelInvoice, useDeleteInvoice, usePayments, useRecalculateInvoice, useSendInvoice } from './queries'
 
 /** One invoice: its lines, dates and the next step — send a draft, enter the payment, or cancel. */
 export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceResponse | null; onOpenChange: (o: boolean) => void }) {
@@ -26,6 +26,8 @@ export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceRespo
   const recalculate = useRecalculateInvoice()
   const [paying, setPaying] = useState(false)
   const [cancelling, setCancelling] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const remove = useDeleteInvoice()
   const payments = usePayments({ invoiceId: invoice?.id, size: 50 }, { enabled: !!invoice?.paidAmountEur })
   if (!invoice) return null
   const id = invoice.id!
@@ -47,7 +49,9 @@ export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceRespo
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex flex-wrap items-center gap-2">
-              {t('billing:invoice.title', { id, period: formatPeriod(invoice.period) })}
+              {invoice.number != null
+                ? t('billing:invoice.title', { no: invoiceNo(invoice), period: formatPeriod(invoice.period) })
+                : t('billing:invoice.draftTitle', { period: formatPeriod(invoice.period) })}
               <InvoiceStatusBadge invoice={invoice} />
             </DialogTitle>
           </DialogHeader>
@@ -80,14 +84,20 @@ export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceRespo
             </div>
           )}
           {invoice.status === 'DRAFT' && <p className="text-sm text-muted-foreground">{t('billing:invoice.sendHint')}</p>}
-          {invoice.status !== 'CANCELLED' && (
-            <div>
+          <div className="flex flex-wrap gap-2">
+            {invoice.status !== 'CANCELLED' && (
               <LinkButton variant="outline" to={`/crm/invoices/${id}/print`}>
                 <FileText />
                 {t('billing:document.open')}
               </LinkButton>
-            </div>
-          )}
+            )}
+            {(invoice.status === 'DRAFT' || invoice.status === 'CANCELLED') && !invoice.paidAmountEur && (
+              <Button variant="ghost" className="text-destructive" onClick={() => setDeleting(true)}>
+                <Trash2 />
+                {t('billing:actions.delete')}
+              </Button>
+            )}
+          </div>
           {open && (
             <DialogFooter className="flex-wrap gap-2">
               <Button variant="ghost" className="text-destructive sm:mr-auto" onClick={() => setCancelling(true)}>
@@ -122,11 +132,31 @@ export function InvoiceDialog({ invoice, onOpenChange }: { invoice: InvoiceRespo
 <PayDialog invoice={invoice} open onOpenChange={setPaying} onPaid={() => onOpenChange(false)} />
       )}
       <ConfirmDialog
+        open={deleting}
+        onOpenChange={setDeleting}
+        title={t('billing:actions.delete')}
+        description={t('billing:invoice.deleteConfirm')}
+        confirmLabel={t('billing:actions.delete')}
+        destructive
+        pending={remove.isPending}
+        onConfirm={async () => {
+          try {
+            await remove.mutateAsync(id)
+            toast.success(t('billing:toasts.deleted'))
+            setDeleting(false)
+            onOpenChange(false)
+          } catch (e) {
+            showApiError(e)
+          }
+        }}
+      />
+      <ConfirmDialog
         open={cancelling}
         onOpenChange={setCancelling}
         title={t('billing:actions.cancel')}
         description={t('billing:invoice.cancelConfirm')}
         confirmLabel={t('billing:actions.cancel')}
+        cancelLabel={t('billing:invoice.keep')}
         destructive
         pending={cancel.isPending}
         onConfirm={() => run(() => cancel.mutateAsync(id), () => t('billing:toasts.cancelled')).then(() => setCancelling(false))}
