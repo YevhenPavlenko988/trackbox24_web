@@ -6,6 +6,8 @@ import type { MoneyCurrency } from '@/lib/format'
 import {
   cancelInvoice,
   createPayment,
+  deleteCancelledInvoices,
+  deleteInvoice,
   deletePayment,
   generateInvoices,
   getCompanyBalance,
@@ -23,6 +25,7 @@ import {
   recalculateInvoice,
   savePaymentMethod,
   sendInvoice,
+  setBillingEnabled,
   setCompanyPrice,
   setPrice,
   setRequisites,
@@ -74,7 +77,11 @@ export const useSetPrice = () => useBillingMutation(({ code, amountEur }: { code
 export const useSetCompanyPrice = (companyId: number) =>
   useBillingMutation(({ code, amountEur }: { code: BillingItem; amountEur: number | null }) => setCompanyPrice(companyId, code, amountEur))
 export const useSetTrial = (companyId: number) => useBillingMutation((trialEndsOn: string | null) => setTrial(companyId, trialEndsOn))
-export const useGenerateInvoices = () => useBillingMutation((period: string) => generateInvoices(period))
+export const useGenerateInvoices = () =>
+  useBillingMutation(({ period, companyIds }: { period: string; companyIds?: number[] }) => generateInvoices(period, companyIds))
+export const useDeleteCancelledInvoices = () => useBillingMutation(() => deleteCancelledInvoices())
+export const useDeleteInvoice = () => useBillingMutation((id: number) => deleteInvoice(id))
+export const useSetBillingEnabled = (companyId: number) => useBillingMutation((value: boolean) => setBillingEnabled(companyId, value))
 export const useSendInvoice = () => useBillingMutation((id: number) => sendInvoice(id))
 export const useCancelInvoice = () => useBillingMutation((id: number) => cancelInvoice(id))
 export const useRecalculateInvoice = () => useBillingMutation((id: number) => recalculateInvoice(id))

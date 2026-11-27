@@ -14,7 +14,7 @@ import { NotFoundPage } from '@/routes/ErrorPages'
 import { showApiError } from '@/lib/api/problem'
 import type { InvoiceLineResponse } from '@/lib/api/types'
 import { CURRENCY_SYMBOL, formatDate, formatPhone, MONEY_ORDER, type MoneyCurrency } from '@/lib/format'
-import { formatEur, formatPeriod, isoDate } from './format'
+import { formatEur, formatPeriod, invoiceNo, isoDate } from './format'
 import { useInvoice, useInvoiceRate, useRequisites, useSendInvoice } from './queries'
 
 const round2 = (v: number) => Math.round(v * 100) / 100
@@ -55,7 +55,7 @@ export function InvoicePrintPage() {
   useEffect(() => {
     if (!i) return
     const previous = document.title
-    document.title = `Рахунок ${i.id} TrackBox24 ${formatPeriod(i.period)}`
+    document.title = `Рахунок ${i.number ?? 'чернетка'} TrackBox24 ${formatPeriod(i.period)}`
     return () => {
       document.title = previous
     }
@@ -70,7 +70,7 @@ export function InvoicePrintPage() {
   const paid = i.status === 'PAID' ? i.amountEur : i.paidAmountEur
   const due = i.status === 'PAID' ? 0 : (i.remainingEur ?? i.amountEur)
   const missing = !requisites?.name || !requisites?.iban
-  const purpose = t('billing:document.purposeText', { id: i.id, date: formatDate(date), period: formatPeriod(i.period) })
+  const purpose = t('billing:document.purposeText', { no: invoiceNo(i), date: formatDate(date), period: formatPeriod(i.period) })
 
   const markSent = async () => {
     try {
@@ -157,7 +157,7 @@ export function InvoicePrintPage() {
         <header className="flex items-start justify-between gap-6 border-b-2 border-[#f28c1e] pb-5">
           <img src="/logo-full.png" alt="TrackBox24" className="h-16 w-auto" />
           <div className="text-right">
-            <h1 className="text-[17pt] font-semibold">{t('billing:document.title', { id: i.id })}</h1>
+            <h1 className="text-[17pt] font-semibold">{i.number != null ? t('billing:document.title', { number: i.number }) : t('billing:document.draftTitle')}</h1>
             <p>{t('billing:document.from', { date: formatDate(date) })}</p>
             {i.dueOn && <p className="font-medium">{t('billing:document.dueOn', { date: formatDate(i.dueOn) })}</p>}
           </div>

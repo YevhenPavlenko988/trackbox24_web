@@ -9,6 +9,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  cancelLabel,
   destructive,
   pending,
   onConfirm,
@@ -18,6 +19,8 @@ export function ConfirmDialog({
   title: ReactNode
   description?: ReactNode
   confirmLabel?: ReactNode
+  /** When the action itself is a «cancel», the way back must not be called «Скасувати» too. */
+  cancelLabel?: ReactNode
   destructive?: boolean
   pending?: boolean
   onConfirm: () => void
@@ -32,7 +35,7 @@ export function ConfirmDialog({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            {t('actions.cancel')}
+            {cancelLabel ?? t('actions.cancel')}
           </Button>
           <Button variant={destructive ? 'destructive' : 'default'} disabled={pending} onClick={onConfirm}>
             {confirmLabel ?? t('actions.confirm')}

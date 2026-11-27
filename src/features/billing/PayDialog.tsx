@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { parseNumber } from '@/features/parcels/status'
 import { showApiError } from '@/lib/api/problem'
 import type { InvoiceResponse } from '@/lib/api/types'
-import { formatEur, isoDate } from './format'
+import { formatEur, formatPeriod, invoiceNo, isoDate } from './format'
 import { usePaymentMethods, usePayInvoice } from './queries'
 
 /** A payment of the invoice received outside the system: when, how much (what is left unless said otherwise), how. */
@@ -50,7 +50,7 @@ export function PayDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{t('billing:pay.title', { id: invoice.id })}</DialogTitle>
+          <DialogTitle>{invoice.number != null ? t('billing:pay.title', { no: invoiceNo(invoice) }) : t('billing:pay.draftTitle', { period: formatPeriod(invoice.period) })}</DialogTitle>
         </DialogHeader>
         <FieldGroup>
           <Field>

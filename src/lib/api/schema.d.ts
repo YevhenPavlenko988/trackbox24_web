@@ -670,6 +670,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/crm/companies/{id}/billing-enabled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Виставляти рахунки компанії
+         * @description Вимкнено — рахунки для неї не формуються (тестові компанії).
+         */
+        put: operations["setBillingEnabled"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}": {
         parameters: {
             query?: never;
@@ -2270,7 +2290,7 @@ export interface paths {
         put?: never;
         /**
          * Позначити надісланим
-         * @description Лише чернетка. Термін оплати — 7 днів від сьогодні.
+         * @description Лише чернетка. Дає рахунку наступний номер; термін оплати — 7 днів від сьогодні.
          */
         post: operations["send"];
         delete?: never;
@@ -2352,7 +2372,8 @@ export interface paths {
         put?: never;
         /**
          * Сформувати рахунки за місяць
-         * @description Чернетки наперед для активних компаній, у яких за цей місяць рахунку ще немає: місяць за поточними опціями
+         * @description Чернетки наперед для активних компаній з увімкненим «Виставляти рахунки» (або лише для `companyId`), у яких за
+         *     цей місяць рахунку ще немає: місяць за поточними опціями
          *     плюс коригування попереднього місяця. Поточний місяць — лише компаніям, у яких тест уже скінчився; наступний —
          *     усім, у кого тест скінчиться до його кінця. Планувальник робить це щоранку для поточного місяця.
          *     Повторний виклик нічого не дублює.
@@ -3658,7 +3679,11 @@ export interface paths {
         get: operations["invoice"];
         put?: never;
         post?: never;
-        delete?: never;
+        /**
+         * Видалити рахунок
+         * @description Чернетка або скасований, без оплат. Номер є лише в надісланих, тож дірок у нумерації не лишається.
+         */
+        delete: operations["deleteInvoice"];
         options?: never;
         head?: never;
         patch?: never;
@@ -3978,6 +4003,26 @@ export interface paths {
         post?: never;
         /** Видалити оплату клієнта */
         delete: operations["deletePayment_1"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/crm/invoices/cancelled": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Видалити всі скасовані
+         * @description Скасовані рахунки без оплат; ті, за якими є оплати, лишаються. Відповідь — скільки видалено.
+         */
+        delete: operations["deleteCancelled"];
         options?: never;
         head?: never;
         patch?: never;
@@ -6333,6 +6378,12 @@ export interface components {
              */
             invoiceId?: number;
             /**
+             * Format: int32
+             * @description Номер рахунку; немає — чернетка або без рахунку
+             * @example 7
+             */
+            invoiceNumber?: number;
+            /**
              * Format: date
              * @description Місяць рахунку (перше число)
              * @example 2026-11-01
@@ -6625,6 +6676,11 @@ export interface components {
              * @example true
              */
             inTrial?: boolean;
+            /**
+             * @description Компанії виставляються рахунки; вимкнено — тестова, рахунки не формуються
+             * @example true
+             */
+            billingEnabled?: boolean;
             /**
              * Format: date-time
              * @description Доступ обмежено за несплату з цього моменту; немає — доступ є
@@ -6930,6 +6986,11 @@ export interface components {
              * @example false
              */
             suspended?: boolean;
+            /**
+             * @description Команда виставляє компанії рахунки (тестовим — ні)
+             * @example true
+             */
+            billingEnabled?: boolean;
         };
         NpSenderRequest: {
             /**
@@ -8369,6 +8430,12 @@ export interface components {
              * @example 12
              */
             id?: number;
+            /**
+             * Format: int32
+             * @description Номер рахунку: дається при надсиланні; у чернетки немає
+             * @example 7
+             */
+            number?: number;
             /** @description Компанія-клієнт */
             company?: components["schemas"]["CrmRef"];
             /**
@@ -16164,6 +16231,110 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/crm/companies/{id}/prices/{code}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setBillingEnabled: {
+        parameters: {
+            query: {
+                value: boolean;
+            };
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyBillingResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/companies/{id}/billing-enabled"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/companies/{id}/billing-enabled"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/companies/{id}/billing-enabled"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/companies/{id}/billing-enabled"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
@@ -25764,6 +25935,8 @@ export interface operations {
                  * @example 2026-10
                  */
                 period: string;
+                /** @description Лише ці компанії; без — усі, яким виставляються рахунки */
+                companyId?: number[];
             };
             header?: never;
             path?: never;
@@ -32172,6 +32345,97 @@ export interface operations {
             };
         };
     };
+    deleteInvoice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description No Content */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/invoices/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/invoices/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/invoices/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/invoices/{id}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     invoiceRate: {
         parameters: {
             query: {
@@ -33635,6 +33899,81 @@ export interface operations {
                      *       "status": 404,
                      *       "detail": "Parcel with id 10 not found",
                      *       "instance": "/api/parcels/{id}/payments/{paymentId}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    deleteCancelled: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": {
+                        [key: string]: number;
+                    };
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Bad Request",
+                     *       "status": 400,
+                     *       "detail": "Cannot change status from IN_NOVA_POSHTA to IN_CAR",
+                     *       "instance": "/api/crm/invoices/cancelled"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/invoices/cancelled"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/invoices/cancelled"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];

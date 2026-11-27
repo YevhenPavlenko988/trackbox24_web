@@ -4,7 +4,7 @@ import { Link } from 'react-router'
 import { DataTable, type Column } from '@/components/common/DataTable'
 import type { BillingPaymentResponse } from '@/lib/api/types'
 import { formatDate, formatMoney, type MoneyCurrency } from '@/lib/format'
-import { formatEur, formatPeriod } from './format'
+import { formatEur, formatPeriod, invoiceNo } from './format'
 import { PaymentDialog } from './PaymentDialog'
 
 /** Payments, newest first; a row opens the payment to correct or delete it. */
@@ -58,7 +58,7 @@ export function PaymentsTable({
             cell: (p: BillingPaymentResponse) =>
               p.invoiceId ? (
                 <span>
-                  №{p.invoiceId} <span className="text-muted-foreground">· {formatPeriod(p.invoicePeriod)}</span>
+                  {invoiceNo({ number: p.invoiceNumber })} <span className="text-muted-foreground">· {formatPeriod(p.invoicePeriod)}</span>
                 </span>
               ) : (
                 <span className="text-muted-foreground">{t('payment.advance')}</span>
