@@ -29,6 +29,13 @@ export function getCompanyBilling(id: number): Promise<CompanyBillingResponse> {
   return unwrap(api.GET('/api/crm/companies/{id}/billing', { params: { path: { id } } }))
 }
 
+export function setCompanyPrice(id: number, code: BillingItem, amountEur: number | null): Promise<CompanyBillingResponse> {
+  // null brings back the general price; the generated body type has no null, the backend takes it
+  return unwrap(
+    api.PUT('/api/crm/companies/{id}/prices/{code}', { params: { path: { id, code } }, body: { amountEur: amountEur as number } }),
+  )
+}
+
 export function setTrial(id: number, trialEndsOn: string | null): Promise<CompanyBillingResponse> {
   // null removes the trial; the generated body type has no null, the backend takes it
   return unwrap(api.PUT('/api/crm/companies/{id}/trial', { params: { path: { id } }, body: { trialEndsOn: trialEndsOn as string } }))

@@ -625,6 +625,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/crm/companies/{id}/prices/{code}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Своя ціна компанії
+         * @description Лише ADMIN. Ціна позиції тарифу для цієї компанії замість загальної; `amountEur` без значення — знову загальна.
+         *     Діє для рахунків, сформованих після зміни (і для перерахунку чернеток).
+         */
+        put: operations["setCompanyPrice"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/companies/{id}": {
         parameters: {
             query?: never;
@@ -6541,6 +6562,36 @@ export interface components {
             currentMonthLines?: components["schemas"]["InvoiceLineResponse"][];
             /** @description Історія вмикання опцій, нові зверху */
             optionChanges?: components["schemas"]["OptionChange"][];
+            /** @description Ціни для компанії: загальна, своя (якщо домовились) і чинна, у порядку тарифу */
+            prices?: components["schemas"]["CompanyPriceResponse"][];
+        };
+        CompanyPriceResponse: {
+            /**
+             * @description Позиція тарифу
+             * @example BASE
+             * @enum {string}
+             */
+            code?: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS" | "REPORTS";
+            /**
+             * @description Назва
+             * @example Базовий тариф
+             */
+            label?: string;
+            /**
+             * @description Загальна ціна за місяць, EUR
+             * @example 170
+             */
+            generalEur?: number;
+            /**
+             * @description Своя ціна компанії, EUR; немає — діє загальна
+             * @example 150
+             */
+            ownEur?: number;
+            /**
+             * @description Чинна ціна для компанії, EUR
+             * @example 150
+             */
+            amountEur?: number;
         };
         InvoiceLineResponse: {
             /**
@@ -6611,6 +6662,13 @@ export interface components {
              * @example Олена Петренко
              */
             by?: string;
+        };
+        CompanyPriceRequest: {
+            /**
+             * @description Своя ціна за повний місяць, EUR; без — загальна ціна
+             * @example 150
+             */
+            amountEur?: number;
         };
         CompanyRequest: {
             /**
@@ -15722,6 +15780,113 @@ export interface operations {
                      *       "status": 409,
                      *       "detail": "Data conflicts with existing records",
                      *       "instance": "/api/crm/companies/{id}/trial"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    setCompanyPrice: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: number;
+                code: "BASE" | "PARCELS" | "MOVES" | "PHOTOS" | "PUBLIC_TRACKING" | "TELEGRAM_BOT" | "CURRENCY" | "REFERRAL" | "ONLINE_PAYMENTS" | "REPORTS";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompanyPriceRequest"];
+            };
+        };
+        responses: {
+            /** @description OK */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "*/*": components["schemas"]["CompanyBillingResponse"];
+                };
+            };
+            /** @description Невалідний запит або дія недоступна в поточному стані */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Немає токена або він недійсний / прострочений */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Unauthorized",
+                     *       "status": 401,
+                     *       "instance": "/api/crm/companies/{id}/prices/{code}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Недостатньо прав для цієї ролі */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Forbidden",
+                     *       "status": 403,
+                     *       "detail": "Access Denied",
+                     *       "instance": "/api/crm/companies/{id}/prices/{code}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Не знайдено (або належить іншій компанії) */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Not Found",
+                     *       "status": 404,
+                     *       "detail": "Parcel with id 10 not found",
+                     *       "instance": "/api/crm/companies/{id}/prices/{code}"
+                     *     }
+                     */
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Конфлікт з існуючими даними (дублікат) */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    /**
+                     * @example {
+                     *       "type": "about:blank",
+                     *       "title": "Conflict",
+                     *       "status": 409,
+                     *       "detail": "Data conflicts with existing records",
+                     *       "instance": "/api/crm/companies/{id}/prices/{code}"
                      *     }
                      */
                     "application/problem+json": components["schemas"]["Problem"];
