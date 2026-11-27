@@ -55,8 +55,9 @@ function PriceRow({ companyId, price, editable }: { companyId: number; price: Co
 
   return (
     <li className="flex min-h-12 items-center gap-3 border-b py-1.5 last:border-b-0 lg:[&:nth-last-child(2)]:border-b-0" data-testid={`company-price-${price.code}`}>
-      <span className="flex-1">
+      <span className={cn('flex-1', !price.enabled && 'text-muted-foreground')}>
         {price.label}
+        {!price.enabled && <span className="ml-1.5 text-xs">({t('billing:companyPrices.off')})</span>}
         {own && (
           <Badge variant="secondary" className="ml-2 bg-amber-100 text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
             {t('billing:companyPrices.own')}
